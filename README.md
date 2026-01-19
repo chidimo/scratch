@@ -1,50 +1,72 @@
-# Welcome to your Expo app 👋
+# Developer Scratchpad
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A cross-platform scratchpad system for developers to capture ideas on the go, with seamless sync between mobile and VSCode.
 
-## Get started
+## 🚀 Project Overview
 
-1. Install dependencies
+This project solves the common developer problem of losing great ideas while away from the keyboard. It provides:
 
-   ```bash
-   npm install
-   ```
+- **Mobile App**: Capture ideas instantly with your phone
+- **VSCode Extension**: Access and edit notes while coding
+- **GitHub Integration**: Sync via private GitHub Gists
+- **Team Support**: Encrypted scratch files in team repositories
 
-2. Start the app
+## 📋 Key Features
 
-   ```bash
-   npx expo start
-   ```
+- ✅ **Cross-platform sync** between mobile and desktop
+- ✅ **Privacy-first** with AES-256 encryption
+- ✅ **GitHub Gists** for personal note storage
+- ✅ **Team collaboration** with encrypted .scratch folders
+- ✅ **Offline support** with automatic sync
+- ✅ **Rich text editing** with markdown support
 
-In the output, you'll find options to open the app in a
+## 📚 Documentation
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **[Technical Findings](./FINDINGS.md)** - Detailed technical feasibility analysis
+- **[Implementation Plan](./IMPLEMENTATION_PLAN.md)** - Complete development roadmap
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🛠️ Tech Stack
 
-## Get a fresh project
+### Mobile App
 
-When you're ready, run:
+- React Native with Expo
+- GitHub OAuth integration
+- AsyncStorage for offline caching
+
+### VSCode Extension
+
+- TypeScript with VSCode Extension API
+- AES-256 encryption for security
+- Git integration for team workflows
+
+## 🚀 Quick Start
+
+### Mobile App
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### VSCode Extension
 
-## Learn more
+```bash
+# Coming soon - extension in development
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📅 Development Timeline
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **Phase 1**: Mobile App MVP (2-3 weeks)
+- **Phase 2**: VSCode Extension (2-3 weeks)
+- **Phase 3**: Integration & Testing (1-2 weeks)
+- **Phase 4**: Deployment (1 week)
 
-## Join the community
+Total estimated timeline: **6-8 weeks**
 
-Join our community of developers creating universal apps.
+## 🤝 Contributing
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+See [Implementation Plan](./IMPLEMENTATION_PLAN.md) for detailed development roadmap and contribution guidelines.
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
