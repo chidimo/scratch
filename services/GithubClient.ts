@@ -1,6 +1,6 @@
-import { Octokit } from '@octokit/rest';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
+import { Octokit } from "@octokit/rest";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 
 export interface Note {
   id: string;
@@ -10,7 +10,7 @@ export interface Note {
   updated_at: string;
   tags: string[];
   gist_id?: string;
-  sync_status: 'synced' | 'pending' | 'error';
+  sync_status: "synced" | "pending" | "error";
 }
 
 export interface GistFile {
@@ -31,18 +31,19 @@ class GithubClient {
   private octokit: Octokit | null = null;
   private rateLimitResetTime: number = 0;
   private isRateLimited: boolean = false;
-
-  constructor() {
-    this.initializeClient();
-  }
+  private initialized: boolean = false;
 
   private async initializeClient() {
+    if (this.initialized) {
+      return;
+    }
+
     try {
-      const token = await AsyncStorage.getItem('github_token');
+      const token = await AsyncStorage.getItem("github_token");
       if (token) {
         this.octokit = new Octokit({
           auth: token,
-          userAgent: 'ScratchApp/1.0.0',
+          userAgent: "ScratchApp/1.0.0",
           throttle: {
             onRateLimit: (retryAfter: number, options: any) => {
               this.handleRateLimit(retryAfter, options);
@@ -55,26 +56,32 @@ class GithubClient {
           },
         });
       }
+      this.initialized = true;
     } catch (error) {
-      console.error('Error initializing GitHub client:', error);
+      console.error("Error initializing GitHub client:", error);
+      this.initialized = true; // Mark as initialized even on error to avoid retry loops
     }
   }
 
   private handleRateLimit(retryAfter: number, options: any) {
-    console.warn(`Rate limit hit for ${options.method} ${options.url}. Retrying after ${retryAfter} seconds.`);
+    console.warn(
+      `Rate limit hit for ${options.method} ${options.url}. Retrying after ${retryAfter} seconds.`,
+    );
     this.isRateLimited = true;
-    this.rateLimitResetTime = Date.now() + (retryAfter * 1000);
-    
+    this.rateLimitResetTime = Date.now() + retryAfter * 1000;
+
     setTimeout(() => {
       this.isRateLimited = false;
     }, retryAfter * 1000);
   }
 
   private handleAbuseLimit(retryAfter: number, options: any) {
-    console.error(`Abuse limit hit for ${options.method} ${options.url}. Retrying after ${retryAfter} seconds.`);
+    console.error(
+      `Abuse limit hit for ${options.method} ${options.url}. Retrying after ${retryAfter} seconds.`,
+    );
     this.isRateLimited = true;
-    this.rateLimitResetTime = Date.now() + (retryAfter * 1000);
-    
+    this.rateLimitResetTime = Date.now() + retryAfter * 1000;
+
     setTimeout(() => {
       this.isRateLimited = false;
     }, retryAfter * 1000);
@@ -85,7 +92,7 @@ class GithubClient {
       const netInfo = await NetInfo.fetch();
       return netInfo.isConnected ?? false;
     } catch (error) {
-      console.error('Error checking connectivity:', error);
+      console.error("Error checking connectivity:", error);
       return false;
     }
   }
@@ -94,19 +101,23 @@ class GithubClient {
     if (!this.octokit) {
       await this.initializeClient();
     }
-    
+
     if (!this.octokit) {
-      throw new Error('GitHub client not initialized. Please authenticate first.');
+      throw new Error(
+        "GitHub client not initialized. Please authenticate first.",
+      );
     }
 
     if (this.isRateLimited) {
       const waitTime = Math.max(0, this.rateLimitResetTime - Date.now());
-      throw new Error(`Rate limited. Please wait ${Math.ceil(waitTime / 1000)} seconds before trying again.`);
+      throw new Error(
+        `Rate limited. Please wait ${Math.ceil(waitTime / 1000)} seconds before trying again.`,
+      );
     }
 
     const isConnected = await this.checkConnectivity();
     if (!isConnected) {
-      throw new Error('No internet connection available.');
+      throw new Error("No internet connection available.");
     }
 
     return this.octokit;
@@ -119,91 +130,114 @@ class GithubClient {
         per_page: 100,
       });
 
-      return response.data.map(gist => ({
+      return response.data.map((gist) => ({
         id: gist.id,
-        description: gist.description || '',
+        description: gist.description || "",
         public: gist.public ?? false,
         created_at: gist.created_at,
         updated_at: gist.updated_at,
-        files: Object.keys(gist.files || {}).reduce((acc, filename) => {
-          const file = gist.files![filename];
-          acc[filename] = {
-            filename: file?.filename ?? '',
-            content: file?.content ?? '',
-          };
-          return acc;
-        }, {} as { [filename: string]: GistFile }),
+        files: Object.keys(gist.files || {}).reduce(
+          (acc, filename) => {
+            const file = gist.files![filename];
+            acc[filename] = {
+              filename: file?.filename ?? "",
+              content: file?.content ?? "",
+            };
+            return acc;
+          },
+          {} as { [filename: string]: GistFile },
+        ),
       }));
     } catch (error) {
-      console.error('Error fetching user gists:', error);
+      console.error("Error fetching user gists:", error);
       throw error;
     }
   }
 
-  async createGist(description: string, files: { [filename: string]: string }, isPublic: boolean = false): Promise<Gist> {
+  async createGist(
+    description: string,
+    files: { [filename: string]: string },
+    isPublic: boolean = false,
+  ): Promise<Gist> {
     try {
       const client = await this.ensureClient();
       const response = await client.rest.gists.create({
         description,
         public: isPublic,
-        files: Object.keys(files).reduce((acc, filename) => {
-          acc[filename] = { content: files[filename] };
-          return acc;
-        }, {} as { [filename: string]: { content: string } }),
+        files: Object.keys(files).reduce(
+          (acc, filename) => {
+            acc[filename] = { content: files[filename] };
+            return acc;
+          },
+          {} as { [filename: string]: { content: string } },
+        ),
       });
 
       const gist = response.data;
       return {
         id: gist.id!,
-        description: gist.description || '',
+        description: gist.description || "",
         public: gist.public ?? false,
-        created_at: gist.created_at ?? '',
-        updated_at: gist.updated_at ?? '',
-        files: Object.keys(gist.files || {}).reduce((acc, filename) => {
-          const file = gist.files![filename];
-          acc[filename] = {
-            filename: file?.filename ?? '',
-            content: file?.content ?? '',
-          };
-          return acc;
-        }, {} as { [filename: string]: GistFile }),
+        created_at: gist.created_at ?? "",
+        updated_at: gist.updated_at ?? "",
+        files: Object.keys(gist.files || {}).reduce(
+          (acc, filename) => {
+            const file = gist.files![filename];
+            acc[filename] = {
+              filename: file?.filename ?? "",
+              content: file?.content ?? "",
+            };
+            return acc;
+          },
+          {} as { [filename: string]: GistFile },
+        ),
       };
     } catch (error) {
-      console.error('Error creating gist:', error);
+      console.error("Error creating gist:", error);
       throw error;
     }
   }
 
-  async updateGist(gistId: string, description: string, files: { [filename: string]: string }): Promise<Gist> {
+  async updateGist(
+    gistId: string,
+    description: string,
+    files: { [filename: string]: string },
+  ): Promise<Gist> {
     try {
       const client = await this.ensureClient();
       const response = await client.rest.gists.update({
         gist_id: gistId,
         description,
-        files: Object.keys(files).reduce((acc, filename) => {
-          acc[filename] = { content: files[filename] };
-          return acc;
-        }, {} as { [filename: string]: { content: string } }),
+        files: Object.keys(files).reduce(
+          (acc, filename) => {
+            acc[filename] = { content: files[filename] };
+            return acc;
+          },
+          {} as { [filename: string]: { content: string } },
+        ),
       });
 
       const gist = response.data;
       return {
         id: gist.id!,
-        description: gist.description || '',
+        description: gist.description || "",
         public: gist.public ?? false,
-        created_at: gist.created_at ?? '',
-        updated_at: gist.updated_at ?? '',
-        files: Object.keys(gist.files || {}).reduce((acc, filename) => {
-          const file = gist.files![filename];
-          acc[filename] = {
-            filename: file?.filename ?? '',
-            content: file?.content ?? '',
-          };
-          return acc;
-        }, {} as { [filename: string]: GistFile }),
+        created_at: gist.created_at ?? "",
+        updated_at: gist.updated_at ?? "",
+        files: Object.keys(gist.files || {}).reduce(
+          (acc, filename) => {
+            const file = gist.files![filename];
+            acc[filename] = {
+              filename: file?.filename ?? "",
+              content: file?.content ?? "",
+            };
+            return acc;
+          },
+          {} as { [filename: string]: GistFile },
+        ),
       };
     } catch (error) {
-      console.error('Error updating gist:', error);
+      console.error("Error updating gist:", error);
       throw error;
     }
   }
@@ -215,7 +249,7 @@ class GithubClient {
         gist_id: gistId,
       });
     } catch (error) {
-      console.error('Error deleting gist:', error);
+      console.error("Error deleting gist:", error);
       throw error;
     }
   }
@@ -230,26 +264,33 @@ class GithubClient {
       const gist = response.data;
       return {
         id: gist.id!,
-        description: gist.description || '',
+        description: gist.description || "",
         public: gist.public ?? false,
-        created_at: gist.created_at ?? '',
-        updated_at: gist.updated_at ?? '',
-        files: Object.keys(gist.files || {}).reduce((acc, filename) => {
-          const file = gist.files![filename];
-          acc[filename] = {
-            filename: file?.filename ?? '',
-            content: file?.content ?? '',
-          };
-          return acc;
-        }, {} as { [filename: string]: GistFile }),
+        created_at: gist.created_at ?? "",
+        updated_at: gist.updated_at ?? "",
+        files: Object.keys(gist.files || {}).reduce(
+          (acc, filename) => {
+            const file = gist.files![filename];
+            acc[filename] = {
+              filename: file?.filename ?? "",
+              content: file?.content ?? "",
+            };
+            return acc;
+          },
+          {} as { [filename: string]: GistFile },
+        ),
       };
     } catch (error) {
-      console.error('Error fetching gist:', error);
+      console.error("Error fetching gist:", error);
       throw error;
     }
   }
 
-  async getRateLimitStatus(): Promise<{ remaining: number; reset: number; limit: number }> {
+  async getRateLimitStatus(): Promise<{
+    remaining: number;
+    reset: number;
+    limit: number;
+  }> {
     try {
       const client = await this.ensureClient();
       const response = await client.rest.rateLimit.get();
@@ -259,10 +300,18 @@ class GithubClient {
         limit: response.data.resources.core.limit,
       };
     } catch (error) {
-      console.error('Error fetching rate limit status:', error);
+      console.error("Error fetching rate limit status:", error);
       throw error;
     }
   }
 }
 
-export const githubClient = new GithubClient();
+// Create a singleton instance that's only initialized when needed
+let githubClientInstance: GithubClient | null = null;
+
+export const getGithubClient = (): GithubClient => {
+  if (!githubClientInstance) {
+    githubClientInstance = new GithubClient();
+  }
+  return githubClientInstance;
+};

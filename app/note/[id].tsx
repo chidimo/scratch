@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/context/AuthContext";
+import { getGithubClient } from "@/services/GithubClient";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
-import { githubClient } from '@/services/GithubClient';
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function NoteEditor() {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isNewNote, setIsNewNote] = useState(false);
-  
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (id === 'new') {
+    if (id === "new") {
       setIsNewNote(true);
       setIsLoading(false);
     } else if (id && user) {
@@ -37,16 +37,19 @@ export default function NoteEditor() {
 
   const loadNote = async (noteId: string) => {
     try {
+      const githubClient = getGithubClient();
       const gist = await githubClient.getGist(noteId);
-      
-      const mdFile = Object.keys(gist.files).find(filename => filename.endsWith('.md'));
+
+      const mdFile = Object.keys(gist.files).find((filename) =>
+        filename.endsWith(".md"),
+      );
       if (mdFile) {
-        setTitle(gist.description || mdFile.replace('.md', ''));
+        setTitle(gist.description || mdFile.replace(".md", ""));
         setContent(gist.files[mdFile].content);
       }
     } catch (error) {
-      console.error('Error loading note:', error);
-      Alert.alert('Error', 'Failed to load note');
+      console.error("Error loading note:", error);
+      Alert.alert("Error", "Failed to load note");
       router.back();
     } finally {
       setIsLoading(false);
@@ -55,25 +58,28 @@ export default function NoteEditor() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Error', 'Please enter a title');
+      Alert.alert("Error", "Please enter a title");
       return;
     }
 
     setIsSaving(true);
     try {
-      const filename = `${title.replaceAll(/[^a-zA-Z0-9\s]/g, '').trim()}.md`;
-      
+      const githubClient = getGithubClient();
+      const filename = `${title.replaceAll(/[^a-zA-Z0-9\s]/g, "").trim()}.md`;
+
       if (isNewNote) {
-        const gist = await githubClient.createGist(title, { [filename]: content });
+        const gist = await githubClient.createGist(title, {
+          [filename]: content,
+        });
         router.replace(`/note/${gist.id}`);
       } else {
         await githubClient.updateGist(id!, title, { [filename]: content });
       }
-      
-      Alert.alert('Success', 'Note saved successfully');
+
+      Alert.alert("Success", "Note saved successfully");
     } catch (error) {
-      console.error('Error saving note:', error);
-      Alert.alert('Error', 'Failed to save note');
+      console.error("Error saving note:", error);
+      Alert.alert("Error", "Failed to save note");
     } finally {
       setIsSaving(false);
     }
@@ -86,25 +92,26 @@ export default function NoteEditor() {
     }
 
     Alert.alert(
-      'Delete Note',
-      'Are you sure you want to delete this note? This action cannot be undone.',
+      "Delete Note",
+      "Are you sure you want to delete this note? This action cannot be undone.",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
+              const githubClient = getGithubClient();
               await githubClient.deleteGist(id!);
-              Alert.alert('Success', 'Note deleted successfully');
-              router.replace('/(tabs)');
+              Alert.alert("Success", "Note deleted successfully");
+              router.replace("/(tabs)");
             } catch (error) {
-              console.error('Error deleting note:', error);
-              Alert.alert('Error', 'Failed to delete note');
+              console.error("Error deleting note:", error);
+              Alert.alert("Error", "Failed to delete note");
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -119,16 +126,20 @@ export default function NoteEditor() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.cancelButton}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isNewNote ? 'New Note' : 'Edit Note'}</Text>
+        <Text style={styles.headerTitle}>
+          {isNewNote ? "New Note" : "Edit Note"}
+        </Text>
         <TouchableOpacity onPress={handleSave} disabled={isSaving}>
-          <Text style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}>
-            {isSaving ? 'Saving...' : 'Save'}
+          <Text
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          >
+            {isSaving ? "Saving..." : "Save"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -141,7 +152,7 @@ export default function NoteEditor() {
           onChangeText={setTitle}
           multiline
         />
-        
+
         <TextInput
           style={styles.contentInput}
           placeholder="Start writing your note..."
@@ -166,32 +177,32 @@ export default function NoteEditor() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   cancelButton: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 16,
   },
   saveButton: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveButtonDisabled: {
-    color: '#ccc',
+    color: "#ccc",
   },
   content: {
     flex: 1,
@@ -199,10 +210,10 @@ const styles = StyleSheet.create({
   },
   titleInput: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
     paddingBottom: 8,
   },
   contentInput: {
@@ -214,17 +225,17 @@ const styles = StyleSheet.create({
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: "#e0e0e0",
   },
   deleteButton: {
-    backgroundColor: '#ff4444',
+    backgroundColor: "#ff4444",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   deleteButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { githubClient } from "@/services/GithubClient";
+import { getGithubClient } from "@/services/GithubClient";
 import React from "react";
 import {
     ActivityIndicator,
@@ -23,6 +23,7 @@ export default function SettingsScreen() {
 
   const handleCheckRateLimit = async () => {
     try {
+      const githubClient = getGithubClient();
       const rateLimit = await githubClient.getRateLimitStatus();
       Alert.alert(
         "GitHub API Rate Limit",

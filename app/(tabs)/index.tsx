@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { githubClient, Note } from "@/services/GithubClient";
+import { getGithubClient, Note } from "@/services/GithubClient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -30,6 +30,7 @@ export default function NotesScreen() {
 
   const loadNotes = async () => {
     try {
+      const githubClient = getGithubClient();
       const gists = await githubClient.getUserGists();
 
       const notesList: Note[] = gists

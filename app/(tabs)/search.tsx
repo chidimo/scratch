@@ -1,15 +1,15 @@
 import { useAuth } from "@/context/AuthContext";
-import { githubClient, Note } from "@/services/GithubClient";
+import { getGithubClient, Note } from "@/services/GithubClient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function SearchScreen() {
@@ -24,6 +24,7 @@ export default function SearchScreen() {
 
     setIsLoading(true);
     try {
+      const githubClient = getGithubClient();
       const gists = await githubClient.getUserGists();
 
       const notes: Note[] = gists
