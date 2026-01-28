@@ -3,19 +3,27 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
-export function useThemeColor(
-  props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
-) {
-  const theme = useColorScheme() ?? 'light';
-  const colorFromProps = props[theme];
+export function useThemeColor<
+  T extends keyof typeof Colors.light & keyof typeof Colors.dark,
+>(
+  props: {
+    light?: Partial<Record<T, string>>;
+    dark?: Partial<Record<T, string>>;
+  },
+  colorNames: T[],
+): Record<T, string> {
+  const theme = useColorScheme() ?? "light";
+  const result = {} as Record<T, string>;
 
-  if (colorFromProps) {
-    return colorFromProps;
-  } else {
-    return Colors[theme][colorName];
+  for (const colorName of colorNames) {
+    const colorFromProps = (props[theme] as Partial<Record<T, string>>)?.[
+      colorName
+    ];
+    result[colorName] = colorFromProps || Colors[theme][colorName];
   }
+
+  return result;
 }
