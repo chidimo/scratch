@@ -1,7 +1,8 @@
 import { Note } from '@scratch/shared';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedView } from './themed-view';
+import { ThemedText } from './themed-text';
 
 export const GistItem = ({ gist }: { gist: Note }) => {
   const router = useRouter();
@@ -12,14 +13,14 @@ export const GistItem = ({ gist }: { gist: Note }) => {
       onPress={() => router.push(`/note/${gist.id}`)}
     >
       <ThemedView style={styles.noteHeader}>
-        <Text style={styles.noteTitle}>{gist.title}</Text>
-        <Text style={styles.noteDate}>
+        <ThemedText style={styles.noteTitle}>{gist.title}</ThemedText>
+        <ThemedText style={styles.noteDate}>
           {new Date(gist.updated_at).toLocaleDateString()}
-        </Text>
+        </ThemedText>
       </ThemedView>
-      <Text style={styles.notePreview} numberOfLines={3}>
+      <ThemedText style={styles.notePreview} numberOfLines={3}>
         {gist.content.substring(0, 150)}...
-      </Text>
+      </ThemedText>
       <ThemedView style={styles.noteFooter}>
         <View style={styles.syncStatus}>
           <View
@@ -31,7 +32,7 @@ export const GistItem = ({ gist }: { gist: Note }) => {
               },
             ]}
           />
-          <Text style={styles.statusText}>{gist.sync_status}</Text>
+          <ThemedText style={styles.statusText}>{gist.sync_status}</ThemedText>
         </View>
       </ThemedView>
     </TouchableOpacity>
@@ -47,13 +48,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 32,
     textAlign: 'center',
     lineHeight: 24,
   },
   noteItem: {
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     marginVertical: 8,
     padding: 16,

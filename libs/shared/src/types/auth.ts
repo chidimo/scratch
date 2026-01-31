@@ -79,8 +79,7 @@ export interface Note {
 export interface AuthState {
   user: GitHubUser | null;
   token: string | null;
-  gists: Gist[];
-  isLoading: boolean;
+   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
 }

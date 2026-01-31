@@ -58,6 +58,10 @@ export default function RootLayout() {
                     name="auth/callback"
                     options={{ headerShown: false }}
                   />
+                  <Stack.Screen
+                    name="note"
+                    options={{ headerShown: false }}
+                  />
                 </Stack>
               </ThemeProvider>
             </AuthProvider>

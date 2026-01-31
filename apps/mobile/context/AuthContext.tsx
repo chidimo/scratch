@@ -42,7 +42,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     token: null,
-    gists: [],
     isLoading: true,
     isAuthenticated: false,
     error: null,
@@ -80,13 +79,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const storedToken = await AsyncStorage.getItem('github_token');
       const storedUser = await AsyncStorage.getItem('github_user');
-      const storedGists = await AsyncStorage.getItem('github_gists');
 
       if (storedToken && storedUser) {
         setAuthState({
           user: JSON.parse(storedUser),
           token: storedToken,
-          gists: storedGists ? JSON.parse(storedGists) : [],
           isLoading: false,
           isAuthenticated: true,
           error: null,
@@ -148,13 +145,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await AsyncStorage.multiRemove([
         'github_token',
         'github_user',
-        'github_gists',
       ]);
       setAuthState({
         user: null,
         token: null,
-        gists: [],
-        isLoading: false,
+         isLoading: false,
         isAuthenticated: false,
         error: null,
       });

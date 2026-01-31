@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { ThemedText } from '../../components/themed-text';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AuthCallback() {
@@ -82,9 +83,9 @@ export default function AuthCallback() {
         }}
       >
         <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 16, textAlign: 'center' }}>
+        <ThemedText style={{ marginTop: 16, textAlign: 'center' }}>
           Completing authentication...
-        </Text>
+        </ThemedText>
       </View>
     );
   }
@@ -99,7 +100,7 @@ export default function AuthCallback() {
           padding: 20,
         }}
       >
-        <Text
+        <ThemedText
           style={{
             fontSize: 16,
             color: '#d32f2f',
@@ -108,7 +109,7 @@ export default function AuthCallback() {
           }}
         >
           {error}
-        </Text>
+        </ThemedText>
         <TouchableOpacity
           style={{
             backgroundColor: '#007AFF',
@@ -118,9 +119,9 @@ export default function AuthCallback() {
           }}
           onPress={() => router.replace('/')}
         >
-          <Text style={{ fontSize: 14, color: 'white' }}>
+          <ThemedText style={{ fontSize: 14, color: 'white' }}>
             Go back to sign in
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       </View>
     );

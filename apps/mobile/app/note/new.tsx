@@ -8,11 +8,11 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { ThemedText } from '../../components/themed-text';
 
 export default function NewNoteScreen() {
   const [title, setTitle] = useState('');
@@ -88,10 +88,10 @@ export default function NewNoteScreen() {
           onPress={handleCancel}
           disabled={createGist.isPending}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>New Note</Text>
+        <ThemedText style={styles.headerTitle}>New Note</ThemedText>
 
         <TouchableOpacity
           style={[
@@ -101,14 +101,14 @@ export default function NewNoteScreen() {
           onPress={handleSave}
           disabled={createGist.isPending || !title.trim() || !content.trim()}
         >
-          <Text
+          <ThemedText
             style={[
               styles.saveButtonText,
               createGist.isPending && styles.saveButtonTextDisabled,
             ]}
           >
             {createGist.isPending ? 'Saving...' : 'Save'}
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       </View>
 

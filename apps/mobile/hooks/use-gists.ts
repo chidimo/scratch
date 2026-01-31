@@ -4,35 +4,47 @@ import { Note } from '@scratch/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Query key for gists
-export const GISTS_QUERY_KEY = ['gists'];
+export const GISTS_QUERY_KEY = 'gists';
 
-export const useGists = () => {
+export const useGists = (searchTerm?: string) => {
   return useQuery({
-    queryKey: GISTS_QUERY_KEY,
+    queryKey: [GISTS_QUERY_KEY, searchTerm],
     queryFn: async () => {
       const githubClient = getGithubClient();
       const gistsData = await githubClient.getUserGists();
 
-      return gistsData
-        .filter((gist) =>
-          Object.keys(gist.files).some((filename) => filename.endsWith('.md')),
-        )
-        .map((gist) => {
-          const mdFile = Object.keys(gist.files).find((filename) =>
-            filename.endsWith('.md'),
-          );
-          return {
-            id: gist.id,
-            title:
-              gist.description || mdFile?.replace('.md', '') || 'Untitled Note',
-            content: mdFile ? gist.files[mdFile].content || '' : '',
-            created_at: gist.created_at,
-            updated_at: gist.updated_at,
-            tags: [],
-            gist_id: gist.id,
-            sync_status: 'synced' as const,
-          };
-        });
+      let filteredGists = gistsData.filter((gist) =>
+        Object.keys(gist.files).some((filename) => filename.endsWith('.md')),
+      );
+
+      // Apply search filter if search term is provided
+      if (searchTerm?.trim()) {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        filteredGists = filteredGists.filter(
+          (gist) =>
+            (gist.description || '').toLowerCase().includes(lowerSearchTerm) ||
+            Object.keys(gist.files).some((filename) =>
+              filename.toLowerCase().includes(lowerSearchTerm),
+            ),
+        );
+      }
+
+      return filteredGists.map((gist) => {
+        const mdFile = Object.keys(gist.files).find((filename) =>
+          filename.endsWith('.md'),
+        );
+        return {
+          id: gist.id,
+          title:
+            gist.description || mdFile?.replace('.md', '') || 'Untitled Note',
+          content: mdFile ? gist.files[mdFile].content || '' : '',
+          created_at: gist.created_at,
+          updated_at: gist.updated_at,
+          tags: [],
+          gist_id: gist.id,
+          sync_status: 'synced' as const,
+        };
+      });
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
@@ -69,7 +81,7 @@ export const useCreateGist = () => {
     },
     onSuccess: (newGist) => {
       // Update the gists cache with the new gist
-      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [GISTS_QUERY_KEY] });
     },
     onError: (error) => {
       console.error('Error creating gist:', error);
@@ -100,7 +112,7 @@ export const useUpdateGistById = () => {
       return await githubClient.updateGist(id, title, files);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [GISTS_QUERY_KEY] });
     },
     onError: (error) => {
       console.error('Error updating note:', error);
@@ -119,7 +131,7 @@ export const useDeleteGistById = () => {
       return id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [GISTS_QUERY_KEY] });
     },
     onError: (error) => {
       console.error('Error deleting note:', error);
@@ -141,7 +153,7 @@ export const useRefreshGists = () => {
       return gistsData;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [GISTS_QUERY_KEY] });
     },
     onError: (error) => {
       console.error('Error refreshing gists:', error);

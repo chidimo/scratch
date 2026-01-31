@@ -8,24 +8,31 @@ import {
   FlatList,
   RefreshControl,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { GistItem } from './gist-item';
+import { SearchInput } from './search-input';
+import { ThemedView } from './themed-view';
+import { ThemedText } from './themed-text';
+import { NewUser } from './new-user';
 
 export const GistList = () => {
   const [refreshing, setRefreshing] = useState(false);
-  const { user, signIn, isLoading: authLoading } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  const { data: gists, refetch } = useGists();
-  console.log('gitst data ', gists);
+  const { data: gists, refetch, isLoading } = useGists(searchTerm);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
 
   const handleCreateNote = () => {
@@ -36,30 +43,37 @@ export const GistList = () => {
 
   if (authLoading) {
     return (
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
         <ActivityIndicator size="large" />
-      </View>
+      </ThemedView>
     );
   }
 
   if (!user) {
+    return <NewUser />;
+  }
+
+  if (isLoading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.authContainer}>
-          <Text style={styles.title}>Welcome to Scratch</Text>
-          <Text style={styles.subtitle}>
-            Your personal scratchpad synced with GitHub Gists
-          </Text>
-          <TouchableOpacity style={styles.signInButton} onPress={signIn}>
-            <Text style={styles.signInButtonText}>Sign in with GitHub</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ThemedView style={styles.container}>
+        <ActivityIndicator size="large" />
+      </ThemedView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
+      <View style={styles.searchAndCreateContainer}>
+        <View style={styles.searchWrapper}>
+          <SearchInput onSearch={handleSearch} />
+        </View>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={handleCreateNote}
+        >
+          <ThemedText style={styles.createButtonThemedText}>+ New</ThemedText>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={gists}
         renderItem={renderNoteItem}
@@ -70,32 +84,31 @@ export const GistList = () => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>No notes yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Create your first note to get started
-            </Text>
+            <ThemedText style={styles.emptyTitle}>
+              {searchTerm.trim() ? 'No notes found' : 'No notes yet'}
+            </ThemedText>
+            <ThemedText style={styles.emptySubtitle}>
+              {searchTerm.trim()
+                ? `Try searching for something else`
+                : 'Create your first note to get started'}
+            </ThemedText>
           </View>
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>My Notes</Text>
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreateNote}
-            >
-              <Text style={styles.createButtonText}>+ New Note</Text>
-            </TouchableOpacity>
+            <ThemedText style={styles.headerTitle}>
+              {searchTerm.trim() ? 'Search Results' : 'My Notes'}
+            </ThemedText>
           </View>
         }
       />
-    </View>
+    </ThemedView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   authContainer: {
     flex: 1,
@@ -116,25 +129,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  signInButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
-    minWidth: 200,
-  },
-  signInButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  header: {
+  searchAndCreateContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  searchWrapper: {
+    flex: 1,
+    marginRight: 12,
+  },
+  header: {
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -144,14 +151,16 @@ const styles = StyleSheet.create({
   },
   createButton: {
     backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 8,
+    minWidth: 80,
   },
-  createButtonText: {
+  createButtonThemedText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+    textAlign: 'center',
   },
   notesList: {
     flex: 1,
