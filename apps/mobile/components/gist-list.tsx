@@ -1,4 +1,3 @@
-import { useAuth } from '@/context/AuthContext';
 import { useGists } from '@/hooks/use-gists';
 import { Note } from '@scratch/shared';
 import { useRouter } from 'expo-router';
@@ -16,11 +15,12 @@ import { SearchInput } from './search-input';
 import { ThemedView } from './themed-view';
 import { ThemedText } from './themed-text';
 import { NewUser } from './new-user';
+import { useUserProfile } from '@/hooks/use-user-profile';
 
 export const GistList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const { user, isLoading: authLoading } = useAuth();
+  const { data: user, isPending: authLoading } = useUserProfile();
   const router = useRouter();
 
   const { data: gists, refetch, isLoading } = useGists(searchTerm);

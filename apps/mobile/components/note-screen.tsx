@@ -155,7 +155,7 @@ export const NoteScreen = () => {
           onPress={handleCancel}
           disabled={isMutating}
         >
-          <ThemedText style={styles.cancelButtonText}>Cancel**</ThemedText>
+          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
         </TouchableOpacity>
 
         <ThemedText style={styles.headerTitle}>Edit Note</ThemedText>

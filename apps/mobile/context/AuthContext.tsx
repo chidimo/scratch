@@ -1,11 +1,6 @@
 import { PUBLIC_AUTH_SCHEME } from '@/constants/app-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  AuthContextType,
-  AuthProviderProps,
-  AuthState,
-  GitHubUser,
-} from '@scratch/shared';
+import { AuthContextType, AuthProviderProps, AuthState } from '@scratch/shared';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import {
@@ -40,7 +35,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authState, setAuthState] = useState<AuthState>({
-    user: null,
     token: null,
     isLoading: true,
     isAuthenticated: false,
@@ -142,14 +136,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = useCallback(async () => {
     try {
-      await AsyncStorage.multiRemove([
-        'github_token',
-        'github_user',
-      ]);
+      await AsyncStorage.multiRemove(['github_token', 'github_user']);
       setAuthState({
-        user: null,
         token: null,
-         isLoading: false,
+        isLoading: false,
         isAuthenticated: false,
         error: null,
       });
@@ -248,17 +238,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log('Token exchange result:', tokenData);
 
         if (tokenData.access_token) {
-          console.log('Got access token, fetching user profile...');
-          const user = await fetchUserProfile(tokenData.access_token);
-
           await AsyncStorage.setItem('github_token', tokenData.access_token);
-          await AsyncStorage.setItem('github_user', JSON.stringify(user));
 
-          console.log('Setting auth state to authenticated');
+          console.log('Got access token, fetching user profile...');
+
           setAuthState({
-            user,
             token: tokenData.access_token,
-            gists: [],
             isLoading: false,
             isAuthenticated: true,
             error: null,
@@ -285,76 +270,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     },
     [request?.redirectUri, request?.codeVerifier, isAuthInProgress],
   );
-
-  const fetchUserProfile = async (token: string): Promise<GitHubUser> => {
-    console.log(
-      'Fetching user profile with token:',
-      token.substring(0, 10) + '...',
-    );
-
-    const response = await fetch('https://api.github.com/user', {
-      headers: {
-        Authorization: `token ${token}`,
-        'User-Agent': 'ScratchApp',
-      },
-    });
-
-    console.log('User profile response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to fetch user profile:', errorText);
-      throw new Error(
-        `Failed to fetch user profile: ${response.status} - ${errorText}`,
-      );
-    }
-
-    const userData = await response.json();
-    console.log('User data received:', {
-      login: userData.login,
-      id: userData.id,
-      email: userData.email,
-    });
-
-    try {
-      const emailResponse = await fetch('https://api.github.com/user/emails', {
-        headers: {
-          Authorization: `token ${token}`,
-          'User-Agent': 'ScratchApp',
-        },
-      });
-
-      console.log('Emails response status:', emailResponse.status);
-
-      if (emailResponse.ok) {
-        const emails = await emailResponse.json();
-        console.log(
-          'Emails data received:',
-          Array.isArray(emails) ? `${emails.length} emails` : 'Not an array',
-        );
-
-        // Check if emails is an array before using find
-        if (Array.isArray(emails)) {
-          const primaryEmail =
-            emails.find((email: any) => email.primary && email.verified)
-              ?.email || userData.email;
-          console.log('Primary email found:', primaryEmail);
-          return {
-            ...userData,
-            email: primaryEmail,
-          };
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to fetch user emails, using default email:', error);
-    }
-
-    // Fallback to user data email if email fetch fails
-    return {
-      ...userData,
-      email: userData.email || '',
-    };
-  };
 
   const value = useMemo(
     () => ({

@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { Gist, GistFile } from '@scratch/shared';
+import { Gist, GistFile, GitHubUser } from '@scratch/shared';
 
 class GithubClient {
   private octokit: Octokit | null = null;
@@ -260,6 +260,17 @@ class GithubClient {
       };
     } catch (error) {
       console.error('Error fetching rate limit status:', error);
+      throw error;
+    }
+  }
+
+  async getUserProfile(): Promise<GitHubUser> {
+    try {
+      const client = await this.ensureClient();
+      const response = await client.rest.users.getAuthenticated();
+      return response.data as GitHubUser;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
       throw error;
     }
   }

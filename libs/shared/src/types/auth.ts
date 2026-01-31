@@ -77,9 +77,8 @@ export interface Note {
 
 // Auth context interfaces
 export interface AuthState {
-  user: GitHubUser | null;
   token: string | null;
-   isLoading: boolean;
+  isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
 }
