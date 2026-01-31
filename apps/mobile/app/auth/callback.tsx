@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -44,6 +44,7 @@ export default function AuthCallback() {
           if (storedCodeVerifier) {
             await AsyncStorage.removeItem('pkce_code_verifier');
           }
+          await AsyncStorage.removeItem('oauth_redirect_uri');
 
           console.log('Auth completed successfully');
           if (isMounted.current) {

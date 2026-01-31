@@ -118,10 +118,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // GitHub OAuth configuration
       const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-      const baseUrl =
-        import.meta.env.VITE_NETLIFY_FUNCTIONS_URL ||
-        globalThis.location.origin;
-      const redirectUri = `${baseUrl}/callback`;
+      const redirectUri = `${globalThis.location.origin}/callback`;
 
       if (!clientId) {
         throw new Error('GitHub Client ID not configured');

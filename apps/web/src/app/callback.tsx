@@ -34,9 +34,11 @@ export function Callback() {
         }
 
         // Exchange code for token using our Netlify function
-        const functionUrl = import.meta.env.VITE_NETLIFY_FUNCTIONS_URL
-          ? `${import.meta.env.VITE_NETLIFY_FUNCTIONS_URL}/.netlify/functions/github-token`
-          : '/.netlify/functions/github-token';
+        const functionBaseUrl =
+          import.meta.env.VITE_NETLIFY_FUNCTIONS_URL ||
+          globalThis.location.origin;
+        const functionUrl = `${functionBaseUrl}/.netlify/functions/github-token`;
+        const redirectUri = `${globalThis.location.origin}/callback`;
 
         const tokenResponse = await fetch(functionUrl, {
           method: 'POST',
@@ -45,9 +47,7 @@ export function Callback() {
           },
           body: JSON.stringify({
             code,
-            redirect_uri: import.meta.env.VITE_NETLIFY_FUNCTIONS_URL
-              ? `${import.meta.env.VITE_NETLIFY_FUNCTIONS_URL}/callback`
-              : `${globalThis.location.origin}/callback`,
+            redirect_uri: redirectUri,
           }),
         });
 
@@ -84,6 +84,27 @@ export function Callback() {
         setUser(userData);
 
         setStatus('success');
+
+        // Check if this is a mobile redirect request
+        const callbackUrlParams = new URLSearchParams(
+          globalThis.location.search,
+        );
+        const stateParam = callbackUrlParams.get('state');
+
+        if (stateParam) {
+          try {
+            const stateData = JSON.parse(decodeURIComponent(stateParam));
+            if (stateData.mobile_redirect) {
+              // Redirect back to mobile app with the token
+              setTimeout(() => {
+                globalThis.location.href = stateData.mobile_redirect;
+              }, 1500);
+              return;
+            }
+          } catch (e) {
+            console.error('Not a mobile redirect, continuing with web flow', e);
+          }
+        }
 
         setTimeout(() => {
           navigate('/');

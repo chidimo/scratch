@@ -97,17 +97,22 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.EXPO_PUBLIC_GITHUB_CLIENT_SECRET;
-const GITHUB_OAUTH_PROXY_URL = process.env.EXPO_PUBLIC_GITHUB_OAUTH_PROXY_URL;
+const NETLIFY_FUNCTIONS_BASE_URL =
+  process.env.EXPO_PUBLIC_NETLIFY_FUNCTIONS_URL;
+const AUTH_USE_PROXY =
+  process.env.EXPO_PUBLIC_AUTH_USE_PROXY?.toLowerCase() !== 'false';
+const AUTH_SCHEME = process.env.EXPO_PUBLIC_AUTH_SCHEME || 'scratch';
 
 console.log(
   'Environment check - Client ID:',
   GITHUB_CLIENT_ID ? 'Set' : 'Not set',
 );
 console.log(
-  'Environment check - Client Secret:',
-  GITHUB_CLIENT_SECRET ? 'Set' : 'Not set',
+  'Environment check - Netlify Functions URL:',
+  NETLIFY_FUNCTIONS_BASE_URL ? 'Set' : 'Not set',
 );
+console.log('Environment check - Auth proxy:', AUTH_USE_PROXY ? 'On' : 'Off');
+console.log('Environment check - Auth scheme:', AUTH_SCHEME);
 
 const discovery = {
   authorizationEndpoint: 'https://github.com/login/oauth/authorize',
@@ -128,6 +133,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     loadStoredAuth();
+  }, []);
+
+  useEffect(() => {
+    const redirectUri = AuthSession.makeRedirectUri({
+      scheme: AUTH_SCHEME,
+      path: 'auth/callback',
+      preferLocalhost: true,
+      useProxy: AUTH_USE_PROXY,
+    });
+    console.log('Auth redirect URI:', redirectUri);
   }, []);
 
   const loadStoredAuth = async () => {
@@ -166,9 +181,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       try {
-        const tokenResponse = codeVerifier
-          ? await exchangeCodeForToken(code, codeVerifier)
-          : await exchangeCodeForTokenWeb(code);
+        const storedRedirectUri =
+          await AsyncStorage.getItem('oauth_redirect_uri');
+        const redirectUri =
+          storedRedirectUri ||
+          AuthSession.makeRedirectUri({
+            scheme: AUTH_SCHEME,
+            path: 'auth/callback',
+            useProxy: AUTH_USE_PROXY,
+          });
+        const tokenResponse = await exchangeCodeForToken(
+          code,
+          redirectUri,
+          codeVerifier,
+        );
 
         if (tokenResponse.access_token) {
           console.log('Got access token, fetching user profile...');
@@ -208,25 +234,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Starting sign-in process...');
 
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'scratch',
+      // Create a mobile deep link that will redirect to web and back
+      const mobileRedirectUri = AuthSession.makeRedirectUri({
+        scheme: AUTH_SCHEME,
         path: 'auth/callback',
         preferLocalhost: true,
       });
 
-      console.log('Generated redirect URI:', { redirectUri });
+      // Use the web callback URL for GitHub OAuth to match Netlify function
+      // But include mobile redirect as state parameter
+      const webRedirectUri = `${NETLIFY_FUNCTIONS_BASE_URL}/callback`;
+      const state = encodeURIComponent(
+        JSON.stringify({
+          mobile_redirect: mobileRedirectUri,
+        }),
+      );
+
+      console.log('Mobile redirect URI:', { mobileRedirectUri });
+      console.log('Web redirect URI:', { webRedirectUri });
       console.log('Client ID:', GITHUB_CLIENT_ID);
 
       // Use the standard OAuth flow with AuthSession
       const request = new AuthSession.AuthRequest({
         clientId: GITHUB_CLIENT_ID!,
-        scopes: ['gist', 'user:email'],
-        redirectUri,
+        scopes: ['gist', 'read:user'],
+        redirectUri: webRedirectUri,
+        state,
+        responseType: AuthSession.ResponseType.Code,
         usePKCE: true,
       });
 
       console.log('AuthRequest created with PKCE enabled');
 
+      await AsyncStorage.setItem('oauth_redirect_uri', webRedirectUri);
       if (request.codeVerifier) {
         await AsyncStorage.setItem('pkce_code_verifier', request.codeVerifier);
       }
@@ -303,14 +343,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [authState.token]);
 
-  const exchangeCodeForToken = async (code: string, codeVerifier: string) => {
+  const exchangeCodeForToken = async (
+    code: string,
+    redirectUri: string,
+    codeVerifier?: string | null,
+  ) => {
     console.log('Exchanging code for token...', {
       code: code.substring(0, 10) + '...',
       codeVerifier: codeVerifier ? 'Present' : 'Missing',
     });
 
+    if (!NETLIFY_FUNCTIONS_BASE_URL) {
+      throw new Error(
+        'Missing EXPO_PUBLIC_NETLIFY_FUNCTIONS_URL for token exchange.',
+      );
+    }
+
     const response = await fetch(
-      'https://github.com/login/oauth/access_token',
+      `${NETLIFY_FUNCTIONS_BASE_URL}/.netlify/functions/github-token`,
       {
         method: 'POST',
         headers: {
@@ -318,9 +368,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          client_id: GITHUB_CLIENT_ID,
-          client_secret: GITHUB_CLIENT_SECRET,
           code,
+          redirect_uri: redirectUri,
           code_verifier: codeVerifier,
         }),
       },
@@ -336,43 +385,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const result = await response.json();
     console.log('Token exchange result:', result);
-    return result;
-  };
-
-  const exchangeCodeForTokenWeb = async (code: string) => {
-    console.log('Exchanging code for token (web, no PKCE)...', {
-      code: code.substring(0, 10) + '...',
-    });
-
-    if (!GITHUB_OAUTH_PROXY_URL) {
-      throw new Error(
-        'Missing EXPO_PUBLIC_GITHUB_OAUTH_PROXY_URL. Web token exchange must go through your own backend to avoid CORS.',
-      );
-    }
-
-    const response = await fetch(GITHUB_OAUTH_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: GITHUB_CLIENT_ID,
-        client_secret: GITHUB_CLIENT_SECRET,
-        code,
-      }),
-    });
-
-    console.log('Web token exchange response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Web token exchange failed:', errorText);
-      throw new Error(`Failed to exchange code for token: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Web token exchange result:', result);
     return result;
   };
 

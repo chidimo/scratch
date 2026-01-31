@@ -3,6 +3,7 @@ import { Handler } from '@netlify/functions';
 interface TokenRequest {
   code: string;
   redirect_uri: string;
+  code_verifier?: string;
 }
 
 interface TokenResponse {
@@ -57,10 +58,13 @@ const handler: Handler = async (event) => {
       throw new Error('Request body is required');
     }
 
-    const { code, redirect_uri }: TokenRequest = JSON.parse(event.body);
+    const { code, redirect_uri, code_verifier }: TokenRequest = JSON.parse(
+      event.body,
+    );
     console.log('📋 Parsed request body:', {
       code: code ? `${code.substring(0, 10)}...` : 'null',
       redirect_uri,
+      code_verifier: code_verifier ? '***PRESENT***' : 'null',
     });
 
     if (!code) {
@@ -105,6 +109,7 @@ const handler: Handler = async (event) => {
           client_secret: clientSecret,
           code: code,
           redirect_uri: redirect_uri,
+          ...(code_verifier ? { code_verifier } : {}),
         }),
       },
     );
