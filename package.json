@@ -1,6 +1,9 @@
 {
   "name": "scratch",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "nx start mobile",
     "start:web": "nx dev web",

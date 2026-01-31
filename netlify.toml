@@ -4,7 +4,7 @@
   publish = "apps/web/dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "22"
 
 [dev]
   command = "yarn web:dev"
