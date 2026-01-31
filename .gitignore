@@ -43,3 +43,8 @@ app-example
 /android
 
 .env
+
+
+.nx/cache
+.nx/workspace-data
+vite.config.*.timestamp*
