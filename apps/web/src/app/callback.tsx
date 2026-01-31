@@ -91,19 +91,14 @@ export function Callback() {
         );
         const stateParam = callbackUrlParams.get('state');
 
-        if (stateParam) {
-          try {
-            const stateData = JSON.parse(decodeURIComponent(stateParam));
-            if (stateData.mobile_redirect) {
-              // Redirect back to mobile app with the token
-              setTimeout(() => {
-                globalThis.location.href = stateData.mobile_redirect;
-              }, 1500);
-              return;
-            }
-          } catch (e) {
-            console.error('Not a mobile redirect, continuing with web flow', e);
-          }
+        if (stateParam?.startsWith('mobile_')) {
+          // This is a mobile request, redirect back to mobile app
+          // The mobile app will handle the token from AsyncStorage
+          const mobileRedirectUri = `scratch://auth/callback?success=true`;
+          setTimeout(() => {
+            globalThis.location.href = mobileRedirectUri;
+          }, 1500);
+          return;
         }
 
         setTimeout(() => {

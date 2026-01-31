@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 // GitHub User interface - matches GitHub API response
 export interface GitHubUser {
   login: string;

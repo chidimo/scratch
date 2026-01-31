@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
@@ -30,21 +29,10 @@ export default function AuthCallback() {
         }
 
         if (params.code) {
-          console.log('Looking for code verifier in AsyncStorage...');
-          const storedCodeVerifier =
-            await AsyncStorage.getItem('pkce_code_verifier');
-
-          console.log(
-            'Stored code verifier:',
-            storedCodeVerifier ? 'Found' : 'Not found',
-          );
-
-          await completeAuth(params.code as string, storedCodeVerifier);
-
-          if (storedCodeVerifier) {
-            await AsyncStorage.removeItem('pkce_code_verifier');
+          console.log('Processing OAuth callback with code...');
+          if (completeAuth) {
+            await completeAuth(params.code as string);
           }
-          await AsyncStorage.removeItem('oauth_redirect_uri');
 
           console.log('Auth completed successfully');
           if (isMounted.current) {

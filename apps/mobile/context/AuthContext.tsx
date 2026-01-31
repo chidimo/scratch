@@ -1,8 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as AuthSession from 'expo-auth-session';
+import {
+  AuthContextType,
+  AuthProviderProps,
+  AuthState,
+  GitHubUser,
+} from '@scratch/shared';
+import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
-  ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -10,92 +16,14 @@ import {
   useState,
 } from 'react';
 
-// GitHub User interface - matches GitHub API response
-interface GitHubUser {
-  login: string;
-  id: number;
-  node_id: string;
-  avatar_url: string;
-  gravatar_id: string;
-  url: string;
-  html_url: string;
-  followers_url: string;
-  following_url: string;
-  gists_url: string;
-  starred_url: string;
-  subscriptions_url: string;
-  organizations_url: string;
-  repos_url: string;
-  events_url: string;
-  received_events_url: string;
-  type: string;
-  user_view_type: string;
-  site_admin: boolean;
-  name: string;
-  company: string;
-  blog: string;
-  location: string;
-  email: string;
-  hireable: boolean;
-  bio: string;
-  twitter_username: string | null;
-  notification_email: string;
-  public_repos: number;
-  public_gists: number;
-  followers: number;
-  following: number;
-  created_at: string;
-  updated_at: string;
-}
+// GitHub OAuth discovery endpoints
+const discovery = {
+  authorizationEndpoint: 'https://github.com/login/oauth/authorize',
+  tokenEndpoint: 'https://github.com/login/oauth/access_token',
+  revocationEndpoint: 'https://github.com/settings/connections/applications/',
+};
 
-// Gist interfaces - matches GitHub API response
-interface Gist {
-  id: string;
-  description: string | null;
-  public: boolean;
-  created_at: string;
-  updated_at: string;
-  files: Record<
-    string,
-    {
-      filename: string;
-      type: string;
-      language: string | null;
-      raw_url: string;
-      size: number;
-    }
-  >;
-  owner: {
-    login: string;
-    id: number;
-    avatar_url: string;
-  };
-  html_url: string;
-}
-
-// Auth context interfaces
-interface AuthState {
-  user: GitHubUser | null;
-  token: string | null;
-  gists: Gist[];
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  error: string | null;
-}
-
-interface AuthContextType extends AuthState {
-  signIn: () => Promise<void>;
-  signOut: () => Promise<void>;
-  fetchGists: () => Promise<void>;
-  completeAuth: (code: string, codeVerifier?: string | null) => Promise<void>;
-}
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
+// Environment variables
 const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
 const NETLIFY_FUNCTIONS_BASE_URL =
   process.env.EXPO_PUBLIC_NETLIFY_FUNCTIONS_URL;
@@ -114,14 +42,9 @@ console.log(
 console.log('Environment check - Auth proxy:', AUTH_USE_PROXY ? 'On' : 'Off');
 console.log('Environment check - Auth scheme:', AUTH_SCHEME);
 
-const discovery = {
-  authorizationEndpoint: 'https://github.com/login/oauth/authorize',
-  tokenEndpoint: 'https://github.com/login/oauth/access_token',
-  revocationEndpoint:
-    'https://github.com/settings/connections/applications/' + GITHUB_CLIENT_ID,
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     token: null,
@@ -131,18 +54,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     error: null,
   });
 
+  // Track if auth is in progress to prevent duplicate calls
+  const [isAuthInProgress, setIsAuthInProgress] = useState(false);
+
+  // Use Expo's useAuthRequest hook
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId: GITHUB_CLIENT_ID!,
+      scopes: ['gist', 'read:user'],
+      redirectUri: makeRedirectUri({
+        scheme: AUTH_SCHEME,
+        path: 'auth/callback',
+      }),
+    },
+    discovery,
+  );
+
+  // Log the redirect URI for debugging
   useEffect(() => {
-    loadStoredAuth();
-  }, []);
+    if (request) {
+      console.log(JSON.stringify(request, null, 2));
+      console.log('OAuth Request redirect URI:', request.redirectUri);
+    }
+  }, [request]);
 
   useEffect(() => {
-    const redirectUri = AuthSession.makeRedirectUri({
-      scheme: AUTH_SCHEME,
-      path: 'auth/callback',
-      preferLocalhost: true,
-      useProxy: AUTH_USE_PROXY,
-    });
-    console.log('Auth redirect URI:', redirectUri);
+    loadStoredAuth();
   }, []);
 
   const loadStoredAuth = async () => {
@@ -161,7 +98,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           error: null,
         });
       } else {
-        setAuthState((prev) => ({ ...prev, isLoading: false }));
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: 'No stored authentication found',
+        }));
       }
     } catch (error) {
       console.error('Error loading stored auth:', error);
@@ -173,115 +114,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const completeAuth = useCallback(
-    async (code: string, codeVerifier?: string | null) => {
-      console.log('completeAuth called with:', {
-        code: code.substring(0, 10) + '...',
-        codeVerifier: codeVerifier ? 'Present' : 'Missing',
-      });
+  useEffect(() => {
+    // Handle auth response
+    if (response?.type === 'success') {
+      const { code } = response.params;
+      console.log('Got authorization code:', code.substring(0, 10) + '...');
+      completeAuth(code);
+    } else if (response?.type === 'error') {
+      console.error('Auth error:', response.error);
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: `Authentication error: ${response.error}`,
+      }));
+    }
+  }, [response]);
 
-      try {
-        const storedRedirectUri =
-          await AsyncStorage.getItem('oauth_redirect_uri');
-        const redirectUri =
-          storedRedirectUri ||
-          AuthSession.makeRedirectUri({
-            scheme: AUTH_SCHEME,
-            path: 'auth/callback',
-            useProxy: AUTH_USE_PROXY,
-          });
-        const tokenResponse = await exchangeCodeForToken(
-          code,
-          redirectUri,
-          codeVerifier,
-        );
-
-        if (tokenResponse.access_token) {
-          console.log('Got access token, fetching user profile...');
-          const user = await fetchUserProfile(tokenResponse.access_token);
-
-          await AsyncStorage.setItem(
-            'github_token',
-            tokenResponse.access_token,
-          );
-          await AsyncStorage.setItem('github_user', JSON.stringify(user));
-
-          console.log('Setting auth state to authenticated');
-          setAuthState({
-            user,
-            token: tokenResponse.access_token,
-            gists: [],
-            isLoading: false,
-            isAuthenticated: true,
-            error: null,
-          });
-        } else {
-          console.error('No access token in response:', tokenResponse);
-          setAuthState((prev) => ({
-            ...prev,
-            error: 'Failed to get access token',
-          }));
-        }
-      } catch (error) {
-        console.error('Error completing auth:', error);
-        throw error;
-      }
-    },
-    [],
-  );
+  useEffect(() => {
+    // Complete auth session when app starts
+    WebBrowser.maybeCompleteAuthSession();
+  }, []);
 
   const signIn = useCallback(async () => {
     try {
       console.log('Starting sign-in process...');
-
-      // Create a mobile deep link that will redirect to web and back
-      const mobileRedirectUri = AuthSession.makeRedirectUri({
-        scheme: AUTH_SCHEME,
-        path: 'auth/callback',
-        preferLocalhost: true,
-      });
-
-      // Use the web callback URL for GitHub OAuth to match Netlify function
-      // But include mobile redirect as state parameter
-      const webRedirectUri = `${NETLIFY_FUNCTIONS_BASE_URL}/callback`;
-      const state = encodeURIComponent(
-        JSON.stringify({
-          mobile_redirect: mobileRedirectUri,
-        }),
-      );
-
-      console.log('Mobile redirect URI:', { mobileRedirectUri });
-      console.log('Web redirect URI:', { webRedirectUri });
-      console.log('Client ID:', GITHUB_CLIENT_ID);
-
-      // Use the standard OAuth flow with AuthSession
-      const request = new AuthSession.AuthRequest({
-        clientId: GITHUB_CLIENT_ID!,
-        scopes: ['gist', 'read:user'],
-        redirectUri: webRedirectUri,
-        state,
-        responseType: AuthSession.ResponseType.Code,
-        usePKCE: true,
-      });
-
-      console.log('AuthRequest created with PKCE enabled');
-
-      await AsyncStorage.setItem('oauth_redirect_uri', webRedirectUri);
-      if (request.codeVerifier) {
-        await AsyncStorage.setItem('pkce_code_verifier', request.codeVerifier);
-      }
-
-      const result = await request.promptAsync(discovery);
-      console.log('OAuth result:', result.type);
-
-      if (result.type === 'success') {
-        console.log('Got authorization code, waiting for callback route');
-      }
+      await promptAsync();
     } catch (error) {
       console.error('Error during sign in:', error);
-      throw error;
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Authentication failed',
+      }));
     }
-  }, []);
+  }, [promptAsync]);
 
   const signOut = useCallback(async () => {
     try {
@@ -343,52 +209,140 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [authState.token]);
 
-  const exchangeCodeForToken = async (
-    code: string,
-    redirectUri: string,
-    codeVerifier?: string | null,
-  ) => {
-    console.log('Exchanging code for token...', {
-      code: code.substring(0, 10) + '...',
-      codeVerifier: codeVerifier ? 'Present' : 'Missing',
-    });
+  const completeAuth = useCallback(
+    async (code: string, codeVerifier?: string | null) => {
+      // Prevent duplicate auth calls
+      if (isAuthInProgress) {
+        console.log('Auth already in progress, skipping duplicate call');
+        return;
+      }
 
-    if (!NETLIFY_FUNCTIONS_BASE_URL) {
-      throw new Error(
-        'Missing EXPO_PUBLIC_NETLIFY_FUNCTIONS_URL for token exchange.',
-      );
-    }
+      setIsAuthInProgress(true);
 
-    const response = await fetch(
-      `${NETLIFY_FUNCTIONS_BASE_URL}/.netlify/functions/github-token`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      console.log('completeAuth called with:', {
+        code: code.substring(0, 10) + '...',
+        codeVerifier: codeVerifier
+          ? `${codeVerifier.length} chars`
+          : 'Not provided',
+        timestamp: new Date().toISOString(),
+      });
+
+      try {
+        // Use the exact redirect URI from the OAuth request
+        const actualRedirectUri =
+          request?.redirectUri ||
+          makeRedirectUri({
+            scheme: AUTH_SCHEME,
+            path: 'auth/callback',
+          });
+        const requestCodeVerifier = request?.codeVerifier;
+
+        console.log('Using redirect URI:', actualRedirectUri);
+        console.log(
+          'Using PKCE:',
+          requestCodeVerifier
+            ? `Yes (${requestCodeVerifier.length} chars)`
+            : 'No',
+        );
+        console.log('Request object:', {
+          hasCodeVerifier: !!requestCodeVerifier,
+          hasRedirectUri: !!actualRedirectUri,
+          clientId: GITHUB_CLIENT_ID?.substring(0, 10) + '...',
+        });
+
+        // Exchange code for token directly with GitHub (as per Expo docs)
+        const tokenUrl = 'https://github.com/login/oauth/access_token';
+
+        const requestBody: any = {
+          client_id: GITHUB_CLIENT_ID!,
+          client_secret: process.env.EXPO_PUBLIC_GITHUB_CLIENT_SECRET,
           code,
-          redirect_uri: redirectUri,
-          code_verifier: codeVerifier,
-        }),
-      },
-    );
+          redirect_uri: actualRedirectUri,
+        };
 
-    console.log('Token exchange response status:', response.status);
+        // Use code verifier from parameter first, then from request
+        const finalCodeVerifier = codeVerifier || requestCodeVerifier;
+        if (finalCodeVerifier) {
+          requestBody.code_verifier = finalCodeVerifier;
+        }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Token exchange failed:', errorText);
-      throw new Error(`Failed to exchange code for token: ${response.status}`);
-    }
+        console.log('Token exchange request body:', {
+          ...requestBody,
+          client_secret: requestBody.client_secret
+            ? '***PRESENT***'
+            : '***MISSING***',
+          code_verifier: requestBody.code_verifier
+            ? `${requestBody.code_verifier.length} chars`
+            : 'Not using PKCE',
+        });
 
-    const result = await response.json();
-    console.log('Token exchange result:', result);
-    return result;
-  };
+        const response = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        console.log('Token exchange response status:', response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Token exchange failed:', errorText);
+          throw new Error(
+            `Failed to exchange code for token: ${response.status} - ${errorText}`,
+          );
+        }
+
+        const tokenData = await response.json();
+        console.log('Token exchange result:', tokenData);
+
+        if (tokenData.access_token) {
+          console.log('Got access token, fetching user profile...');
+          const user = await fetchUserProfile(tokenData.access_token);
+
+          await AsyncStorage.setItem('github_token', tokenData.access_token);
+          await AsyncStorage.setItem('github_user', JSON.stringify(user));
+
+          console.log('Setting auth state to authenticated');
+          setAuthState({
+            user,
+            token: tokenData.access_token,
+            gists: [],
+            isLoading: false,
+            isAuthenticated: true,
+            error: null,
+          });
+        } else {
+          console.error('No access token in response:', tokenData);
+          setAuthState((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: 'Failed to get access token',
+          }));
+        }
+      } catch (error) {
+        console.error('Error completing auth:', error);
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error:
+            error instanceof Error ? error.message : 'Authentication failed',
+        }));
+      } finally {
+        setIsAuthInProgress(false);
+      }
+    },
+    [request?.redirectUri, request?.codeVerifier, isAuthInProgress],
+  );
 
   const fetchUserProfile = async (token: string): Promise<GitHubUser> => {
+    console.log(
+      'Fetching user profile with token:',
+      token.substring(0, 10) + '...',
+    );
+
     const response = await fetch('https://api.github.com/user', {
       headers: {
         Authorization: `token ${token}`,
@@ -396,27 +350,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
+    console.log('User profile response status:', response.status);
+
     if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
+      const errorText = await response.text();
+      console.error('Failed to fetch user profile:', errorText);
+      throw new Error(
+        `Failed to fetch user profile: ${response.status} - ${errorText}`,
+      );
     }
 
     const userData = await response.json();
-
-    const emailResponse = await fetch('https://api.github.com/user/emails', {
-      headers: {
-        Authorization: `token ${token}`,
-        'User-Agent': 'ScratchApp',
-      },
+    console.log('User data received:', {
+      login: userData.login,
+      id: userData.id,
+      email: userData.email,
     });
 
-    const emails = await emailResponse.json();
-    const primaryEmail =
-      emails.find((email: any) => email.primary && email.verified)?.email ||
-      userData.email;
+    try {
+      const emailResponse = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `token ${token}`,
+          'User-Agent': 'ScratchApp',
+        },
+      });
 
+      console.log('Emails response status:', emailResponse.status);
+
+      if (emailResponse.ok) {
+        const emails = await emailResponse.json();
+        console.log(
+          'Emails data received:',
+          Array.isArray(emails) ? `${emails.length} emails` : 'Not an array',
+        );
+
+        // Check if emails is an array before using find
+        if (Array.isArray(emails)) {
+          const primaryEmail =
+            emails.find((email: any) => email.primary && email.verified)
+              ?.email || userData.email;
+          console.log('Primary email found:', primaryEmail);
+          return {
+            ...userData,
+            email: primaryEmail,
+          };
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch user emails, using default email:', error);
+    }
+
+    // Fallback to user data email if email fetch fails
     return {
       ...userData,
-      email: primaryEmail,
+      email: userData.email || '',
     };
   };
 
@@ -434,10 +421,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
+
+export default AuthProvider;
