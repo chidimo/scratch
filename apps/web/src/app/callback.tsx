@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export function Callback() {
   const navigate = useNavigate();
+  const { setUser, setToken } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
     'loading',
   );
@@ -61,6 +63,7 @@ export function Callback() {
 
         // Store token securely
         sessionStorage.setItem('github_token', tokenData.access_token);
+        setToken(tokenData.access_token);
 
         // Get user information
         const userResponse = await fetch('https://api.github.com/user', {
@@ -75,8 +78,10 @@ export function Callback() {
 
         const userData = await userResponse.json();
 
-        // Store user data and redirect to main app
+        // Store user data and update context
         sessionStorage.setItem('github_user', JSON.stringify(userData));
+        setUser(userData);
+
         setStatus('success');
 
         setTimeout(() => {
@@ -89,7 +94,7 @@ export function Callback() {
     };
 
     handleCallback();
-  }, [navigate]);
+  }, [navigate, setUser, setToken]);
 
   return (
     <div className="callback">
@@ -106,7 +111,7 @@ export function Callback() {
           <>
             <div className="success-icon">✓</div>
             <h2>Success!</h2>
-            <p>You're now signed in. Redirecting to the app...</p>
+            <p>You're now signed in. Redirecting to your gists...</p>
           </>
         )}
 
