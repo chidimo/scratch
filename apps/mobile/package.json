@@ -1,16 +1,18 @@
 {
-  "name": "scratch",
+  "name": "mobile",
   "version": "1.0.0",
+  "main": "expo-router/entry",
+  "private": true,
   "scripts": {
-    "start": "nx start mobile",
+    "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "nx android mobile",
-    "ios": "nx ios mobile",
-    "web": "nx web mobile",
-    "lint": "nx lint mobile",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint",
     "prebuild": "npx expo prebuild",
-    "build:dev": "nx build:dev mobile",
-    "build:prod": "nx build:prod mobile",
+    "build:dev": "npx eas-cli@latest workflow:run create-development-builds.yml",
+    "build:prod": "npx eas-cli@latest workflow:run create-production-builds.yml",
     "build:android": "eas build --profile development --platform android",
     "build:android:production": "eas build --profile production --platform android",
     "submit:android": "eas submit --platform android --profile production",
@@ -28,7 +30,7 @@
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.31",
     "expo-auth-session": "^7.0.10",
-    "expo-checkbox": "^5.0.8",
+    "expo-checkbox": "~5.0.8",
     "expo-constants": "~18.0.13",
     "expo-crypto": "^15.0.8",
     "expo-dev-client": "~6.0.20",
@@ -53,20 +55,9 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
-    "@nx/eslint": "^22.4.4",
-    "@nx/js": "^22.4.4",
-    "@nx/workspace": "^22.4.4",
-    "@swc-node/register": "~1.9.1",
-    "@swc/core": "~1.5.7",
-    "@swc/helpers": "~0.5.11",
-    "@types/node": "20.19.9",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "nx": "22.4.4",
-    "prettier": "~3.6.2",
     "typescript": "~5.9.2"
-  },
-  "private": true,
-  "nx": {}
+  }
 }
