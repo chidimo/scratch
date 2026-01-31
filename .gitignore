@@ -41,3 +41,10 @@ app-example
 # generated native folders
 /ios
 /android
+
+.env
+
+
+.nx/cache
+.nx/workspace-data
+vite.config.*.timestamp*
