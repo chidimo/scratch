@@ -1,10 +1,16 @@
 [build]
   base = "."
-  command = "cd apps/web && npm run build"
+  command = "cd apps/web && yarn build"
   publish = "apps/web/dist"
 
 [build.environment]
   NODE_VERSION = "18"
+
+[dev]
+  command = "yarn web:dev"
+  targetPort = 5173
+  port = 8888
+  autoLaunch = false
 
 [[redirects]]
   from = "/callback"
@@ -12,7 +18,7 @@
   status = 200
 
 [[redirects]]
-  from "/*"
+  from = "/*"
   to = "/apps/web/index.html"
   status = 200
 

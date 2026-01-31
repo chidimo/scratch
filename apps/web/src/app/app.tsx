@@ -42,7 +42,10 @@ export function App() {
 
       // GitHub OAuth configuration
       const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-      const redirectUri = `${globalThis.location.origin}/callback`;
+      const baseUrl =
+        import.meta.env.VITE_NETLIFY_FUNCTIONS_URL ||
+        globalThis.location.origin;
+      const redirectUri = `${baseUrl}/callback`;
 
       if (!clientId) {
         throw new Error('GitHub Client ID not configured');
