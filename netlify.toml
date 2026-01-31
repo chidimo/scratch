@@ -14,6 +14,11 @@
 
 [[redirects]]
   from = "/callback"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/.netlify/functions/github-token"
   to = "/.netlify/functions/github-token"
   status = 200
 

@@ -21,7 +21,21 @@ const handler: Handler = async (event) => {
   console.log('📥 Request method:', event.httpMethod);
   console.log('📥 Request headers:', event.headers);
 
-  // Only allow POST requests
+  // Handle CORS preflight request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json',
+      },
+      body: '',
+    };
+  }
+
+  // Only allow POST requests for token exchange
   if (event.httpMethod !== 'POST') {
     console.log('❌ Method not allowed:', event.httpMethod);
     return {
@@ -29,7 +43,7 @@ const handler: Handler = async (event) => {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
       body: JSON.stringify({ error: 'Method not allowed' }),
