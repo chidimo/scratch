@@ -1,6 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
-import '../styles.css';
 import Callback from './callback';
 import Gists from './gists';
 

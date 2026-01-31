@@ -1,11 +1,6 @@
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
+// GitHub User interface - matches GitHub API response
 interface GitHubUser {
   login: string;
   id: number;
@@ -43,6 +38,7 @@ interface GitHubUser {
   updated_at: string;
 }
 
+// Gist interfaces - matches GitHub API response
 interface Gist {
   id: string;
   description: string | null;
@@ -67,6 +63,7 @@ interface Gist {
   html_url: string;
 }
 
+// Auth context interfaces
 interface AuthContextType {
   user: GitHubUser | null;
   token: string | null;
@@ -80,11 +77,11 @@ interface AuthContextType {
   setToken: (token: string | null) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<GitHubUser | null>(null);

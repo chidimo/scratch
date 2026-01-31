@@ -1,7 +1,8 @@
-import { Octokit } from "@octokit/rest";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
+import { Octokit } from '@octokit/rest';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 
+// Note interface for mobile app
 export interface Note {
   id: string;
   title: string;
@@ -10,7 +11,7 @@ export interface Note {
   updated_at: string;
   tags: string[];
   gist_id?: string;
-  sync_status: "synced" | "pending" | "error";
+  sync_status: 'synced' | 'pending' | 'error';
 }
 
 export interface GistFile {
@@ -39,11 +40,11 @@ class GithubClient {
     }
 
     try {
-      const token = await AsyncStorage.getItem("github_token");
+      const token = await AsyncStorage.getItem('github_token');
       if (token) {
         this.octokit = new Octokit({
           auth: token,
-          userAgent: "ScratchApp/1.0.0",
+          userAgent: 'ScratchApp/1.0.0',
           throttle: {
             onRateLimit: (retryAfter: number, options: any) => {
               this.handleRateLimit(retryAfter, options);
@@ -58,7 +59,7 @@ class GithubClient {
       }
       this.initialized = true;
     } catch (error) {
-      console.error("Error initializing GitHub client:", error);
+      console.error('Error initializing GitHub client:', error);
       this.initialized = true; // Mark as initialized even on error to avoid retry loops
     }
   }
@@ -92,7 +93,7 @@ class GithubClient {
       const netInfo = await NetInfo.fetch();
       return netInfo.isConnected ?? false;
     } catch (error) {
-      console.error("Error checking connectivity:", error);
+      console.error('Error checking connectivity:', error);
       return false;
     }
   }
@@ -104,7 +105,7 @@ class GithubClient {
 
     if (!this.octokit) {
       throw new Error(
-        "GitHub client not initialized. Please authenticate first.",
+        'GitHub client not initialized. Please authenticate first.',
       );
     }
 
@@ -117,7 +118,7 @@ class GithubClient {
 
     const isConnected = await this.checkConnectivity();
     if (!isConnected) {
-      throw new Error("No internet connection available.");
+      throw new Error('No internet connection available.');
     }
 
     return this.octokit;
@@ -132,7 +133,7 @@ class GithubClient {
 
       return response.data.map((gist) => ({
         id: gist.id,
-        description: gist.description || "",
+        description: gist.description || '',
         public: gist.public ?? false,
         created_at: gist.created_at,
         updated_at: gist.updated_at,
@@ -140,8 +141,8 @@ class GithubClient {
           (acc, filename) => {
             const file = gist.files![filename];
             acc[filename] = {
-              filename: file?.filename ?? "",
-              content: file?.content ?? "",
+              filename: file?.filename ?? '',
+              content: file?.content ?? '',
             };
             return acc;
           },
@@ -149,7 +150,7 @@ class GithubClient {
         ),
       }));
     } catch (error) {
-      console.error("Error fetching user gists:", error);
+      console.error('Error fetching user gists:', error);
       throw error;
     }
   }
@@ -176,16 +177,16 @@ class GithubClient {
       const gist = response.data;
       return {
         id: gist.id!,
-        description: gist.description || "",
+        description: gist.description || '',
         public: gist.public ?? false,
-        created_at: gist.created_at ?? "",
-        updated_at: gist.updated_at ?? "",
+        created_at: gist.created_at ?? '',
+        updated_at: gist.updated_at ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
             acc[filename] = {
-              filename: file?.filename ?? "",
-              content: file?.content ?? "",
+              filename: file?.filename ?? '',
+              content: file?.content ?? '',
             };
             return acc;
           },
@@ -193,7 +194,7 @@ class GithubClient {
         ),
       };
     } catch (error) {
-      console.error("Error creating gist:", error);
+      console.error('Error creating gist:', error);
       throw error;
     }
   }
@@ -220,16 +221,16 @@ class GithubClient {
       const gist = response.data;
       return {
         id: gist.id!,
-        description: gist.description || "",
+        description: gist.description || '',
         public: gist.public ?? false,
-        created_at: gist.created_at ?? "",
-        updated_at: gist.updated_at ?? "",
+        created_at: gist.created_at ?? '',
+        updated_at: gist.updated_at ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
             acc[filename] = {
-              filename: file?.filename ?? "",
-              content: file?.content ?? "",
+              filename: file?.filename ?? '',
+              content: file?.content ?? '',
             };
             return acc;
           },
@@ -237,7 +238,7 @@ class GithubClient {
         ),
       };
     } catch (error) {
-      console.error("Error updating gist:", error);
+      console.error('Error updating gist:', error);
       throw error;
     }
   }
@@ -249,7 +250,7 @@ class GithubClient {
         gist_id: gistId,
       });
     } catch (error) {
-      console.error("Error deleting gist:", error);
+      console.error('Error deleting gist:', error);
       throw error;
     }
   }
@@ -264,16 +265,16 @@ class GithubClient {
       const gist = response.data;
       return {
         id: gist.id!,
-        description: gist.description || "",
+        description: gist.description || '',
         public: gist.public ?? false,
-        created_at: gist.created_at ?? "",
-        updated_at: gist.updated_at ?? "",
+        created_at: gist.created_at ?? '',
+        updated_at: gist.updated_at ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
             acc[filename] = {
-              filename: file?.filename ?? "",
-              content: file?.content ?? "",
+              filename: file?.filename ?? '',
+              content: file?.content ?? '',
             };
             return acc;
           },
@@ -281,7 +282,7 @@ class GithubClient {
         ),
       };
     } catch (error) {
-      console.error("Error fetching gist:", error);
+      console.error('Error fetching gist:', error);
       throw error;
     }
   }
@@ -300,7 +301,7 @@ class GithubClient {
         limit: response.data.resources.core.limit,
       };
     } catch (error) {
-      console.error("Error fetching rate limit status:", error);
+      console.error('Error fetching rate limit status:', error);
       throw error;
     }
   }
