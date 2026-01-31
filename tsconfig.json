@@ -1,12 +1,12 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "strict": true,
-    "paths": {
-      "@/*": ["./*"],
-      "@scratch/shared/utils": ["libs/shared/utils/src/index.ts"],
-      "@scratch/shared/types": ["libs/shared/types/src/index.ts"]
-    }
+    "strict": true
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "apps/mobile/expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "apps/mobile/expo-env.d.ts"
+  ]
 }

@@ -1,0 +1,21 @@
+[build]
+  base = "apps/web/"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/callback"
+  to = "/.netlify/functions/github-token"
+  status = 200
+
+[[redirects]]
+  from "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  directory = "../../netlify/functions"
+  node_bundler = "esbuild"
