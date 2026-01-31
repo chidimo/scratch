@@ -72,14 +72,14 @@ export interface Note {
   updated_at: string;
   tags: string[];
   gist_id?: string;
+  is_public?: boolean;
+  owner_login?: string;
   sync_status: 'synced' | 'pending' | 'error';
 }
 
 // Auth context interfaces
 export interface AuthState {
-  user: GitHubUser | null;
   token: string | null;
-  gists: Gist[];
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
@@ -90,7 +90,6 @@ export interface AuthContextType extends AuthState {
   logout?: () => void;
   signIn?: () => Promise<void>;
   signOut?: () => Promise<void>;
-  fetchGists: () => Promise<void>;
   completeAuth?: (code: string, codeVerifier?: string | null) => Promise<void>;
   setUser?: (user: GitHubUser | null) => void;
   setToken?: (token: string | null) => void;

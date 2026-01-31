@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { Gist, GistFile } from '@scratch/shared';
+import { Gist, GistFile, GitHubUser } from '@scratch/shared';
 
 class GithubClient {
   private octokit: Octokit | null = null;
@@ -106,24 +106,7 @@ class GithubClient {
         per_page: 100,
       });
 
-      return response.data.map((gist) => ({
-        id: gist.id,
-        description: gist.description || '',
-        public: gist.public ?? false,
-        created_at: gist.created_at,
-        updated_at: gist.updated_at,
-        files: Object.keys(gist.files || {}).reduce(
-          (acc, filename) => {
-            const file = gist.files![filename];
-            acc[filename] = {
-              filename: file?.filename ?? '',
-              content: file?.content ?? '',
-            };
-            return acc;
-          },
-          {} as { [filename: string]: GistFile },
-        ),
-      }));
+      return response.data;
     } catch (error) {
       console.error('Error fetching user gists:', error);
       throw error;
@@ -156,6 +139,12 @@ class GithubClient {
         public: gist.public ?? false,
         created_at: gist.created_at ?? '',
         updated_at: gist.updated_at ?? '',
+        owner: {
+          login: gist.owner?.login ?? '',
+          id: gist.owner?.id ?? 0,
+          avatar_url: gist.owner?.avatar_url ?? '',
+        },
+        html_url: gist.html_url ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
@@ -178,12 +167,14 @@ class GithubClient {
     gistId: string,
     description: string,
     files: { [filename: string]: string },
+    isPublic?: boolean,
   ): Promise<Gist> {
     try {
       const client = await this.ensureClient();
       const response = await client.rest.gists.update({
         gist_id: gistId,
         description,
+        public: isPublic,
         files: Object.keys(files).reduce(
           (acc, filename) => {
             acc[filename] = { content: files[filename] };
@@ -200,6 +191,12 @@ class GithubClient {
         public: gist.public ?? false,
         created_at: gist.created_at ?? '',
         updated_at: gist.updated_at ?? '',
+        owner: {
+          login: gist.owner?.login ?? '',
+          id: gist.owner?.id ?? 0,
+          avatar_url: gist.owner?.avatar_url ?? '',
+        },
+        html_url: gist.html_url ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
@@ -244,6 +241,12 @@ class GithubClient {
         public: gist.public ?? false,
         created_at: gist.created_at ?? '',
         updated_at: gist.updated_at ?? '',
+        owner: {
+          login: gist.owner?.login ?? '',
+          id: gist.owner?.id ?? 0,
+          avatar_url: gist.owner?.avatar_url ?? '',
+        },
+        html_url: gist.html_url ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
@@ -277,6 +280,17 @@ class GithubClient {
       };
     } catch (error) {
       console.error('Error fetching rate limit status:', error);
+      throw error;
+    }
+  }
+
+  async getUserProfile(): Promise<GitHubUser> {
+    try {
+      const client = await this.ensureClient();
+      const response = await client.rest.users.getAuthenticated();
+      return response.data as GitHubUser;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
       throw error;
     }
   }

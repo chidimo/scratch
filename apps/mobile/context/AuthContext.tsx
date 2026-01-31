@@ -1,6 +1,11 @@
+import {
+  GITHUB_ENDPOINT,
+  PUBLIC_AUTH_SCHEME,
+  TOKEN_STORAGE_KEY,
+  USER_STORAGE_KEY,
+} from '@/constants/app-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AuthContextType, AuthProviderProps } from '@scratch/shared';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AuthContextType, AuthProviderProps, AuthState } from '@scratch/shared';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import {
@@ -11,14 +16,12 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { useUserProfile } from '../hooks/use-user-profile';
-import { PUBLIC_AUTH_SCHEME } from '@/constants/app-constants';
 
 // GitHub OAuth discovery endpoints
 const discovery = {
-  authorizationEndpoint: 'https://github.com/login/oauth/authorize',
-  tokenEndpoint: 'https://github.com/login/oauth/access_token',
-  revocationEndpoint: `https://github.com/settings/connections/applications/${process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID}`,
+  tokenEndpoint: `${GITHUB_ENDPOINT}/login/oauth/access_token`,
+  authorizationEndpoint: `${GITHUB_ENDPOINT}/login/oauth/authorize`,
+  revocationEndpoint: `${GITHUB_ENDPOINT}/settings/connections/applications/`,
 };
 
 // Environment variables
@@ -36,13 +39,20 @@ console.log('Environment check - Auth scheme:', PUBLIC_AUTH_SCHEME);
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const queryClient = useQueryClient();
+  const [authState, setAuthState] = useState<AuthState>({
+    token: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null,
+  });
+
+  // Track if auth is in progress to prevent duplicate calls
   const [isAuthInProgress, setIsAuthInProgress] = useState(false);
 
   // Use Expo's useAuthRequest hook
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: GITHUB_CLIENT_ID || '',
+      clientId: GITHUB_CLIENT_ID!,
       scopes: ['gist', 'read:user'],
       redirectUri: makeRedirectUri({
         scheme: PUBLIC_AUTH_SCHEME,
@@ -52,116 +62,114 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     discovery,
   );
 
-  // Query for stored auth state (token only)
-  const { data: storedAuthData, isLoading: isAuthLoading } = useQuery({
-    queryKey: ['auth'],
-    queryFn: async () => {
-      try {
-        const token = await AsyncStorage.getItem('github_token');
-        const userStr = await AsyncStorage.getItem('github_user');
+  // Log the redirect URI for debugging
+  useEffect(() => {
+    if (request) {
+      console.log(JSON.stringify(request, null, 2));
+      console.log('OAuth Request redirect URI:', request.redirectUri);
+    }
+  }, [request]);
 
-        if (token && userStr) {
-          const user = JSON.parse(userStr);
+  useEffect(() => {
+    loadStoredAuth();
+  }, []);
 
-          return {
-            user,
-            token,
-            gists: [], // Gists will be managed by the use-gists hook
-            isLoading: false,
-            isAuthenticated: true,
-            error: null,
-          };
-        }
+  const loadStoredAuth = async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
 
-        return {
-          user: null,
-          token: null,
-          gists: [],
+      if (storedToken) {
+        setAuthState({
+          token: storedToken,
           isLoading: false,
-          isAuthenticated: false,
+          isAuthenticated: true,
           error: null,
-        };
-      } catch (error) {
-        console.error('Error loading stored auth:', error);
-        return {
-          user: null,
-          token: null,
-          gists: [],
+        });
+      } else {
+        setAuthState((prev) => ({
+          ...prev,
           isLoading: false,
-          isAuthenticated: false,
-          error: 'Failed to load authentication state',
-        };
+          error: 'No stored authentication found',
+        }));
       }
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+    } catch (error) {
+      console.error('Error loading stored auth:', error);
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to load stored authentication',
+      }));
+    }
+  };
 
-  // Query for user profile using the new hook
-  const {
-    data: userProfile,
-    isLoading: isProfileLoading,
-    error: profileError,
-  } = useUserProfile(storedAuthData?.token || null);
+  useEffect(() => {
+    // Handle auth response
+    if (response?.type === 'success') {
+      const { code } = response.params;
+      console.log('Got authorization code:', code.substring(0, 10) + '...');
+      completeAuth(code);
+    } else if (response?.type === 'error') {
+      console.error('Auth error:', response.error);
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: `Authentication error: ${response.error}`,
+      }));
+    }
+  }, [response]);
 
-  // Combine stored auth data with fresh user profile
-  const authData = useMemo(() => {
-    if (!storedAuthData) {
-      return {
-        user: null,
+  useEffect(() => {
+    // Complete auth session when app starts
+    WebBrowser.maybeCompleteAuthSession();
+  }, []);
+
+  const signIn = useCallback(async () => {
+    try {
+      console.log('Starting sign-in process...');
+      await promptAsync();
+    } catch (error) {
+      console.error('Error during sign in:', error);
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Authentication failed',
+      }));
+    }
+  }, [promptAsync]);
+
+  const signOut = useCallback(async () => {
+    try {
+      await AsyncStorage.multiRemove([TOKEN_STORAGE_KEY, USER_STORAGE_KEY]);
+      setAuthState({
         token: null,
-        gists: [],
-        isLoading: isAuthLoading,
+        isLoading: false,
         isAuthenticated: false,
         error: null,
-      };
+      });
+    } catch (error) {
+      console.error('Error during sign out:', error);
     }
+  }, []);
 
-    return {
-      ...storedAuthData,
-      user: userProfile || storedAuthData.user, // Use fresh profile if available, fallback to stored
-      isLoading: isAuthLoading || isProfileLoading,
-      error: profileError
-        ? profileError instanceof Error
-          ? profileError.message
-          : profileError
-        : storedAuthData.error,
-    };
-  }, [
-    storedAuthData,
-    userProfile,
-    isAuthLoading,
-    isProfileLoading,
-    profileError,
-  ]);
-
-  // Mutation for completing authentication
-  const completeAuthMutation = useMutation({
-    mutationFn: async ({
-      code,
-      codeVerifier,
-    }: {
-      code: string;
-      codeVerifier?: string | null;
-    }) => {
-      if (!GITHUB_CLIENT_ID) {
-        throw new Error('GitHub client ID is not configured');
-      }
-
+  const completeAuth = useCallback(
+    async (code: string, codeVerifier?: string | null) => {
+      // Prevent duplicate auth calls
       if (isAuthInProgress) {
-        throw new Error('Authentication is already in progress');
+        console.log('Auth already in progress, skipping duplicate call');
+        return;
       }
 
       setIsAuthInProgress(true);
 
-      try {
-        console.log('completeAuth called with:', {
-          code: code.substring(0, 10) + '...',
-          codeVerifier: codeVerifier
-            ? `${codeVerifier.length} chars`
-            : 'Not provided',
-          timestamp: new Date().toISOString(),
-        });
+      console.log('completeAuth called with:', {
+        code: code.substring(0, 10) + '...',
+        codeVerifier: codeVerifier
+          ? `${codeVerifier.length} chars`
+          : 'Not provided',
+        timestamp: new Date().toISOString(),
+      });
 
+      try {
         // Use the exact redirect URI from the OAuth request
         const actualRedirectUri =
           request?.redirectUri ||
@@ -172,213 +180,108 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const requestCodeVerifier = request?.codeVerifier;
 
         console.log('Using redirect URI:', actualRedirectUri);
-        console.log('Using PKCE:', requestCodeVerifier ? 'Yes' : 'No');
-
-        // Use code verifier from parameter first, then from request
-        const finalCodeVerifier = codeVerifier || request?.codeVerifier;
-
-        if (!finalCodeVerifier) {
-          throw new Error('No code verifier available');
-        }
-
-        console.log('Exchanging authorization code for token...');
-        console.log('Code:', code.substring(0, 10) + '...');
         console.log(
-          'Code verifier:',
-          finalCodeVerifier.substring(0, 10) + '...',
+          'Using PKCE:',
+          requestCodeVerifier
+            ? `Yes (${requestCodeVerifier.length} chars)`
+            : 'No',
         );
-
-        // Exchange authorization code for token
-        const tokenResponse = await fetch(discovery.tokenEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Accept: 'application/json',
-          },
-          body: new URLSearchParams({
-            client_id: GITHUB_CLIENT_ID!,
-            code,
-            redirect_uri:
-              request?.redirectUri ||
-              makeRedirectUri({
-                scheme: PUBLIC_AUTH_SCHEME,
-                path: 'auth/callback',
-              }),
-            code_verifier: finalCodeVerifier,
-          }),
+        console.log('Request object:', {
+          hasCodeVerifier: !!requestCodeVerifier,
+          hasRedirectUri: !!actualRedirectUri,
+          clientId: GITHUB_CLIENT_ID?.substring(0, 10) + '...',
         });
 
-        console.log('Token exchange response status:', tokenResponse.status);
+        // Exchange code for token directly with GitHub (as per Expo docs)
+        const tokenUrl = `${GITHUB_ENDPOINT}/login/oauth/access_token`;
 
-        if (!tokenResponse.ok) {
-          const errorText = await tokenResponse.text();
+        const requestBody: any = {
+          client_id: GITHUB_CLIENT_ID!,
+          client_secret: process.env.EXPO_PUBLIC_GITHUB_CLIENT_SECRET,
+          code,
+          redirect_uri: actualRedirectUri,
+        };
+
+        // Use code verifier from parameter first, then from request
+        const finalCodeVerifier = codeVerifier || requestCodeVerifier;
+        if (finalCodeVerifier) {
+          requestBody.code_verifier = finalCodeVerifier;
+        }
+
+        console.log('Token exchange request body:', {
+          ...requestBody,
+          client_secret: requestBody.client_secret
+            ? '***PRESENT***'
+            : '***MISSING***',
+          code_verifier: requestBody.code_verifier
+            ? `${requestBody.code_verifier.length} chars`
+            : 'Not using PKCE',
+        });
+
+        const response = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        console.log('Token exchange response status:', response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
           console.error('Token exchange failed:', errorText);
           throw new Error(
-            `Token exchange failed: ${tokenResponse.status} - ${errorText}`,
+            `Failed to exchange code for token: ${response.status} - ${errorText}`,
           );
         }
 
-        const tokenData = await tokenResponse.json();
-        console.log('Token data received:', {
-          access_token: tokenData.access_token ? 'Present' : 'Missing',
-          token_type: tokenData.token_type,
-          scope: tokenData.scope,
-        });
+        const tokenData = await response.json();
+        console.log('Token exchange result:', tokenData);
 
-        if (!tokenData.access_token) {
-          throw new Error('No access token received');
+        if (tokenData.access_token) {
+          await AsyncStorage.setItem(TOKEN_STORAGE_KEY, tokenData.access_token);
+
+          console.log('Got access token, fetching user profile...');
+
+          setAuthState({
+            token: tokenData.access_token,
+            isLoading: false,
+            isAuthenticated: true,
+            error: null,
+          });
+        } else {
+          console.error('No access token in response:', tokenData);
+          setAuthState((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: 'Failed to get access token',
+          }));
         }
-
-        // Store token
-        await AsyncStorage.setItem('github_token', tokenData.access_token);
-
-        // Invalidate user profile cache to trigger fresh fetch
-        queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-
-        // Return basic auth state - user profile will be fetched by the hook
-        return {
-          user: null, // Will be populated by useUserProfile hook
-          token: tokenData.access_token,
-          gists: [],
+      } catch (error) {
+        console.error('Error completing auth:', error);
+        setAuthState((prev) => ({
+          ...prev,
           isLoading: false,
-          isAuthenticated: true,
-          error: null,
-        };
+          error:
+            error instanceof Error ? error.message : 'Authentication failed',
+        }));
       } finally {
         setIsAuthInProgress(false);
       }
     },
-    onSuccess: (newAuthState) => {
-      queryClient.setQueryData(['auth'], newAuthState);
-    },
-    onError: (error) => {
-      console.error('Error completing auth:', error);
-    },
-  });
-
-  // Mutation for signing out
-  const signOutMutation = useMutation({
-    mutationFn: async () => {
-      try {
-        await AsyncStorage.removeItem('github_token');
-        await AsyncStorage.removeItem('github_user');
-        // Note: gists cache is managed by the use-gists hook
-
-        // Clear user profile cache
-        queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-
-        return {
-          user: null,
-          token: null,
-          gists: [],
-          isLoading: false,
-          isAuthenticated: false,
-          error: null,
-        };
-      } catch (error) {
-        console.error('Error during sign out:', error);
-        throw error;
-      }
-    },
-    onSuccess: (newAuthState) => {
-      queryClient.setQueryData(['auth'], newAuthState);
-    },
-  });
-
-  // Log the redirect URI for debugging
-  useEffect(() => {
-    if (request) {
-      console.log(JSON.stringify(request, null, 2));
-      console.log('OAuth Request redirect URI:', request.redirectUri);
-    }
-  }, [request]);
-
-  // Handle auth response
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { code } = response.params;
-      console.log('Got authorization code:', code.substring(0, 10) + '...');
-      completeAuthMutation.mutate({ code });
-    } else if (response?.type === 'error') {
-      console.error('Auth error:', response.error);
-      queryClient.setQueryData(['auth'], (old: any) => ({
-        ...old,
-        isLoading: false,
-        error: `Authentication error: ${response.error}`,
-      }));
-    }
-  }, [response, completeAuthMutation, queryClient]);
-
-  // Complete auth session when app starts
-  useEffect(() => {
-    WebBrowser.maybeCompleteAuthSession();
-  }, []);
-
-  const signIn = useCallback(async () => {
-    if (!GITHUB_CLIENT_ID) {
-      console.error('GitHub client ID is not configured');
-      return;
-    }
-
-    if (isAuthInProgress) {
-      console.log('Authentication is already in progress');
-      return;
-    }
-
-    try {
-      const result = await promptAsync();
-      console.log('Auth request result:', result);
-    } catch (error) {
-      console.error('Error during auth request:', error);
-      queryClient.setQueryData(['auth'], (old: any) => ({
-        ...old,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Authentication failed',
-      }));
-    }
-  }, [promptAsync, isAuthInProgress, queryClient]);
-
-  const completeAuth = useCallback(
-    async (code: string, codeVerifier?: string | null) => {
-      completeAuthMutation.mutate({ code, codeVerifier });
-    },
-    [completeAuthMutation],
+    [request?.redirectUri, request?.codeVerifier, isAuthInProgress],
   );
-
-  const signOut = useCallback(async () => {
-    signOutMutation.mutate();
-  }, [signOutMutation]);
-
-  const fetchGists = useCallback(async () => {
-    // This function is deprecated - use the useGistOperations hook instead
-    console.warn(
-      'fetchGists is deprecated. Use the useGistOperations hook from hooks/use-gists.ts instead.',
-    );
-  }, []);
 
   const value = useMemo(
     () => ({
-      ...authData,
-      isLoading:
-        authData?.isLoading ||
-        isAuthLoading ||
-        completeAuthMutation.isPending ||
-        signOutMutation.isPending,
+      ...authState,
       signIn,
       signOut,
-      fetchGists,
       completeAuth,
     }),
-    [
-      authData,
-      isAuthLoading,
-      completeAuthMutation.isPending,
-      signOutMutation.isPending,
-      signIn,
-      signOut,
-      fetchGists,
-      completeAuth,
-    ],
+    [authState, signIn, signOut, completeAuth],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

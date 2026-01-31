@@ -8,18 +8,21 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { ThemedText } from '../../components/themed-text';
+import { CustomSwitch } from '@/components/form-elements/custom-switch';
 
 export default function NewNoteScreen() {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const { token } = useAuth();
   const router = useRouter();
   const createGist = useCreateGist();
+
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -43,7 +46,7 @@ export default function NewNoteScreen() {
         files: {
           [`${title.trim()}.md`]: { content: content.trim() },
         },
-        public: false,
+        public: isPublic,
       });
 
       Alert.alert('Success', 'Note created successfully!', [
@@ -88,10 +91,10 @@ export default function NewNoteScreen() {
           onPress={handleCancel}
           disabled={createGist.isPending}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>New Note</Text>
+        <ThemedText style={styles.headerTitle}>New Note</ThemedText>
 
         <TouchableOpacity
           style={[
@@ -101,18 +104,26 @@ export default function NewNoteScreen() {
           onPress={handleSave}
           disabled={createGist.isPending || !title.trim() || !content.trim()}
         >
-          <Text
+          <ThemedText
             style={[
               styles.saveButtonText,
               createGist.isPending && styles.saveButtonTextDisabled,
             ]}
           >
             {createGist.isPending ? 'Saving...' : 'Save'}
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.privacyRow}>
+          <CustomSwitch
+            value={isPublic}
+            onChange={setIsPublic}
+            label={isPublic ? 'Public gist' : 'Private gist'}
+          />
+        </View>
+
         <TextInput
           style={styles.titleInput}
           placeholder="Note Title"
@@ -188,6 +199,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+  },
+  privacyRow: {
+    marginBottom: 12,
   },
   titleInput: {
     fontSize: 24,
