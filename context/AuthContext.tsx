@@ -30,13 +30,15 @@ interface AuthContextType extends AuthState {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshToken: () => Promise<void>;
-  completeAuth: (code: string, codeVerifier: string) => Promise<void>;
+  completeAuth: (code: string, codeVerifier?: string | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.EXPO_PUBLIC_GITHUB_CLIENT_SECRET;
+const GITHUB_OAUTH_PROXY_URL =
+  process.env.EXPO_PUBLIC_GITHUB_OAUTH_PROXY_URL;
 
 console.log(
   "Environment check - Client ID:",
@@ -88,14 +90,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const completeAuth = useCallback(
-    async (code: string, codeVerifier: string) => {
+    async (code: string, codeVerifier?: string | null) => {
       console.log("completeAuth called with:", {
         code: code.substring(0, 10) + "...",
         codeVerifier: codeVerifier ? "Present" : "Missing",
       });
 
       try {
-        const tokenResponse = await exchangeCodeForToken(code, codeVerifier);
+        const tokenResponse = codeVerifier
+          ? await exchangeCodeForToken(code, codeVerifier)
+          : await exchangeCodeForTokenWeb(code);
 
         if (tokenResponse.access_token) {
           console.log("Got access token, fetching user profile...");
@@ -143,107 +147,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clientId: GITHUB_CLIENT_ID!,
         scopes: ["gist", "user:email"],
         redirectUri,
-        usePKCE: false, // Disable PKCE for web to avoid CORS issues
+        usePKCE: true,
       });
 
-      console.log("AuthRequest created, PKCE disabled for web");
+      console.log("AuthRequest created with PKCE enabled");
+
+      if (request.codeVerifier) {
+        await AsyncStorage.setItem(
+          "pkce_code_verifier",
+          request.codeVerifier,
+        );
+      }
 
       const result = await request.promptAsync(discovery);
       console.log("OAuth result:", result.type);
 
       if (result.type === "success") {
-        const { code } = result.params;
-        console.log("Got authorization code");
-
-        // For web, we need to handle the token exchange differently
-        // Let's use a simple approach that works in web browsers
-        if (typeof window !== "undefined") {
-          // Create a form to post to GitHub's token endpoint
-          const form = document.createElement("form");
-          form.method = "POST";
-          form.action = "https://github.com/login/oauth/access_token";
-          form.style.display = "none";
-
-          const clientIdInput = document.createElement("input");
-          clientIdInput.type = "hidden";
-          clientIdInput.name = "client_id";
-          clientIdInput.value = GITHUB_CLIENT_ID!;
-          form.appendChild(clientIdInput);
-
-          const clientSecretInput = document.createElement("input");
-          clientSecretInput.type = "hidden";
-          clientSecretInput.name = "client_secret";
-          clientSecretInput.value = GITHUB_CLIENT_SECRET!;
-          form.appendChild(clientSecretInput);
-
-          const codeInput = document.createElement("input");
-          codeInput.type = "hidden";
-          codeInput.name = "code";
-          codeInput.value = code;
-          form.appendChild(codeInput);
-
-          // Create an iframe to handle the POST request
-          const iframe = document.createElement("iframe");
-          iframe.style.display = "none";
-          iframe.name = "oauth_frame";
-          document.body.appendChild(iframe);
-
-          form.target = "oauth_frame";
-          document.body.appendChild(form);
-
-          // Listen for the response
-          return new Promise<void>((resolve, reject) => {
-            iframe.onload = async () => {
-              try {
-                // Try to extract the token from the iframe response
-                const iframeDoc =
-                  iframe.contentDocument || iframe.contentWindow?.document;
-                if (iframeDoc && iframeDoc.body.textContent) {
-                  const responseText = iframeDoc.body.textContent;
-                  const urlParams = new URLSearchParams(responseText);
-                  const accessToken = urlParams.get("access_token");
-
-                  if (accessToken) {
-                    console.log("Got access token from iframe");
-                    const user = await fetchUserProfile(accessToken);
-
-                    await AsyncStorage.setItem("github_token", accessToken);
-                    await AsyncStorage.setItem(
-                      "github_user",
-                      JSON.stringify(user),
-                    );
-
-                    setAuthState({
-                      user,
-                      token: accessToken,
-                      isLoading: false,
-                      isAuthenticated: true,
-                    });
-
-                    resolve();
-                  } else {
-                    reject(new Error("No access token in response"));
-                  }
-                } else {
-                  reject(new Error("Could not read iframe response"));
-                }
-              } catch (error) {
-                reject(error);
-              } finally {
-                document.body.removeChild(form);
-                document.body.removeChild(iframe);
-              }
-            };
-
-            iframe.onerror = () => {
-              document.body.removeChild(form);
-              document.body.removeChild(iframe);
-              reject(new Error("OAuth request failed"));
-            };
-
-            form.submit();
-          });
-        }
+        console.log("Got authorization code, waiting for callback route");
       }
     } catch (error) {
       console.error("Error during sign in:", error);
@@ -318,8 +238,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       code: code.substring(0, 10) + "...",
     });
 
+    if (!GITHUB_OAUTH_PROXY_URL) {
+      throw new Error(
+        "Missing EXPO_PUBLIC_GITHUB_OAUTH_PROXY_URL. Web token exchange must go through your own backend to avoid CORS.",
+      );
+    }
+
     const response = await fetch(
-      "https://github.com/login/oauth/access_token",
+      GITHUB_OAUTH_PROXY_URL,
       {
         method: "POST",
         headers: {

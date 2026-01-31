@@ -13,6 +13,7 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 **Objectives:**
 
 - Set up GitHub OAuth integration
+- Set up token exchange backend (serverless)
 - Implement basic gist fetching
 - Create core navigation structure
 
@@ -20,6 +21,9 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 
 - [ ] Add required dependencies: `@octokit/rest`, `@react-native-async-storage/async-storage`, `@react-native-community/netinfo`
 - [ ] Implement GitHub OAuth flow using Expo AuthSession
+- [ ] Create GitHub OAuth token exchange endpoint (serverless)
+- [ ] Configure GitHub OAuth app redirect URLs for Expo Go, dev build, and web
+- [ ] Wire mobile + web to use serverless token exchange endpoint (no client secret on client)
 - [ ] Create authentication context and state management
 - [ ] Build basic app navigation (tabs: Notes, Search, Settings)
 - [ ] Implement GitHub API client wrapper
@@ -28,6 +32,7 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 **Deliverables:**
 
 - Working GitHub authentication
+- Serverless token exchange endpoint deployed
 - Basic app shell with navigation
 - GitHub API integration
 
@@ -218,6 +223,16 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 - [ ] Set up update mechanism
 - [ ] Create extension documentation
 
+#### Web App Deployment
+
+**Tasks:**
+
+- [ ] Build marketing/landing site with Vite + React
+- [ ] Deploy site to Netlify
+- [ ] Deploy GitHub OAuth token exchange function to Netlify Functions
+- [ ] Configure environment variables for Netlify function
+- [ ] Add production redirect URL to GitHub OAuth app
+
 ## Technical Implementation Details
 
 ### Mobile App Architecture
@@ -319,6 +334,14 @@ extension/
 }
 ```
 
+### Backend / Serverless Dependencies (Netlify Functions)
+
+```json
+{
+  "node-fetch": "^3.3.2"
+}
+```
+
 ## Testing Strategy
 
 ### Mobile App Testing
@@ -411,8 +434,9 @@ extension/
 
 1. **Immediate**: Set up development environment and repositories
 2. **Week 1**: Begin mobile app development with GitHub authentication
-3. **Week 3**: Start VSCode extension development in parallel
-4. **Week 6**: Begin integration testing
-5. **Week 8**: Prepare for deployment
+3. **Week 1**: Add serverless token exchange + update OAuth redirect URLs
+4. **Week 3**: Start VSCode extension development in parallel
+5. **Week 6**: Begin integration testing
+6. **Week 8**: Prepare for deployment
 
 This implementation plan provides a clear roadmap for building the scratchpad system with realistic timelines and deliverables.

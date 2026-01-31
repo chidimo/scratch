@@ -47,26 +47,19 @@ export default function AuthCallback() {
 
           if (storedCodeVerifier) {
             console.log("Using PKCE flow with code verifier");
-            // Complete the auth flow with the received code and stored verifier
-            await completeAuth(params.code as string, storedCodeVerifier);
-            // Clean up the stored verifier
-            await AsyncStorage.removeItem("pkce_code_verifier");
-
-            console.log("PKCE auth completed successfully");
-            // Navigate to home page
-            if (isMounted.current) {
-              router.replace("/");
-            }
           } else {
-            console.error(
-              "No code verifier found - this should not happen on mobile",
-            );
-            setError("No code verifier found. Please try signing in again.");
-            // Show error message
-            if (isMounted.current) {
-              setIsProcessing(false);
-              return;
-            }
+            console.log("No code verifier found, falling back to non-PKCE flow");
+          }
+
+          // Complete the auth flow with the received code and optional verifier
+          await completeAuth(params.code as string, storedCodeVerifier);
+          // Clean up the stored verifier
+          await AsyncStorage.removeItem("pkce_code_verifier");
+
+          console.log("Auth completed successfully");
+          // Navigate to home page
+          if (isMounted.current) {
+            router.replace("/");
           }
         } else if (params.error) {
           console.error("OAuth error:", params.error);

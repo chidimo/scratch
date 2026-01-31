@@ -8,7 +8,16 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "prebuild": "npx expo prebuild",
+    "build:dev": "npx eas-cli@latest workflow:run create-development-builds.yml",
+    "build:prod": "npx eas-cli@latest workflow:run create-production-builds.yml",
+    "build:android": "eas build --profile development --platform android",
+    "build:android:production": "eas build --profile production --platform android",
+    "submit:android": "eas submit --platform android --profile production",
+    "build:ios": "eas build --profile development --platform ios",
+    "build:ios:production": "eas build --profile development --platform ios",
+    "submit:ios": "eas submit --platform ios --profile production"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -22,6 +31,7 @@
     "expo-auth-session": "^7.0.10",
     "expo-constants": "~18.0.13",
     "expo-crypto": "^15.0.8",
+    "expo-dev-client": "~6.0.20",
     "expo-font": "~14.0.10",
     "expo-haptics": "~15.0.8",
     "expo-image": "~3.0.11",
