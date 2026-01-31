@@ -6,6 +6,7 @@ import { ThemedText } from './themed-text';
 
 export const GistItem = ({ gist }: { gist: Note }) => {
   const router = useRouter();
+  // console.log(gist)
 
   return (
     <TouchableOpacity
@@ -19,7 +20,7 @@ export const GistItem = ({ gist }: { gist: Note }) => {
         </ThemedText>
       </ThemedView>
       <ThemedText style={styles.notePreview} numberOfLines={3}>
-        {gist.content.substring(0, 150)}...
+        {gist.content.substring(0, 500)}...
       </ThemedText>
       <ThemedView style={styles.noteFooter}>
         <View style={styles.syncStatus}>
@@ -53,9 +54,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   noteItem: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 16,
+    margin: 12,
+    padding: 12,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -72,18 +72,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   noteTitle: {
+    flex: 1,
     fontSize: 18,
     fontWeight: '600',
-    flex: 1,
     marginRight: 8,
   },
   noteDate: {
     fontSize: 12,
-    color: '#666',
   },
   notePreview: {
     fontSize: 14,
-    color: '#333',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -103,7 +101,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: '#666',
     textTransform: 'capitalize',
   },
 });

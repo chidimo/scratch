@@ -1,3 +1,5 @@
+import { GISTS_STORAGE_KEY } from '@/constants/app-constants';
+import { useAuth } from '@/context/AuthContext';
 import { getGithubClient } from '@/services/GithubClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Note } from '@scratch/shared';
@@ -7,47 +9,48 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 export const GISTS_QUERY_KEY = 'gists';
 
 export const useGists = (searchTerm?: string) => {
+  const { token } = useAuth();
+
   return useQuery({
     queryKey: [GISTS_QUERY_KEY, searchTerm],
     queryFn: async () => {
       const githubClient = getGithubClient();
       const gistsData = await githubClient.getUserGists();
 
-      let filteredGists = gistsData.filter((gist) =>
-        Object.keys(gist.files).some((filename) => filename.endsWith('.md')),
-      );
-
-      // Apply search filter if search term is provided
-      if (searchTerm?.trim()) {
-        const lowerSearchTerm = searchTerm.toLowerCase();
-        filteredGists = filteredGists.filter(
-          (gist) =>
-            (gist.description || '').toLowerCase().includes(lowerSearchTerm) ||
-            Object.keys(gist.files).some((filename) =>
-              filename.toLowerCase().includes(lowerSearchTerm),
-            ),
-        );
-      }
-
-      return filteredGists.map((gist) => {
-        const mdFile = Object.keys(gist.files).find((filename) =>
-          filename.endsWith('.md'),
-        );
-        return {
-          id: gist.id,
-          title:
-            gist.description || mdFile?.replace('.md', '') || 'Untitled Note',
-          content: mdFile ? gist.files[mdFile].content || '' : '',
-          created_at: gist.created_at,
-          updated_at: gist.updated_at,
-          tags: [],
-          gist_id: gist.id,
-          sync_status: 'synced' as const,
-        };
-      });
+      return gistsData
+        .filter((gist) => {
+          return Object.keys(gist.files).some((fn) => fn.endsWith('.md'));
+        })
+        .filter((gist) => {
+          const st = searchTerm?.toLowerCase();
+          if (st) {
+            return (
+              (gist.description || '').toLowerCase().includes(st) ||
+              Object.keys(gist.files).some((fn) =>
+                fn.toLowerCase().includes(st),
+              )
+            );
+          }
+          return true;
+        })
+        .map((gist) => {
+          const mdFile = Object.keys(gist.files).find((fn) =>
+            fn.endsWith('.md'),
+          );
+          return {
+            id: gist.id,
+            title:
+              gist.description || mdFile?.replace('.md', '') || 'Untitled Note',
+            content: mdFile ? gist.files[mdFile].content || '' : '',
+            created_at: gist.created_at,
+            updated_at: gist.updated_at,
+            tags: [],
+            gist_id: gist.id,
+            sync_status: 'synced' as const,
+          };
+        });
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+    enabled: !!token,
   });
 };
 
@@ -79,8 +82,7 @@ export const useCreateGist = () => {
         isPublic,
       );
     },
-    onSuccess: (newGist) => {
-      // Update the gists cache with the new gist
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [GISTS_QUERY_KEY] });
     },
     onError: (error) => {
@@ -148,7 +150,7 @@ export const useRefreshGists = () => {
       const githubClient = getGithubClient();
       const gistsData = await githubClient.getUserGists();
 
-      await AsyncStorage.setItem('github_gists', JSON.stringify(gistsData));
+      await AsyncStorage.setItem(GISTS_STORAGE_KEY, JSON.stringify(gistsData));
 
       return gistsData;
     },
@@ -163,6 +165,8 @@ export const useRefreshGists = () => {
 
 // Hook to fetch a single note by ID
 export const useGistById = (id: string | null) => {
+  const { token } = useAuth();
+
   return useQuery({
     queryKey: [GISTS_QUERY_KEY, id],
     queryFn: async (): Promise<Note | null> => {
@@ -191,14 +195,12 @@ export const useGistById = (id: string | null) => {
         content: noteContent,
         created_at: gistData.created_at,
         updated_at: gistData.updated_at,
-        tags: [], // TODO: Extract tags from content or metadata
+        tags: [], // Extract tags from content or metadata
         gist_id: gistData.id,
         sync_status: 'synced' as const,
       };
     },
-    enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes cache time
+    enabled: !!id && !!token,
   });
 };
 

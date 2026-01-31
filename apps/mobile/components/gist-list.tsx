@@ -14,16 +14,13 @@ import { GistItem } from './gist-item';
 import { SearchInput } from './search-input';
 import { ThemedView } from './themed-view';
 import { ThemedText } from './themed-text';
-import { NewUser } from './new-user';
-import { useUserProfile } from '@/hooks/use-user-profile';
 
 export const GistList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: user, isPending: authLoading } = useUserProfile();
   const router = useRouter();
 
-  const { data: gists, refetch, isLoading } = useGists(searchTerm);
+  const { data: gists, refetch, isPending } = useGists(searchTerm);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -41,28 +38,9 @@ export const GistList = () => {
 
   const renderNoteItem = ({ item }: { item: Note }) => <GistItem gist={item} />;
 
-  if (authLoading) {
-    return (
-      <ThemedView style={styles.container}>
-        <ActivityIndicator size="large" />
-      </ThemedView>
-    );
-  }
-
-  if (!user) {
-    return <NewUser />;
-  }
-
-  if (isLoading) {
-    return (
-      <ThemedView style={styles.container}>
-        <ActivityIndicator size="large" />
-      </ThemedView>
-    );
-  }
-
   return (
     <ThemedView style={styles.container}>
+      {isPending && <ActivityIndicator size="large" />}
       <View style={styles.searchAndCreateContainer}>
         <View style={styles.searchWrapper}>
           <SearchInput onSearch={handleSearch} />

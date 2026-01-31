@@ -1,39 +1,64 @@
-import { Tabs } from 'expo-router';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Href } from 'expo-router';
+import { TabMenuContainer, TabMenuItem } from '@/components/tab-menu-item';
+import { Octicons, Feather } from '@expo/vector-icons';
+import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { tabIconDefault, tabIconSelected } = useThemeColor({}, [
+    'tabIconDefault',
+    'tabIconSelected',
+  ]);
+  const tabItems = [
+    {
+      name: 'gists',
+      displayName: 'Home',
+      href: '/gists',
+      icon: (isFocused: boolean) => (
+        <Feather
+          name="book"
+          size={24}
+          color={isFocused ? tabIconSelected : tabIconDefault}
+        />
+      ),
+    },
+    {
+      name: 'settings',
+      displayName: 'Settings',
+      href: '/settings',
+      icon: (isFocused: boolean) => (
+        <Octicons
+          name="gear"
+          size={24}
+          color={isFocused ? tabIconSelected : tabIconDefault}
+        />
+      ),
+    },
+  ];
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Notes',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="note.text" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="gearshape.fill" color={color} />
-          ),
-        }}
-      />
+    <Tabs>
+      <TabSlot />
+
+      <TabMenuContainer>
+        {tabItems.map(({ href, ...item }) => (
+          <TabTrigger key={item.name} name={item.name} asChild>
+            <TabMenuItem name={item.displayName} icon={item.icon} />
+          </TabTrigger>
+        ))}
+      </TabMenuContainer>
+
+      <TabList style={{ display: 'none' }}>
+        {tabItems.map((item) => {
+          return (
+            <TabTrigger
+              key={item.name}
+              name={item.name}
+              href={item.href as Href}
+            />
+          );
+        })}
+      </TabList>
     </Tabs>
   );
 }

@@ -1,5 +1,4 @@
-import { useAuth } from '@/context/AuthContext';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import ParallaxScrollView from '../parallax-scroll-view';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
@@ -9,15 +8,19 @@ import { GitHubApiSection } from './github-api-section';
 import { SignOutSection } from './sign-out-section';
 import { ThemeSelector } from './theme-selector';
 import { HorizontalSeparator } from '../horizontal-separator';
+import { useUserProfile } from '@/hooks/use-user-profile';
 
 export const SettingsScreen = () => {
-  const { user, isLoading } = useAuth();
+  const { data: user, isPending } = useUserProfile();
 
-  if (isLoading) {
+  if (isPending) {
     return (
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
         <ActivityIndicator size="large" />
-      </View>
+        <ThemedText style={{ textAlign: 'center' }}>
+          Loading user profile...
+        </ThemedText>
+      </ThemedView>
     );
   }
 
@@ -49,11 +52,9 @@ export const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   message: {
     textAlign: 'center',
-    color: '#666',
     marginTop: 20,
     fontSize: 16,
     padding: 16,

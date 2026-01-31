@@ -1,4 +1,9 @@
-import { PUBLIC_AUTH_SCHEME } from '@/constants/app-constants';
+import {
+  GITHUB_ENDPOINT,
+  PUBLIC_AUTH_SCHEME,
+  TOKEN_STORAGE_KEY,
+  USER_STORAGE_KEY,
+} from '@/constants/app-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContextType, AuthProviderProps, AuthState } from '@scratch/shared';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
@@ -14,9 +19,9 @@ import {
 
 // GitHub OAuth discovery endpoints
 const discovery = {
-  authorizationEndpoint: 'https://github.com/login/oauth/authorize',
-  tokenEndpoint: 'https://github.com/login/oauth/access_token',
-  revocationEndpoint: 'https://github.com/settings/connections/applications/',
+  tokenEndpoint: `${GITHUB_ENDPOINT}/login/oauth/access_token`,
+  authorizationEndpoint: `${GITHUB_ENDPOINT}/login/oauth/authorize`,
+  revocationEndpoint: `${GITHUB_ENDPOINT}/settings/connections/applications/`,
 };
 
 // Environment variables
@@ -71,12 +76,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const loadStoredAuth = async () => {
     try {
-      const storedToken = await AsyncStorage.getItem('github_token');
-      const storedUser = await AsyncStorage.getItem('github_user');
+      const storedToken = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
 
-      if (storedToken && storedUser) {
+      if (storedToken) {
         setAuthState({
-          user: JSON.parse(storedUser),
           token: storedToken,
           isLoading: false,
           isAuthenticated: true,
@@ -136,7 +139,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = useCallback(async () => {
     try {
-      await AsyncStorage.multiRemove(['github_token', 'github_user']);
+      await AsyncStorage.multiRemove([TOKEN_STORAGE_KEY, USER_STORAGE_KEY]);
       setAuthState({
         token: null,
         isLoading: false,
@@ -190,7 +193,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         });
 
         // Exchange code for token directly with GitHub (as per Expo docs)
-        const tokenUrl = 'https://github.com/login/oauth/access_token';
+        const tokenUrl = `${GITHUB_ENDPOINT}/login/oauth/access_token`;
 
         const requestBody: any = {
           client_id: GITHUB_CLIENT_ID!,
@@ -238,7 +241,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log('Token exchange result:', tokenData);
 
         if (tokenData.access_token) {
-          await AsyncStorage.setItem('github_token', tokenData.access_token);
+          await AsyncStorage.setItem(TOKEN_STORAGE_KEY, tokenData.access_token);
 
           console.log('Got access token, fetching user profile...');
 
@@ -291,5 +294,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-export default AuthProvider;
