@@ -1,32 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-
-// Note interface for mobile app
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  tags: string[];
-  gist_id?: string;
-  sync_status: 'synced' | 'pending' | 'error';
-}
-
-export interface GistFile {
-  filename: string;
-  content: string;
-}
-
-export interface Gist {
-  id: string;
-  description: string;
-  public: boolean;
-  created_at: string;
-  updated_at: string;
-  files: { [filename: string]: GistFile };
-}
+import { Gist, GistFile } from '@scratch/shared';
 
 class GithubClient {
   private octokit: Octokit | null = null;
@@ -311,8 +286,6 @@ class GithubClient {
 let githubClientInstance: GithubClient | null = null;
 
 export const getGithubClient = (): GithubClient => {
-  if (!githubClientInstance) {
-    githubClientInstance = new GithubClient();
-  }
+  githubClientInstance ??= new GithubClient();
   return githubClientInstance;
 };
