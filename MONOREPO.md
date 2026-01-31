@@ -73,14 +73,12 @@ npx nx g @nx/react:app app-name --directory=apps/app-name --bundler=vite
 
 ## Shared Libraries
 
-- `@scratch/shared/utils` - Common utility functions
-- `@scratch/shared/types` - Shared TypeScript definitions
+- `@scratch/shared` - Shared TypeScript definitions and utilities
 
 Import in your apps:
 
 ```typescript
-import { someUtil } from '@scratch/shared/utils';
-import { SomeType } from '@scratch/shared/types';
+import { someUtil, SomeType } from '@scratch/shared';
 ```
 
 ## Deployment
