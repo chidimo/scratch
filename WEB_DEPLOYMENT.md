@@ -17,15 +17,20 @@
 ## Environment Variables
 
 ### In Netlify UI
+
 Go to: **Site settings > Build & deploy > Environment > Environment variables**
 
 Add these variables:
+
 ```
 GITHUB_CLIENT_SECRET=your_github_client_secret_here
+VITE_GITHUB_CLIENT_ID=your_github_client_id_here
 ```
 
 ### In Your Local Development
-Create `apps/web/.env.local`:
+
+Create `.env` in root directory:
+
 ```
 VITE_GITHUB_CLIENT_ID=your_github_client_id_here
 ```
@@ -33,6 +38,7 @@ VITE_GITHUB_CLIENT_ID=your_github_client_id_here
 ## Deployment Steps
 
 ### 1. Connect Repository to Netlify
+
 ```bash
 # Push your changes to GitHub
 git add .
@@ -41,19 +47,28 @@ git push origin main
 ```
 
 ### 2. Configure Netlify Site
+
 1. In Netlify, click "New site from Git"
 2. Choose GitHub repository
 3. Configure build settings:
-   - **Base directory**: `apps/web`
-   - **Build command**: `npm run build`
-   - **Publish directory**: `dist`
+   - **Base directory**: `.` (root)
+   - **Build command**: `cd apps/web && npm run build`
+   - **Publish directory**: `apps/web/dist`
    - **Node version**: `18`
 
 ### 3. Set Environment Variables
-Add the `GITHUB_CLIENT_SECRET` in Netlify environment variables
+
+Add both variables in Netlify environment variables:
+
+```
+GITHUB_CLIENT_SECRET=your_github_client_secret_here
+VITE_GITHUB_CLIENT_ID=your_github_client_id_here
+```
 
 ### 4. Update GitHub OAuth App
+
 Update your GitHub OAuth App callback URL to your Netlify URL:
+
 ```
 https://your-site.netlify.app/callback
 ```
@@ -87,29 +102,61 @@ yarn build
 - State parameter prevents CSRF attacks
 - Tokens are stored in sessionStorage (cleared on browser close)
 
+## Console Logs
+
+The OAuth function includes detailed console logging for debugging:
+
+- 🔍 Function calls and request details
+- 🔑 Environment variable validation
+- 🔄 GitHub API interactions
+- ✅ Success states and token info
+- ❌ Error details and failure points
+
+View logs in: **Netlify Dashboard > Functions > [function-name] > Logs**
+
 ## Troubleshooting
 
 ### Common Issues
 
 1. **"GitHub Client ID not configured"**
-   - Check `VITE_GITHUB_CLIENT_ID` in `.env.local`
-   - Restart development server after changing env vars
+   - Check `VITE_GITHUB_CLIENT_ID` in Netlify environment variables
+   - Restart deployment after changing env vars
+   - Verify variable starts with `VITE_` for frontend access
 
 2. **"Token exchange failed"**
    - Verify `GITHUB_CLIENT_SECRET` in Netlify environment variables
-   - Check GitHub OAuth App callback URL matches your site URL
+   - Check GitHub OAuth App callback URL matches your site URL exactly
+   - Review function logs for detailed error information
 
-3. **CORS errors**
-   - Ensure Netlify function is properly deployed
-   - Check `netlify.toml` configuration
+3. **Build failures**
+   - Ensure base directory is set to `.`
+   - Check build command: `cd apps/web && npm run build`
+   - Verify publish directory: `apps/web/dist`
+
+4. **404 errors**
+   - Check redirect rules in `netlify.toml`
+   - Ensure function directory is set to `netlify/functions`
 
 ### Debug Mode
 
-Add temporary logging to the OAuth function:
-```typescript
-console.log('Request received:', { code, redirect_uri });
-console.log('Environment check:', { 
-  clientId: !!process.env.GITHUB_CLIENT_ID,
-  clientSecret: !!process.env.GITHUB_CLIENT_SECRET 
-});
+The function includes comprehensive logging. Check Netlify function logs for:
+
+- Environment variable validation
+- GitHub API responses
+- Token exchange details
+- Error stack traces
+
+### Quick Log Check
+
+After deployment, test the OAuth flow and immediately check:
+
 ```
+Netlify Dashboard > Functions > github-token > Logs
+```
+
+Look for these key log entries:
+
+- `🔍 OAuth function called`
+- `🔑 Environment check`
+- `🔄 Exchanging code for token`
+- `✅ Token exchange successful`
