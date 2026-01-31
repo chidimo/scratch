@@ -90,7 +90,6 @@ export interface AuthContextType extends AuthState {
   logout?: () => void;
   signIn?: () => Promise<void>;
   signOut?: () => Promise<void>;
-  fetchGists: () => Promise<void>;
   completeAuth?: (code: string, codeVerifier?: string | null) => Promise<void>;
   setUser?: (user: GitHubUser | null) => void;
   setToken?: (token: string | null) => void;

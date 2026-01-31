@@ -1,5 +1,5 @@
 import { useAuth } from '@/context/AuthContext';
-import { useNoteOperations } from '@/hooks/use-gists';
+import { useGistOperationsById } from '@/hooks/use-gists';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 
@@ -21,7 +21,7 @@ export default function EditNoteScreen() {
   const router = useRouter();
 
   const { note, isLoading, error, updateNote, deleteNote, isMutating } =
-    useNoteOperations(id, token);
+    useGistOperationsById(id, token);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');

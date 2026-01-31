@@ -1,50 +1,39 @@
+import { getGithubClient } from '@/services/GithubClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Gist } from '@scratch/shared';
+import { Note } from '@scratch/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Query key for gists
 export const GISTS_QUERY_KEY = ['gists'];
 
-// Hook to fetch gists
-export const useGists = (token: string | null) => {
+export const useGists = () => {
   return useQuery({
     queryKey: GISTS_QUERY_KEY,
     queryFn: async () => {
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const githubClient = getGithubClient();
+      const gistsData = await githubClient.getUserGists();
 
-      // First try to get from AsyncStorage
-      const gistsStr = await AsyncStorage.getItem('github_gists');
-      if (gistsStr) {
-        try {
-          const cachedGists = JSON.parse(gistsStr);
-          return cachedGists;
-        } catch (error) {
-          console.warn('Failed to parse cached gists:', error);
-        }
-      }
-
-      // If no cached data or parse failed, fetch from API
-      const response = await fetch('https://api.github.com/gists', {
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch gists: ${response.statusText}`);
-      }
-
-      const gistsData = await response.json();
-
-      // Cache the results
-      await AsyncStorage.setItem('github_gists', JSON.stringify(gistsData));
-
-      return gistsData;
+      return gistsData
+        .filter((gist) =>
+          Object.keys(gist.files).some((filename) => filename.endsWith('.md')),
+        )
+        .map((gist) => {
+          const mdFile = Object.keys(gist.files).find((filename) =>
+            filename.endsWith('.md'),
+          );
+          return {
+            id: gist.id,
+            title:
+              gist.description || mdFile?.replace('.md', '') || 'Untitled Note',
+            content: mdFile ? gist.files[mdFile].content || '' : '',
+            created_at: gist.created_at,
+            updated_at: gist.updated_at,
+            tags: [],
+            gist_id: gist.id,
+            sync_status: 'synced' as const,
+          };
+        });
     },
-    enabled: !!token,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
   });
@@ -64,39 +53,23 @@ export const useCreateGist = () => {
       files: Record<string, { content: string }>;
       public?: boolean;
     }) => {
-      const token = await AsyncStorage.getItem('github_token');
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const githubClient = getGithubClient();
 
-      const response = await fetch('https://api.github.com/gists', {
-        method: 'POST',
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description,
-          public: isPublic,
-          files,
-        }),
+      // Convert files format to match GithubClient interface
+      const filesForClient: { [filename: string]: string } = {};
+      Object.entries(files).forEach(([filename, fileData]) => {
+        filesForClient[filename] = fileData.content;
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to create gist: ${response.status} - ${errorText}`,
-        );
-      }
-
-      return response.json() as Promise<Gist>;
+      return await githubClient.createGist(
+        description,
+        filesForClient,
+        isPublic,
+      );
     },
     onSuccess: (newGist) => {
       // Update the gists cache with the new gist
-      queryClient.setQueryData(GISTS_QUERY_KEY, (old: Gist[] = []) => {
-        return [newGist, ...old];
-      });
+      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
     },
     onError: (error) => {
       console.error('Error creating gist:', error);
@@ -104,97 +77,52 @@ export const useCreateGist = () => {
   });
 };
 
-// Hook to update an existing gist
-export const useUpdateGist = () => {
+// Hook to update a note
+export const useUpdateGistById = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      gistId,
-      description,
-      files,
+      id,
+      title,
+      content,
     }: {
-      gistId: string;
-      description?: string;
-      files: Record<string, { content: string; filename?: string }>;
+      id: string;
+      title: string;
+      content: string;
     }) => {
-      const token = await AsyncStorage.getItem('github_token');
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const githubClient = getGithubClient();
 
-      const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description,
-          files,
-        }),
-      });
+      const files = {
+        [`${title}.md`]: content,
+      };
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to update gist: ${response.status} - ${errorText}`,
-        );
-      }
-
-      return response.json() as Promise<Gist>;
+      return await githubClient.updateGist(id, title, files);
     },
-    onSuccess: (updatedGist) => {
-      // Update the gists cache with the updated gist
-      queryClient.setQueryData(GISTS_QUERY_KEY, (old: Gist[] = []) => {
-        return old.map((gist) =>
-          gist.id === updatedGist.id ? updatedGist : gist,
-        );
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
     },
     onError: (error) => {
-      console.error('Error updating gist:', error);
+      console.error('Error updating note:', error);
     },
   });
 };
 
-// Hook to delete a gist
-export const useDeleteGist = () => {
+// Hook to delete a note
+export const useDeleteGistById = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (gistId: string) => {
-      const token = await AsyncStorage.getItem('github_token');
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to delete gist: ${response.status} - ${errorText}`,
-        );
-      }
-
-      return gistId;
+    mutationFn: async (id: string) => {
+      const githubClient = getGithubClient();
+      await githubClient.deleteGist(id);
+      return id;
     },
-    onSuccess: (deletedGistId) => {
-      // Remove the deleted gist from the cache
-      queryClient.setQueryData(GISTS_QUERY_KEY, (old: Gist[] = []) => {
-        return old.filter((gist) => gist.id !== deletedGistId);
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
     },
     onError: (error) => {
-      console.error('Error deleting gist:', error);
+      console.error('Error deleting note:', error);
     },
   });
 };
@@ -204,31 +132,16 @@ export const useRefreshGists = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (token: string) => {
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+    mutationFn: async () => {
+      const githubClient = getGithubClient();
+      const gistsData = await githubClient.getUserGists();
 
-      const response = await fetch('https://api.github.com/gists', {
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to refresh gists: ${response.statusText}`);
-      }
-
-      const gistsData = await response.json();
-
-      // Update cache with fresh data
       await AsyncStorage.setItem('github_gists', JSON.stringify(gistsData));
 
       return gistsData;
     },
-    onSuccess: (freshGists) => {
-      queryClient.setQueryData(GISTS_QUERY_KEY, freshGists);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
     },
     onError: (error) => {
       console.error('Error refreshing gists:', error);
@@ -236,60 +149,17 @@ export const useRefreshGists = () => {
   });
 };
 
-// Combined hook for all gist operations
-export const useGistOperations = (token: string | null) => {
-  const gistsQuery = useGists(token);
-  const createGist = useCreateGist();
-  const updateGist = useUpdateGist();
-  const deleteGist = useDeleteGist();
-  const refreshGists = useRefreshGists();
-
-  return {
-    // Query
-    gists: gistsQuery.data || [],
-    isLoading: gistsQuery.isLoading,
-    error: gistsQuery.error,
-    refetch: gistsQuery.refetch,
-
-    // Mutations
-    createGist,
-    updateGist,
-    deleteGist,
-    refreshGists: () => (token ? refreshGists.mutate(token) : null),
-
-    // Combined loading state
-    isMutating:
-      createGist.isPending ||
-      updateGist.isPending ||
-      deleteGist.isPending ||
-      refreshGists.isPending,
-  };
-};
-
-// Query key for individual notes
-export const NOTE_QUERY_KEY = (id: string) => ['note', id];
-
 // Hook to fetch a single note by ID
-export const useNote = (id: string | null, token: string | null) => {
+export const useGistById = (id: string | null) => {
   return useQuery({
-    queryKey: NOTE_QUERY_KEY(id || ''),
+    queryKey: [GISTS_QUERY_KEY, id],
     queryFn: async (): Promise<Note | null> => {
-      if (!id || !token) {
-        throw new Error('Note ID and token are required');
+      if (!id) {
+        throw new Error('Note ID is required');
       }
 
-      const response = await fetch(`https://api.github.com/gists/${id}`, {
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch note: ${response.statusText}`);
-      }
-
-      const gistData = await response.json();
+      const githubClient = getGithubClient();
+      const gistData = await githubClient.getGist(id);
 
       // Find the markdown file
       const mdFile = Object.keys(gistData.files).find((filename) =>
@@ -314,129 +184,17 @@ export const useNote = (id: string | null, token: string | null) => {
         sync_status: 'synced' as const,
       };
     },
-    enabled: !!id && !!token,
+    enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache time
   });
 };
 
-// Hook to update a note
-export const useUpdateNote = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      id,
-      title,
-      content,
-    }: {
-      id: string;
-      title: string;
-      content: string;
-    }) => {
-      const token = await AsyncStorage.getItem('github_token');
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      const response = await fetch(`https://api.github.com/gists/${id}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: title,
-          files: {
-            [`${title}.md`]: {
-              content: content,
-            },
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to update note: ${response.status} - ${errorText}`,
-        );
-      }
-
-      return response.json();
-    },
-    onSuccess: (updatedGist, variables) => {
-      // Update the note cache
-      queryClient.setQueryData(
-        NOTE_QUERY_KEY(variables.id),
-        (old: Note | null) => {
-          if (old) {
-            return {
-              ...old,
-              title: variables.title,
-              content: variables.content,
-              updated_at: new Date().toISOString(),
-            };
-          }
-          return old;
-        },
-      );
-
-      // Invalidate the gists list to reflect changes
-      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
-    },
-    onError: (error) => {
-      console.error('Error updating note:', error);
-    },
-  });
-};
-
-// Hook to delete a note
-export const useDeleteNote = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const token = await AsyncStorage.getItem('github_token');
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      const response = await fetch(`https://api.github.com/gists/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to delete note: ${response.status} - ${errorText}`,
-        );
-      }
-
-      return id;
-    },
-    onSuccess: (deletedId) => {
-      // Remove the note from cache
-      queryClient.removeQueries({ queryKey: NOTE_QUERY_KEY(deletedId) });
-
-      // Invalidate the gists list
-      queryClient.invalidateQueries({ queryKey: GISTS_QUERY_KEY });
-    },
-    onError: (error) => {
-      console.error('Error deleting note:', error);
-    },
-  });
-};
-
 // Combined hook for note operations
-export const useNoteOperations = (id: string | null, token: string | null) => {
-  const noteQuery = useNote(id, token);
-  const updateNote = useUpdateNote();
-  const deleteNote = useDeleteNote();
+export const useGistOperationsById = (id: string | null) => {
+  const noteQuery = useGistById(id);
+  const updateNote = useUpdateGistById();
+  const deleteNote = useDeleteGistById();
 
   return {
     // Query

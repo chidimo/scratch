@@ -106,24 +106,7 @@ class GithubClient {
         per_page: 100,
       });
 
-      return response.data.map((gist) => ({
-        id: gist.id,
-        description: gist.description || '',
-        public: gist.public ?? false,
-        created_at: gist.created_at,
-        updated_at: gist.updated_at,
-        files: Object.keys(gist.files || {}).reduce(
-          (acc, filename) => {
-            const file = gist.files![filename];
-            acc[filename] = {
-              filename: file?.filename ?? '',
-              content: file?.content ?? '',
-            };
-            return acc;
-          },
-          {} as { [filename: string]: GistFile },
-        ),
-      }));
+      return response.data;
     } catch (error) {
       console.error('Error fetching user gists:', error);
       throw error;

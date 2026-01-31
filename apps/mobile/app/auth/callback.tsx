@@ -10,6 +10,7 @@ export default function AuthCallback() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(false);
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
     isMounted.current = true;
@@ -23,12 +24,15 @@ export default function AuthCallback() {
       try {
         console.log('Auth callback triggered with params:', params);
 
-        if (isLoading || !isMounted.current) {
-          console.log('Waiting for auth context or component not mounted');
+        if (isLoading || !isMounted.current || hasProcessed.current) {
+          console.log(
+            'Waiting for auth context, component not mounted, or already processed',
+          );
           return;
         }
 
         if (params.code) {
+          hasProcessed.current = true; // Mark as processed
           console.log('Processing OAuth callback with code...');
           if (completeAuth) {
             await completeAuth(params.code as string);
