@@ -95,12 +95,12 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 
 **Tasks:**
 
-- [ ] Initialize VSCode extension with TypeScript
-- [ ] Implement workspace detection for .scratch folders
-- [ ] Create user identification via Git config
-- [ ] Set up basic command palette commands
-- [ ] Implement file system watchers for .scratch folder
-- [ ] Create extension configuration system
+- [x] Initialize VSCode extension with TypeScript
+- [x] Implement workspace detection for .scratch folders
+- [x] Create user identification via Git config
+- [x] Set up basic command palette commands
+- [x] Implement file system watchers for .scratch folder
+- [x] Create extension configuration system
 
 **Deliverables:**
 

@@ -1,0 +1,88 @@
+{
+  "name": "scratch-vscode",
+  "displayName": "Scratchpad",
+  "description": "Local .scratch folder integration for the Scratchpad system.",
+  "version": "0.1.0",
+  "publisher": "scratch",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:chidimo/scratch.git"
+  },
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:scratch.createScratchFolder",
+    "onCommand:scratch.openScratchFolder",
+    "onCommand:scratch.showUserIdentity",
+    "onCommand:scratch.refreshScratchState"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "scratch.createScratchFolder",
+        "title": "Scratch: Create .scratch Folder"
+      },
+      {
+        "command": "scratch.openScratchFolder",
+        "title": "Scratch: Open .scratch Folder"
+      },
+      {
+        "command": "scratch.showUserIdentity",
+        "title": "Scratch: Show User Identity"
+      },
+      {
+        "command": "scratch.refreshScratchState",
+        "title": "Scratch: Refresh Scratch State"
+      }
+    ],
+    "configuration": {
+      "title": "Scratchpad",
+      "properties": {
+        "scratch.scratchFolderName": {
+          "type": "string",
+          "default": ".scratch",
+          "description": "Folder name used to store scratch notes in each workspace."
+        },
+        "scratch.autoCreateScratchFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically create the scratch folder when missing."
+        },
+        "scratch.watchScratchFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Watch scratch folder files and log changes."
+        },
+        "scratch.userIdStrategy": {
+          "type": "string",
+          "default": "git",
+          "enum": [
+            "git"
+          ],
+          "description": "User identification strategy for the extension."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package --allow-missing-repository",
+    "package:clean": "rm -f *.vsix",
+    "package:with-build": "yarn compile && yarn package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.82.0",
+    "@vscode/vsce": "^3.7.1",
+    "typescript": "^5.0.0"
+  }
+}
