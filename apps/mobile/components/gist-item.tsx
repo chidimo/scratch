@@ -26,9 +26,6 @@ export const GistItem = ({ gist }: { gist: Note }) => {
           {new Date(gist.updated_at).toLocaleDateString()}
         </ThemedText>
       </ThemedView>
-      <ThemedText style={styles.notePreview} numberOfLines={3}>
-        {gist.content.substring(0, 500)}...
-      </ThemedText>
       <ThemedView style={styles.noteFooter}>
         <View style={styles.syncStatus}>
           <View
