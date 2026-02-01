@@ -165,22 +165,23 @@ class GithubClient {
 
   async updateGist(
     gistId: string,
-    description: string,
-    files: { [filename: string]: string },
+    description?: string,
+    files: { [filename: string]: string | null },
     isPublic?: boolean,
   ): Promise<Gist> {
     try {
       const client = await this.ensureClient();
       const response = await client.rest.gists.update({
         gist_id: gistId,
-        description,
-        public: isPublic,
+        ...(description === undefined ? {} : { description }),
+        ...(isPublic === undefined ? {} : { public: isPublic }),
         files: Object.keys(files).reduce(
           (acc, filename) => {
-            acc[filename] = { content: files[filename] };
+            const content = files[filename];
+            acc[filename] = content === null ? null : { content };
             return acc;
           },
-          {} as { [filename: string]: { content: string } },
+          {} as { [filename: string]: { content: string } | null },
         ),
       });
 

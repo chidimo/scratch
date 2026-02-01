@@ -34,18 +34,31 @@ export const useGists = (searchTerm?: string) => {
           return true;
         })
         .map((gist) => {
-          const mdFile = Object.keys(gist.files).find((fn) =>
+          const mdFiles = Object.keys(gist.files).filter((fn) =>
             fn.endsWith('.md'),
           );
+          const mdFileCount = mdFiles.length;
+          const primaryFile = mdFiles[0] ?? '';
+          const fileContents: Record<string, string> = {};
+
+          mdFiles.forEach((mdFile) => {
+            fileContents[mdFile] = gist.files[mdFile].content || '';
+          });
+
           return {
             id: gist.id,
             title:
-              gist.description || mdFile?.replace('.md', '') || 'Untitled Note',
-            content: mdFile ? gist.files[mdFile].content || '' : '',
+              gist.description ||
+              (primaryFile ? primaryFile.replace('.md', '') : 'Untitled Note'),
+            content: primaryFile ? fileContents[primaryFile] : '',
             created_at: gist.created_at,
             updated_at: gist.updated_at,
             tags: [],
             gist_id: gist.id,
+            file_name: primaryFile,
+            md_file_count: mdFileCount,
+            md_files: mdFiles,
+            file_contents: fileContents,
             is_public: gist.public,
             owner_login: gist.owner?.login,
             sync_status: 'synced' as const,
@@ -103,17 +116,23 @@ export const useUpdateGistById = () => {
       title,
       content,
       isPublic,
+      fileName,
     }: {
       id: string;
       title: string;
       content: string;
       isPublic?: boolean;
+      fileName?: string;
     }) => {
       const githubClient = getGithubClient();
+      const trimmedTitle = title.trim();
+      const nextFileName = `${trimmedTitle}.md`;
 
-      const files = {
-        [`${title}.md`]: content,
-      };
+      const files: Record<string, string | null> = {};
+      if (fileName && fileName !== nextFileName) {
+        files[fileName] = null;
+      }
+      files[nextFileName] = content;
 
       return await githubClient.updateGist(id, title, files, isPublic);
     },
@@ -131,8 +150,20 @@ export const useDeleteGistById = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({
+      id,
+      fileName,
+      mdFileCount,
+    }: {
+      id: string;
+      fileName?: string;
+      mdFileCount?: number;
+    }) => {
       const githubClient = getGithubClient();
+      if (fileName && (mdFileCount ?? 1) > 1) {
+        await githubClient.updateGist(id, undefined, { [fileName]: null });
+        return id;
+      }
       await githubClient.deleteGist(id);
       return id;
     },
@@ -181,17 +212,24 @@ export const useGistById = (id: string | null) => {
       const githubClient = getGithubClient();
       const gistData = await githubClient.getGist(id);
 
+      console.log(JSON.stringify(gistData, null, 2));
+
       // Find the markdown file
-      const mdFile = Object.keys(gistData.files).find((filename) =>
+      const mdFiles = Object.keys(gistData.files).filter((filename) =>
         filename.endsWith('.md'),
       );
+      const mdFile = mdFiles[0] ?? null;
 
       if (!mdFile) {
         throw new Error('No markdown file found in this gist');
       }
 
-      const noteTitle = gistData.description || mdFile.replace('.md', '');
+      const noteTitle = mdFile.replace('.md', '') || gistData.description || '';
       const noteContent = gistData.files[mdFile].content || '';
+      const fileContents: Record<string, string> = {};
+      mdFiles.forEach((file) => {
+        fileContents[file] = gistData.files[file].content || '';
+      });
 
       return {
         id: gistData.id,
@@ -201,6 +239,10 @@ export const useGistById = (id: string | null) => {
         updated_at: gistData.updated_at,
         tags: [], // Extract tags from content or metadata
         gist_id: gistData.id,
+        file_name: mdFile,
+        md_file_count: mdFiles.length,
+        md_files: mdFiles,
+        file_contents: fileContents,
         is_public: gistData.public,
         owner_login: gistData.owner?.login,
         sync_status: 'synced' as const,
