@@ -20,15 +20,15 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 
 **Tasks:**
 
-- [ ] Add required dependencies: `@octokit/rest`, `@react-native-async-storage/async-storage`, `@react-native-community/netinfo`
-- [ ] Implement GitHub OAuth flow using Expo AuthSession
-- [ ] Create GitHub OAuth token exchange endpoint (serverless)
-- [ ] Configure GitHub OAuth app redirect URLs for Expo Go, dev build, and web
-- [ ] Wire mobile + web to use serverless token exchange endpoint (no client secret on client)
-- [ ] Create authentication context and state management
-- [ ] Build basic app navigation (tabs: Notes, Search, Settings)
-- [ ] Implement GitHub API client wrapper
-- [ ] Add error handling and rate limiting
+- [x] Add required dependencies: `@octokit/rest`, `@react-native-async-storage/async-storage`, `@react-native-community/netinfo`
+- [x] Implement GitHub OAuth flow using Expo AuthSession
+- [x] Create GitHub OAuth token exchange endpoint (serverless)
+- [x] Configure GitHub OAuth app redirect URLs for Expo Go, dev build, and web
+- [x] Wire mobile + web to use serverless token exchange endpoint (no client secret on client)
+- [x] Create authentication context and state management
+- [x] Build basic app navigation (tabs: Notes, Search, Settings)
+- [x] Implement GitHub API client wrapper
+- [x] Add error handling and rate limiting
 
 **Deliverables:**
 
@@ -47,12 +47,12 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 
 **Tasks:**
 
-- [ ] Design and implement note editor component
-- [ ] Create note list view with search/filter
-- [ ] Implement gist creation and updates
-- [ ] Add markdown support with preview
+- [x] Design and implement note editor component
+- [x] Create note list view with search/filter
+- [x] Implement gist creation and updates
+- [x] Add markdown support with preview
 - [ ] Implement local caching with AsyncStorage
-- [ ] Add offline detection and handling
+- [x] Add offline detection and handling
 
 **Deliverables:**
 
