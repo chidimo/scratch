@@ -1,6 +1,7 @@
 import { useAuth } from '@/context/AuthContext';
 import {
   ActivityIndicator,
+  Linking,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -29,6 +30,14 @@ export const NewUser = () => {
         <TouchableOpacity style={styles.signInButton} onPress={signIn}>
           <ThemedText style={styles.signInButtonThemedText}>
             Sign in with GitHub
+          </ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.extensionLinkButton}
+          onPress={() => Linking.openURL('https://scratch.chidiorji.com')}
+        >
+          <ThemedText style={styles.extensionLinkText}>
+            Get the VSCode Extension
           </ThemedText>
         </TouchableOpacity>
       </View>
@@ -71,5 +80,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  extensionLinkButton: {
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  extensionLinkText: {
+    color: '#007AFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

@@ -1,5 +1,11 @@
 import * as vscode from "vscode";
+import {
+  getGithubSession,
+  signInGithub,
+  signOutGithub,
+} from "./auth/github";
 import { getScratchConfig } from "./config";
+import { syncGists } from "./services/gist-sync";
 import { getGitUserIdentity } from "./utils/git";
 import { createScratchWatcher, ensureScratchFolder, getScratchFolderInfos } from "./utils/scratch";
 import { hasWorkspaceFolders } from "./utils/workspace";
@@ -8,7 +14,77 @@ let watchers: vscode.FileSystemWatcher[] = [];
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const outputChannel = vscode.window.createOutputChannel("Scratch");
-  context.subscriptions.push(outputChannel);
+  const statusBar = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    100
+  );
+  const disposables: vscode.Disposable[] = [
+    outputChannel,
+    statusBar,
+    vscode.commands.registerCommand(
+      "scratch.refreshScratchState",
+      refreshScratchState
+    ),
+    vscode.commands.registerCommand(
+      "scratch.createScratchFolder",
+      refreshScratchState
+    ),
+    vscode.commands.registerCommand("scratch.showUserIdentity", showUserIdentity),
+    vscode.commands.registerCommand("scratch.showGithubStatus", showGithubStatus),
+    vscode.commands.registerCommand("scratch.signInGithub", handleGithubSignIn),
+    vscode.commands.registerCommand("scratch.signOutGithub", handleGithubSignOut),
+    vscode.commands.registerCommand("scratch.syncGists", handleGistSync),
+    vscode.commands.registerCommand("scratch.openScratchFolder", async () => {
+      const config = getScratchConfig();
+      const scratchInfos = await getScratchFolderInfos(config);
+      const existing = scratchInfos.filter((info) => info.exists);
+
+      if (!existing.length) {
+        vscode.window.showWarningMessage(
+          "Scratchpad: no scratch folder found in the workspace."
+        );
+        return;
+      }
+
+      if (existing.length === 1) {
+        await vscode.commands.executeCommand(
+          "revealInExplorer",
+          existing[0].scratchUri
+        );
+        return;
+      }
+
+      const selected = await vscode.window.showQuickPick(
+        existing.map((info) => ({
+          label: info.workspaceFolder.name,
+          description: info.scratchUri.fsPath,
+          info,
+        })),
+        { placeHolder: "Select a scratch folder to reveal" }
+      );
+
+      if (selected) {
+        await vscode.commands.executeCommand(
+          "revealInExplorer",
+          selected.info.scratchUri
+        );
+      }
+    }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("scratch")) {
+        refreshScratchState().catch((error) => {
+          outputChannel.appendLine(
+            `Failed to refresh scratch state: ${String(error)}`
+          );
+        });
+      }
+    }),
+    vscode.authentication.onDidChangeSessions(async (event) => {
+      if (event.provider.id === "github") {
+        await updateStatusBar();
+      }
+    }),
+  ];
 
   async function refreshScratchState(): Promise<void> {
     const config = getScratchConfig();
@@ -80,67 +156,110 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
   }
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "scratch.refreshScratchState",
-      refreshScratchState
-    ),
-    vscode.commands.registerCommand(
-      "scratch.createScratchFolder",
-      refreshScratchState
-    ),
-    vscode.commands.registerCommand("scratch.showUserIdentity", showUserIdentity),
-    vscode.commands.registerCommand("scratch.openScratchFolder", async () => {
-      const config = getScratchConfig();
-      const scratchInfos = await getScratchFolderInfos(config);
-      const existing = scratchInfos.filter((info) => info.exists);
+  async function showGithubStatus(): Promise<void> {
+    try {
+      const session = await getGithubSession(false);
 
-      if (!existing.length) {
+      if (!session) {
         vscode.window.showWarningMessage(
-          "Scratchpad: no scratch folder found in the workspace."
+          "Scratchpad: no GitHub session found. Run Scratch: Sign In to GitHub."
         );
         return;
       }
 
-      if (existing.length === 1) {
-        await vscode.commands.executeCommand(
-          "revealInExplorer",
-          existing[0].scratchUri
-        );
-        return;
-      }
-
-      const selected = await vscode.window.showQuickPick(
-        existing.map((info) => ({
-          label: info.workspaceFolder.name,
-          description: info.scratchUri.fsPath,
-          info,
-        })),
-        { placeHolder: "Select a scratch folder to reveal" }
+      vscode.window.showInformationMessage(
+        `Scratchpad: GitHub session active for ${session.account.label}.`
       );
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: failed to read GitHub session. ${String(error)}`
+      );
+    }
+  }
 
-      if (selected) {
-        await vscode.commands.executeCommand(
-          "revealInExplorer",
-          selected.info.scratchUri
+  async function handleGistSync(): Promise<void> {
+    try {
+      const session = await getGithubSession(true);
+
+      if (!session) {
+        vscode.window.showWarningMessage(
+          "Scratchpad: GitHub sign-in required to sync gists."
         );
+        return;
       }
-    })
-  );
 
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("scratch")) {
-        refreshScratchState().catch((error) => {
-          outputChannel.appendLine(
-            `Failed to refresh scratch state: ${String(error)}`
-          );
-        });
+      statusBar.text = "$(sync~spin) Scratch: Syncing gists...";
+      statusBar.command = "scratch.showGithubStatus";
+
+      await syncGists({
+        accessToken: session.accessToken,
+        outputChannel,
+      });
+
+      vscode.window.showInformationMessage("Scratchpad: Gist sync complete.");
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: gist sync failed. ${String(error)}`
+      );
+    } finally {
+      await updateStatusBar();
+    }
+  }
+
+  async function handleGithubSignIn(): Promise<void> {
+    try {
+      const sessionInfo = await signInGithub(context);
+      vscode.window.showInformationMessage(
+        `Scratchpad: GitHub signed in as ${sessionInfo.accountLabel}.`
+      );
+      await updateStatusBar();
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: GitHub sign-in failed. ${String(error)}`
+      );
+    }
+  }
+
+  async function handleGithubSignOut(): Promise<void> {
+    try {
+      await signOutGithub(context);
+      vscode.window.showInformationMessage(
+        "Scratchpad: GitHub token removed. Sign out from the Accounts menu to revoke access."
+      );
+      await updateStatusBar();
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: GitHub sign-out failed. ${String(error)}`
+      );
+    }
+  }
+
+  async function updateStatusBar(): Promise<void> {
+    try {
+      const session = await getGithubSession(false);
+
+      if (!session) {
+        statusBar.text = "$(github) Scratch: Sign in";
+        statusBar.tooltip = "Scratchpad: Sign in to GitHub";
+        statusBar.command = "scratch.signInGithub";
+        return;
       }
-    })
-  );
+
+      statusBar.text = "$(sync) Scratch: Sync gists";
+      statusBar.tooltip = `Scratchpad: Sync gists (${session.account.label})`;
+      statusBar.command = "scratch.syncGists";
+    } catch (error) {
+      statusBar.text = "$(github) Scratch: Auth error";
+      statusBar.tooltip = `Scratchpad: ${String(error)}`;
+      statusBar.command = "scratch.showGithubStatus";
+    }
+  }
+
+  context.subscriptions.push(...disposables);
 
   await refreshScratchState();
+  await updateStatusBar();
+  statusBar.show();
   outputChannel.appendLine("Scratchpad extension activated.");
 }
 

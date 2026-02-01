@@ -17,11 +17,7 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:scratch.createScratchFolder",
-    "onCommand:scratch.openScratchFolder",
-    "onCommand:scratch.showUserIdentity",
-    "onCommand:scratch.refreshScratchState"
+    "onStartupFinished"
   ],
   "contributes": {
     "commands": [
@@ -36,6 +32,22 @@
       {
         "command": "scratch.showUserIdentity",
         "title": "Scratch: Show User Identity"
+      },
+      {
+        "command": "scratch.showGithubStatus",
+        "title": "Scratch: Show GitHub Status"
+      },
+      {
+        "command": "scratch.signInGithub",
+        "title": "Scratch: Sign In to GitHub"
+      },
+      {
+        "command": "scratch.signOutGithub",
+        "title": "Scratch: Sign Out of GitHub"
+      },
+      {
+        "command": "scratch.syncGists",
+        "title": "Scratch: Sync GitHub Gists"
       },
       {
         "command": "scratch.refreshScratchState",
@@ -78,6 +90,9 @@
     "package": "vsce package --allow-missing-repository",
     "package:clean": "rm -f *.vsix",
     "package:with-build": "yarn compile && yarn package"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

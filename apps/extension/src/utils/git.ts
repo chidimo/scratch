@@ -1,13 +1,10 @@
+import * as vscode from "vscode";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { GitUserIdentity } from "../types";
 
 const execFileAsync = promisify(execFile);
 
-export interface GitUserIdentity {
-  name?: string;
-  email?: string;
-  source: "git";
-}
 
 async function getGitConfigValue(
   cwd: string,
@@ -21,6 +18,10 @@ async function getGitConfigValue(
     const value = stdout.trim();
     return value.length > 0 ? value : undefined;
   } catch (error) {
+    console.error(error);
+    vscode.window.showErrorMessage(
+      `Failed to get Git config value: ${key}`
+    );
     return undefined;
   }
 }

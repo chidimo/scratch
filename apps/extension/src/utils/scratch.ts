@@ -1,12 +1,7 @@
 import * as vscode from "vscode";
-import { ScratchConfig } from "../config";
+import { ScratchConfig, ScratchFolderInfo } from "../types";
 import { getWorkspaceFolders } from "./workspace";
 
-export interface ScratchFolderInfo {
-  workspaceFolder: vscode.WorkspaceFolder;
-  scratchUri: vscode.Uri;
-  exists: boolean;
-}
 
 export async function getScratchFolderInfos(
   config: ScratchConfig
@@ -28,6 +23,13 @@ export async function getScratchFolderInfos(
 
         return { workspaceFolder, scratchUri, exists };
       } catch (error) {
+        if (error instanceof vscode.FileSystemError && error.code === "FileNotFound") {
+          return { workspaceFolder, scratchUri, exists: false };
+        }
+
+        vscode.window.showErrorMessage(
+          `Failed to stat scratch folder: ${scratchUri.fsPath}`
+        );
         return { workspaceFolder, scratchUri, exists: false };
       }
     })

@@ -1,13 +1,5 @@
 import * as vscode from "vscode";
-
-export type UserIdStrategy = "git";
-
-export interface ScratchConfig {
-  scratchFolderName: string;
-  autoCreateScratchFolder: boolean;
-  watchScratchFolder: boolean;
-  userIdStrategy: UserIdStrategy;
-}
+import { ScratchConfig, UserIdStrategy } from "./types";
 
 export function getScratchConfig(): ScratchConfig {
   const config = vscode.workspace.getConfiguration("scratch");
