@@ -19,4 +19,5 @@ export interface ScratchConfig {
   autoCreateScratchFolder: boolean;
   watchScratchFolder: boolean;
   userIdStrategy: UserIdStrategy;
+  gistAutoRefreshMinutes: number;
 }

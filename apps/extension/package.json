@@ -50,6 +50,10 @@
         "title": "Scratch: Sync GitHub Gists"
       },
       {
+        "command": "scratch.refreshGists",
+        "title": "Scratch: Refresh Imported Gists"
+      },
+      {
         "command": "scratch.refreshScratchState",
         "title": "Scratch: Refresh Scratch State"
       }
@@ -79,6 +83,12 @@
             "git"
           ],
           "description": "User identification strategy for the extension."
+        },
+        "scratch.gistAutoRefreshMinutes": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Auto-refresh imported gists every N minutes. Set to 0 to disable."
         }
       }
     }

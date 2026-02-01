@@ -12,5 +12,6 @@ export function getScratchConfig(): ScratchConfig {
     ),
     watchScratchFolder: config.get<boolean>("watchScratchFolder", true),
     userIdStrategy: config.get<UserIdStrategy>("userIdStrategy", "git"),
+    gistAutoRefreshMinutes: config.get<number>("gistAutoRefreshMinutes", 0),
   };
 }
