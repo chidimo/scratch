@@ -14,9 +14,10 @@ import {
 } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { CustomSwitch } from '@/components/form-elements/custom-switch';
-import { CustomInput } from '@/components/form-elements/custom-input';
 import { NoteActionBar } from './note-action-bar';
 import { HorizontalFileTabs } from './horizontal-file-tabs';
+import { NoteEditor } from './note-editor';
+import { PreviewMarkdown } from './preview-markdown';
 
 export const NoteScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,6 +30,7 @@ export const NoteScreen = () => {
     Record<string, { title: string; content: string }>
   >({});
   const [isPublic, setIsPublic] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const pagerRef = useRef<ScrollView | null>(null);
   const [pagerWidth, setPagerWidth] = useState(0);
@@ -255,6 +257,10 @@ export const NoteScreen = () => {
     );
   };
 
+  const handlePreview = () => {
+    setIsPreviewing((value) => !value);
+  };
+
   if (isLoading) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -338,41 +344,37 @@ export const NoteScreen = () => {
             };
             return (
               <View key={file} style={{ width: pagerWidth || undefined }}>
-                <CustomInput
-                  textStyle={styles.titleInput}
-                  placeholder="Note Title"
-                  value={draft.title}
-                  onChangeText={(value) =>
-                    setDrafts((prev) => ({
-                      ...prev,
-                      [file]: {
-                        title: value,
-                        content: prev[file]?.content ?? '',
-                      },
-                    }))
-                  }
-                  editable={!isMutating}
-                  multiline
-                  maxLength={100}
-                />
-
-                <CustomInput
-                  textStyle={styles.contentInput}
-                  placeholder="Start writing your note..."
-                  value={draft.content}
-                  onChangeText={(value) =>
-                    setDrafts((prev) => ({
-                      ...prev,
-                      [file]: {
-                        title: prev[file]?.title ?? file.replace('.md', ''),
-                        content: value,
-                      },
-                    }))
-                  }
-                  editable={!isMutating}
-                  multiline
-                  textAlignVertical="top"
-                />
+                {isPreviewing ? (
+                  <PreviewMarkdown
+                    title={draft.title}
+                    content={draft.content}
+                  />
+                ) : (
+                  <NoteEditor
+                    title={draft.title}
+                    content={draft.content}
+                    isTitleEditable={!isMutating}
+                    isContentEditable={!isMutating}
+                    onTitleChange={(value) =>
+                      setDrafts((prev) => ({
+                        ...prev,
+                        [file]: {
+                          title: value,
+                          content: prev[file]?.content ?? '',
+                        },
+                      }))
+                    }
+                    onContentChange={(value) =>
+                      setDrafts((prev) => ({
+                        ...prev,
+                        [file]: {
+                          title: prev[file]?.title ?? file.replace('.md', ''),
+                          content: value,
+                        },
+                      }))
+                    }
+                  />
+                )}
               </View>
             );
           })}
@@ -381,10 +383,12 @@ export const NoteScreen = () => {
 
       <NoteActionBar
         isSaving={isMutating}
+        isPreviewing={isPreviewing}
         canSave={!!activeDraft.title.trim() && !!activeDraft.content.trim()}
         onSave={handleSave}
         onCancel={handleCancel}
         onDelete={handleDelete}
+        onPreview={handlePreview}
       />
     </KeyboardAvoidingView>
   );
@@ -425,21 +429,6 @@ const styles = StyleSheet.create({
   },
   privacyRow: {
     marginBottom: 12,
-  },
-  titleInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    height: 'auto',
-    padding: 0,
-    paddingBottom: 8,
-  },
-  contentInput: {
-    fontSize: 16,
-    height: 'auto',
-    lineHeight: 24,
-    minHeight: 300,
-    padding: 0,
   },
   errorText: {
     fontSize: 16,
