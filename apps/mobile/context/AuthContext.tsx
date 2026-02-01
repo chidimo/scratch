@@ -1,4 +1,5 @@
 import {
+  GISTS_STORAGE_KEY,
   GITHUB_ENDPOINT,
   PUBLIC_AUTH_SCHEME,
   TOKEN_STORAGE_KEY,
@@ -139,7 +140,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = useCallback(async () => {
     try {
-      await AsyncStorage.multiRemove([TOKEN_STORAGE_KEY, USER_STORAGE_KEY]);
+      // Clear all AsyncStorage data
+      await AsyncStorage.multiRemove([
+        TOKEN_STORAGE_KEY,
+        USER_STORAGE_KEY,
+        GISTS_STORAGE_KEY,
+      ]);
+
+      // Reset auth state
       setAuthState({
         token: null,
         isLoading: false,

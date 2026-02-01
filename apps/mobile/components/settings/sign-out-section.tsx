@@ -1,11 +1,10 @@
-import { Alert } from 'react-native';
-import { useAuth } from '@/context/AuthContext';
-import { TouchableOpacity } from 'react-native';
-import { ThemedView } from '../themed-view';
+import { useSignOut } from '@/hooks/use-sign-out';
+import { Alert, TouchableOpacity } from 'react-native';
 import { ThemedText } from '../themed-text';
+import { ThemedView } from '../themed-view';
 
 export const SignOutSection = () => {
-  const { signOut } = useAuth();
+  const signOut = useSignOut();
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -20,9 +19,7 @@ export const SignOutSection = () => {
         style={[styles.settingItem, styles.dangerItem]}
         onPress={handleSignOut}
       >
-        <ThemedText
-          style={[styles.settingThemedText, styles.dangerThemedText]}
-        >
+        <ThemedText style={[styles.settingThemedText, styles.dangerThemedText]}>
           Sign Out
         </ThemedText>
         <ThemedText style={styles.settingDescription}>
@@ -40,7 +37,7 @@ const styles = {
   },
   settingItem: {
     padding: 12,
-    borderRadius: 12
+    borderRadius: 12,
   },
   settingThemedText: {
     fontSize: 16,
