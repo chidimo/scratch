@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { CustomInput } from './form-elements/custom-input';
 
-interface SearchInputProps {
+interface Props {
   placeholder?: string;
   defaultValue?: string;
   debounceMs?: number;
   onSearch: (searchTerm: string) => void;
 }
 
-export const SearchInput: React.FC<SearchInputProps> = ({
+export const SearchInput = ({
   onSearch,
   placeholder = 'Search notes...',
   defaultValue = '',
   debounceMs = 300,
-}) => {
+}: Props) => {
   const [searchQuery, setSearchQuery] = useState(defaultValue);
 
   // Debounce search to avoid too frequent calls
@@ -33,6 +33,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       returnKeyType="search"
       autoCapitalize="none"
       autoCorrect={false}
+      containerStyle={{marginBottom: 0}}
     />
   );
 };

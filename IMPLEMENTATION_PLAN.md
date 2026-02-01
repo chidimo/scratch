@@ -13,7 +13,8 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 **Objectives:**
 
 - Set up GitHub OAuth integration
-- Set up token exchange backend (serverless)
+- Set up token exchange backend (serverless for web)
+- Setup github authentication with expo for mobile
 - Implement basic gist fetching
 - Create core navigation structure
 

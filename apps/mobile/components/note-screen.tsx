@@ -4,15 +4,18 @@ import { useEffect, useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
 } from 'react-native';
 import { ThemedView } from './themed-view';
+import { CustomSwitch } from '@/components/form-elements/custom-switch';
+import { CustomButton } from './form-elements/custom-button';
+import { CustomInput } from './form-elements/custom-input';
 
 export const NoteScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,12 +26,14 @@ export const NoteScreen = () => {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
 
   // Update form when note data changes
   useEffect(() => {
     if (note) {
       setTitle(note.title);
       setContent(note.content);
+      setIsPublic(note.is_public ?? false);
     }
   }, [note]);
 
@@ -53,6 +58,7 @@ export const NoteScreen = () => {
         id,
         title: title.trim(),
         content: content.trim(),
+        isPublic,
       });
 
       Alert.alert('Success', 'Note updated successfully!', [
@@ -67,9 +73,35 @@ export const NoteScreen = () => {
     }
   };
 
+  const handlePrivacyToggle = async (nextValue: boolean) => {
+    if (!note || !id || isMutating) {
+      return;
+    }
+
+    const previousValue = isPublic;
+    const nextTitle = title.trim() || note.title;
+    const nextContent = content.trim() || note.content;
+    setIsPublic(nextValue);
+
+    try {
+      await updateNote.mutateAsync({
+        id,
+        title: nextTitle,
+        content: nextContent,
+        isPublic: nextValue,
+      });
+    } catch (error) {
+      console.error('Error updating note privacy:', error);
+      setIsPublic(previousValue);
+      Alert.alert('Error', 'Failed to update note privacy. Please try again.');
+    }
+  };
+
   const handleCancel = () => {
     const hasChanges =
-      title.trim() !== note?.title || content.trim() !== note?.content;
+      title.trim() !== note?.title ||
+      content.trim() !== note?.content ||
+      isPublic !== (note?.is_public ?? false);
 
     if (hasChanges) {
       Alert.alert(
@@ -123,6 +155,7 @@ export const NoteScreen = () => {
   if (isLoading) {
     return (
       <ThemedView style={styles.loadingContainer}>
+        <ActivityIndicator />
         <ThemedText style={styles.loadingText}>Loading note...</ThemedText>
       </ThemedView>
     );
@@ -150,37 +183,26 @@ export const NoteScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ThemedView style={styles.header}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={handleCancel}
-          disabled={isMutating}
-        >
-          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-        </TouchableOpacity>
-
         <ThemedText style={styles.headerTitle}>Edit Note</ThemedText>
-
-        <TouchableOpacity
-          style={[styles.saveButton, isMutating && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={isMutating || !title.trim() || !content.trim()}
-        >
-          <ThemedText
-            style={[
-              styles.saveButtonText,
-              isMutating && styles.saveButtonTextDisabled,
-            ]}
-          >
-            {isMutating ? 'Saving...' : 'Save'}
-          </ThemedText>
-        </TouchableOpacity>
       </ThemedView>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <TextInput
-          style={styles.titleInput}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <ThemedView style={styles.privacyRow}>
+          <CustomSwitch
+            value={isPublic}
+            onChange={handlePrivacyToggle}
+            label={isPublic ? 'Public gist' : 'Private gist'}
+            containerStyle={{ padding: 6 }}
+          />
+        </ThemedView>
+
+        <CustomInput
+          textStyle={styles.titleInput}
           placeholder="Note Title"
-          placeholderTextColor="#999"
           value={title}
           onChangeText={setTitle}
           editable={!isMutating}
@@ -188,45 +210,82 @@ export const NoteScreen = () => {
           maxLength={100}
         />
 
-        <TextInput
-          style={styles.contentInput}
+        <CustomInput
+          textStyle={styles.contentInput}
           placeholder="Start writing your note..."
-          placeholderTextColor="#999"
           value={content}
           onChangeText={setContent}
           editable={!isMutating}
           multiline
           textAlignVertical="top"
         />
-
-        <ThemedView style={styles.actions}>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-            disabled={isMutating}
-          >
-            <ThemedText style={styles.deleteButtonText}>Delete Note</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
       </ScrollView>
+
+      <NoteActionBar
+        isSaving={isMutating}
+        canSave={!!title.trim() && !!content.trim()}
+        onSave={handleSave}
+        onCancel={handleCancel}
+        onDelete={handleDelete}
+      />
     </KeyboardAvoidingView>
+  );
+};
+
+const NoteActionBar = ({
+  isSaving,
+  canSave,
+  onSave,
+  onCancel,
+  onDelete,
+}: {
+  isSaving: boolean;
+  canSave: boolean;
+  onSave: () => void;
+  onCancel: () => void;
+  onDelete: () => void;
+}) => {
+  return (
+    <ThemedView style={styles.actionBar}>
+      <ThemedView style={styles.actionBarInner}>
+        <CustomButton
+          containerStyle={{ width: '30%' }}
+          onPress={onCancel}
+          title="Back"
+          variant="SECONDARY"
+        />
+        <CustomButton
+          containerStyle={{ width: '30%' }}
+          onPress={onSave}
+          title={isSaving ? 'Saving...' : 'Save'}
+          disabled={!canSave || isSaving}
+          isLoading={isSaving}
+          variant="PRIMARY"
+        />
+        <CustomButton
+          containerStyle={{ width: '30%' }}
+          onPress={onDelete}
+          title="Delete"
+          disabled={isSaving}
+          variant="DANGER"
+        />
+      </ThemedView>
+    </ThemedView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: 'center',
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
+    textAlign: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -236,78 +295,54 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-    backgroundColor: '#fff',
-  },
-  cancelButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
-  },
-  saveButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#007AFF',
-    borderRadius: 6,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  saveButtonTextDisabled: {
-    color: '#999',
   },
   content: {
     flex: 1,
     padding: 16,
   },
+  contentContainer: {
+    paddingBottom: 120,
+  },
+  privacyRow: {
+    marginBottom: 12,
+  },
   titleInput: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: 16,
+    height: 'auto',
     padding: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
     paddingBottom: 8,
   },
   contentInput: {
     fontSize: 16,
-    color: '#000',
+    height: 'auto',
     lineHeight: 24,
     minHeight: 300,
     padding: 0,
   },
-  actions: {
-    marginTop: 40,
-    marginBottom: 40,
-    alignItems: 'center',
-  },
-  deleteButton: {
-    backgroundColor: '#ff3b30',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   errorText: {
     fontSize: 16,
     color: '#ff0000',
+  },
+  actionBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  actionBarInner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
   },
 });

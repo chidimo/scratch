@@ -3,10 +3,15 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedView } from './themed-view';
 import { ThemedText } from './themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export const GistItem = ({ gist }: { gist: Note }) => {
   const router = useRouter();
-  // console.log(gist)
+  const privacyLabel = gist.is_public ? 'Public' : 'Private';
+  const { surfaceAlt: pillBackground, text: pillText } = useThemeColor({}, [
+    'surfaceAlt',
+    'text',
+  ]);
 
   return (
     <TouchableOpacity
@@ -14,7 +19,9 @@ export const GistItem = ({ gist }: { gist: Note }) => {
       onPress={() => router.push(`/note/${gist.id}`)}
     >
       <ThemedView style={styles.noteHeader}>
-        <ThemedText style={styles.noteTitle}>{gist.title}</ThemedText>
+        <View style={styles.noteHeaderLeft}>
+          <ThemedText style={styles.noteTitle}>{gist.title}</ThemedText>
+        </View>
         <ThemedText style={styles.noteDate}>
           {new Date(gist.updated_at).toLocaleDateString()}
         </ThemedText>
@@ -35,6 +42,11 @@ export const GistItem = ({ gist }: { gist: Note }) => {
           />
           <ThemedText style={styles.statusText}>{gist.sync_status}</ThemedText>
         </View>
+        <View style={[styles.privacyPill, { backgroundColor: pillBackground }]}>
+          <ThemedText style={[styles.privacyText, { color: pillText }]}>
+            {privacyLabel}
+          </ThemedText>
+        </View>
       </ThemedView>
     </TouchableOpacity>
   );
@@ -54,16 +66,11 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   noteItem: {
-    margin: 12,
+    marginVertical: 12,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 4,
-    // elevation: 3,
   },
   noteHeader: {
     flexDirection: 'row',
@@ -71,11 +78,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  noteTitle: {
+  noteHeaderLeft: {
     flex: 1,
+    marginRight: 8,
+  },
+  noteTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginRight: 8,
+  },
+  ownerLink: {
+    marginTop: 2,
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
   noteDate: {
     fontSize: 12,
@@ -87,7 +101,8 @@ const styles = StyleSheet.create({
   },
   noteFooter: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   syncStatus: {
     flexDirection: 'row',
@@ -102,5 +117,14 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     textTransform: 'capitalize',
+  },
+  privacyText: {
+    fontSize: 12,
+    textTransform: 'capitalize',
+  },
+  privacyPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
 });

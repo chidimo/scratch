@@ -13,13 +13,16 @@ import {
   View,
 } from 'react-native';
 import { ThemedText } from '../../components/themed-text';
+import { CustomSwitch } from '@/components/form-elements/custom-switch';
 
 export default function NewNoteScreen() {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const { token } = useAuth();
   const router = useRouter();
   const createGist = useCreateGist();
+
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -43,7 +46,7 @@ export default function NewNoteScreen() {
         files: {
           [`${title.trim()}.md`]: { content: content.trim() },
         },
-        public: false,
+        public: isPublic,
       });
 
       Alert.alert('Success', 'Note created successfully!', [
@@ -113,6 +116,14 @@ export default function NewNoteScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.privacyRow}>
+          <CustomSwitch
+            value={isPublic}
+            onChange={setIsPublic}
+            label={isPublic ? 'Public gist' : 'Private gist'}
+          />
+        </View>
+
         <TextInput
           style={styles.titleInput}
           placeholder="Note Title"
@@ -188,6 +199,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+  },
+  privacyRow: {
+    marginBottom: 12,
   },
   titleInput: {
     fontSize: 24,

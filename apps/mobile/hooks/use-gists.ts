@@ -46,6 +46,8 @@ export const useGists = (searchTerm?: string) => {
             updated_at: gist.updated_at,
             tags: [],
             gist_id: gist.id,
+            is_public: gist.public,
+            owner_login: gist.owner?.login,
             sync_status: 'synced' as const,
           };
         });
@@ -100,10 +102,12 @@ export const useUpdateGistById = () => {
       id,
       title,
       content,
+      isPublic,
     }: {
       id: string;
       title: string;
       content: string;
+      isPublic?: boolean;
     }) => {
       const githubClient = getGithubClient();
 
@@ -111,7 +115,7 @@ export const useUpdateGistById = () => {
         [`${title}.md`]: content,
       };
 
-      return await githubClient.updateGist(id, title, files);
+      return await githubClient.updateGist(id, title, files, isPublic);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [GISTS_QUERY_KEY] });
@@ -197,6 +201,8 @@ export const useGistById = (id: string | null) => {
         updated_at: gistData.updated_at,
         tags: [], // Extract tags from content or metadata
         gist_id: gistData.id,
+        is_public: gistData.public,
+        owner_login: gistData.owner?.login,
         sync_status: 'synced' as const,
       };
     },

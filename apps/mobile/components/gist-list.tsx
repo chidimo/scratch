@@ -14,6 +14,7 @@ import { GistItem } from './gist-item';
 import { SearchInput } from './search-input';
 import { ThemedView } from './themed-view';
 import { ThemedText } from './themed-text';
+import { CustomButton } from './form-elements/custom-button';
 
 export const GistList = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -41,16 +42,18 @@ export const GistList = () => {
   return (
     <ThemedView style={styles.container}>
       {isPending && <ActivityIndicator size="large" />}
+
       <View style={styles.searchAndCreateContainer}>
         <View style={styles.searchWrapper}>
           <SearchInput onSearch={handleSearch} />
         </View>
-        <TouchableOpacity
-          style={styles.createButton}
+
+        <CustomButton
+          title="+ New"
+          variant="PRIMARY"
           onPress={handleCreateNote}
-        >
-          <ThemedText style={styles.createButtonThemedText}>+ New</ThemedText>
-        </TouchableOpacity>
+          containerStyle={{ width: 100 }}
+        />
       </View>
       <FlatList
         data={gists}
@@ -87,58 +90,27 @@ export const GistList = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  authContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
-    textAlign: 'center',
-    lineHeight: 24,
+    paddingHorizontal: 8,
   },
   searchAndCreateContainer: {
+    gap: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   searchWrapper: {
     flex: 1,
-    marginRight: 12,
   },
   header: {
-    padding: 16,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-  },
-  createButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 80,
-  },
-  createButtonThemedText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
   },
   notesList: {
     flex: 1,
@@ -154,7 +126,6 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
   },
 });

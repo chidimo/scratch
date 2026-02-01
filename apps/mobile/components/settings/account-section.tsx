@@ -1,4 +1,4 @@
-import { Image, View } from 'react-native';
+import { Image, Linking, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
 import { SectionTitle } from './section-title';
@@ -16,7 +16,15 @@ export const AccountSection = () => {
       <SectionTitle title="Account" />
       <View style={styles.userInfo}>
         <View style={styles.userDetails}>
-          <ThemedText style={styles.userLogin}>@{user.login}</ThemedText>
+          <TouchableOpacity
+            onPress={() => {
+              const profileUrl =
+                user.html_url || `https://github.com/${user.login}`;
+              Linking.openURL(profileUrl);
+            }}
+          >
+            <ThemedText style={styles.userLogin}>@{user.login}</ThemedText>
+          </TouchableOpacity>
           <ThemedText style={styles.userName}>{user.name}</ThemedText>
           <ThemedText style={styles.userEmail}>{user.email}</ThemedText>
         </View>

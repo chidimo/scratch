@@ -72,6 +72,8 @@ export interface Note {
   updated_at: string;
   tags: string[];
   gist_id?: string;
+  is_public?: boolean;
+  owner_login?: string;
   sync_status: 'synced' | 'pending' | 'error';
 }
 

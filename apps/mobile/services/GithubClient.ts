@@ -139,6 +139,12 @@ class GithubClient {
         public: gist.public ?? false,
         created_at: gist.created_at ?? '',
         updated_at: gist.updated_at ?? '',
+        owner: {
+          login: gist.owner?.login ?? '',
+          id: gist.owner?.id ?? 0,
+          avatar_url: gist.owner?.avatar_url ?? '',
+        },
+        html_url: gist.html_url ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
@@ -161,12 +167,14 @@ class GithubClient {
     gistId: string,
     description: string,
     files: { [filename: string]: string },
+    isPublic?: boolean,
   ): Promise<Gist> {
     try {
       const client = await this.ensureClient();
       const response = await client.rest.gists.update({
         gist_id: gistId,
         description,
+        public: isPublic,
         files: Object.keys(files).reduce(
           (acc, filename) => {
             acc[filename] = { content: files[filename] };
@@ -183,6 +191,12 @@ class GithubClient {
         public: gist.public ?? false,
         created_at: gist.created_at ?? '',
         updated_at: gist.updated_at ?? '',
+        owner: {
+          login: gist.owner?.login ?? '',
+          id: gist.owner?.id ?? 0,
+          avatar_url: gist.owner?.avatar_url ?? '',
+        },
+        html_url: gist.html_url ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];
@@ -227,6 +241,12 @@ class GithubClient {
         public: gist.public ?? false,
         created_at: gist.created_at ?? '',
         updated_at: gist.updated_at ?? '',
+        owner: {
+          login: gist.owner?.login ?? '',
+          id: gist.owner?.id ?? 0,
+          avatar_url: gist.owner?.avatar_url ?? '',
+        },
+        html_url: gist.html_url ?? '',
         files: Object.keys(gist.files || {}).reduce(
           (acc, filename) => {
             const file = gist.files![filename];

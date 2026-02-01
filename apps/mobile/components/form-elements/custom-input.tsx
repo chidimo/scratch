@@ -33,9 +33,14 @@ type AutoCapitalizeOptions = 'none' | 'sentences' | 'words' | 'characters';
 type Props = {
   label?: string;
   value?: any;
+  editable?: boolean;
   disabled?: boolean;
   multiline?: boolean;
   selectTextOnFocus?: boolean;
+
+  textAlignVertical?: 'top' | 'bottom';
+
+  maxLength?: number;
 
   error?: any;
   placeholder?: string;
@@ -60,6 +65,8 @@ export const CustomInput = (props: Props, ref?: Ref<TextInput>) => {
     label,
     value,
     error,
+    maxLength,
+    editable = true,
     disabled = false,
     multiline = false,
     containerStyle = {},
@@ -74,6 +81,8 @@ export const CustomInput = (props: Props, ref?: Ref<TextInput>) => {
     autoComplete = 'off',
     autoCorrect,
     autoCapitalize,
+
+    textAlignVertical,
   } = props;
 
   const {
@@ -105,7 +114,8 @@ export const CustomInput = (props: Props, ref?: Ref<TextInput>) => {
       <TextInput
         ref={ref}
         value={value}
-        editable={!disabled}
+        maxLength={maxLength}
+        editable={editable || !disabled}
         multiline={multiline}
         selectTextOnFocus={selectTextOnFocus}
         placeholder={placeholder}
@@ -118,6 +128,7 @@ export const CustomInput = (props: Props, ref?: Ref<TextInput>) => {
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}
         placeholderTextColor={placeholderColor}
+        textAlignVertical={textAlignVertical}
         style={[
           {
             height: 50,
