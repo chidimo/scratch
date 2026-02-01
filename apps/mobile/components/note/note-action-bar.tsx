@@ -4,28 +4,32 @@ import { CustomButton } from '@/components/form-elements/custom-button';
 
 export const NoteActionBar = ({
   isSaving,
+  isPreviewing,
   canSave,
   onSave,
   onCancel,
   onDelete,
+  onPreview,
 }: {
   isSaving: boolean;
+  isPreviewing: boolean;
   canSave: boolean;
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  onPreview: () => void;
 }) => {
   return (
     <ThemedView style={styles.actionBar}>
       <ThemedView style={styles.actionBarInner}>
         <CustomButton
-          containerStyle={{ width: '30%' }}
+          containerStyle={{ width: '22%' }}
           onPress={onCancel}
           title="Back"
           variant="SECONDARY"
         />
         <CustomButton
-          containerStyle={{ width: '30%' }}
+          containerStyle={{ width: '22%' }}
           onPress={onSave}
           title={isSaving ? 'Saving...' : 'Save'}
           disabled={!canSave || isSaving}
@@ -33,7 +37,15 @@ export const NoteActionBar = ({
           variant="PRIMARY"
         />
         <CustomButton
-          containerStyle={{ width: '30%' }}
+          containerStyle={{ width: '22%' }}
+          onPress={onPreview}
+          title={isPreviewing ? 'Edit' : 'Preview'}
+          disabled={!canSave || isSaving}
+          isLoading={isSaving}
+          variant="SUCCESS"
+        />
+        <CustomButton
+          containerStyle={{ width: '22%' }}
           onPress={onDelete}
           title="Delete"
           disabled={isSaving}
