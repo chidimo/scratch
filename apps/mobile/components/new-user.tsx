@@ -25,7 +25,7 @@ export const NewUser = () => {
     <ThemedView style={styles.container}>
       <View style={styles.authContainer}>
         <Image
-          source={require('assets/images/scratchpad-icon.png')}
+          source={require('assets/images/scratch-icon.png')}
           style={styles.logo}
         />
         <ThemedText style={styles.title}>Welcome to Scratch</ThemedText>
