@@ -1,36 +1,36 @@
 import { Linking, StyleSheet, TouchableOpacity, } from "react-native";
-import { SectionTitle } from "./section-title";
 import { ThemedText } from "../themed-text";
 import { ThemedView } from "../themed-view";
+import { SectionTitle } from "./section-title";
 
 export const GetExtension = () => {
     return (
         <ThemedView style={styles.section}>
-            <SectionTitle title="Get the Scratch Extension" />
+            <SectionTitle title="Get the Scratch (Gists) Extension" />
             <TouchableOpacity
                 style={styles.extensionLinkButton}
-                onPress={() => Linking.openURL('https://marketplace.visualstudio.com/items?itemName=scratch.scratch-vscode')}
+                onPress={() => Linking.openURL('https://marketplace.visualstudio.com/items?itemName=chidimo.scratch')}
             >
                 <ThemedText style={styles.extensionLinkText}>
                     VSCode Marketplace
                 </ThemedText>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
                 style={styles.extensionLinkButton}
                 onPress={() => Linking.openURL('https://marketplace.visualstudio.com/items?itemName=scratch.scratch-vscode')}
             >
                 <ThemedText style={styles.extensionLinkText}>
                     Open VSX Marketplace
                 </ThemedText>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
                 style={styles.extensionLinkButton}
-                onPress={() => Linking.openURL('https://github.com/chidimo/scratch')}
+                onPress={() => Linking.openURL('https://scratch.chidiorji.com')}
             >
                 <ThemedText style={styles.extensionLinkText}>
-                    On GitHub
+                    On the web
                 </ThemedText>
             </TouchableOpacity>
         </ThemedView>

@@ -28,7 +28,7 @@ export const NewUser = () => {
           source={require('assets/images/scratch-icon.png')}
           style={styles.logo}
         />
-        <ThemedText style={styles.title}>Welcome to Scratch</ThemedText>
+        <ThemedText style={styles.title}>Welcome to Scratch (Gists)</ThemedText>
         <ThemedText style={styles.subtitle}>
           Your personal scratchpad synced with GitHub Gists
         </ThemedText>

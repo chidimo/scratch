@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
 
-export function Gists() {
+export const Gists = () => {
   const { user, gists, isLoading, error, fetchGists, logout, login } =
     useAuth();
 
@@ -17,7 +17,7 @@ export function Gists() {
     return (
       <>
         <Helmet>
-          <title>Scratch - Your Cross-Platform Scratchpad</title>
+          <title>Scratch (Gists) - Your Cross-Platform Scratchpad</title>
           <meta
             name="description"
             content="Sign in with GitHub to access your gists and manage your scratchpad across all platforms"
@@ -27,24 +27,14 @@ export function Gists() {
           <header className="border-b border-gray-100">
             <div className="max-w-6xl mx-auto px-6 py-6">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2h2.828l-8.586-8.586z"
-                    />
-                  </svg>
-                </div>
+                <img
+                  src="/scratch-icon.png"
+                  alt="Scratch (Gists) logo"
+                  className="w-8 h-8 rounded-lg"
+                />
                 <div>
                   <h1 className="text-2xl font-semibold text-gray-900">
-                    Scratch
+                    Scratch (Gists)
                   </h1>
                 </div>
               </div>
@@ -54,23 +44,13 @@ export function Gists() {
           <main className="flex-1 flex items-center justify-center px-6">
             <div className="w-full max-w-md">
               <div className="text-center mb-8">
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-6">
-                  <svg
-                    className="w-6 h-6 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
+                <img
+                  src="/scratch-icon.png"
+                  alt="Scratch (Gists) logo"
+                  className="w-12 h-12 rounded-xl mx-auto mb-6"
+                />
                 <h2 className="text-3xl font-bold text-gray-900 mb-3">
-                  Welcome to Scratch
+                  Welcome to Scratch (Gists)
                 </h2>
                 <p className="text-lg text-gray-600 mb-1">
                   Your cross-platform scratchpad
@@ -116,10 +96,18 @@ export function Gists() {
 
               <div className="mt-8 pt-6 border-t border-gray-100">
                 <div className="text-center text-sm text-gray-500">
-                  <p className="mb-2">New to Scratch?</p>
+                  <p className="mb-2">New to Scratch (Gists)?</p>
                   <p>
                     Connect your GitHub account to start managing your gists
                   </p>
+                  <a
+                    href="https://marketplace.visualstudio.com/items?itemName=chidimo.scratch"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                  >
+                    Get the VS Code extension →
+                  </a>
                 </div>
               </div>
             </div>
@@ -128,7 +116,15 @@ export function Gists() {
           <footer className="border-t border-gray-100 py-6">
             <div className="max-w-6xl mx-auto px-6 text-center">
               <p className="text-sm text-gray-500">
-                &copy; 2026 Scratch. Built for developers.
+                &copy; 2026 Scratch (Gists). Built with{' '}
+                <span className="text-red-500">❤</span>
+                {'. '}
+                <a
+                  href="/privacy"
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Privacy Policy
+                </a>
               </p>
             </div>
           </footer>
@@ -141,7 +137,7 @@ export function Gists() {
     return (
       <>
         <Helmet>
-          <title>Loading - Scratch | Your Cross-Platform Scratchpad</title>
+          <title>Loading - Scratch (Gists) | Your Cross-Platform Scratchpad</title>
         </Helmet>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
           <div className="text-center">
@@ -159,7 +155,7 @@ export function Gists() {
     return (
       <>
         <Helmet>
-          <title>Error - Scratch | Your Cross-Platform Scratchpad</title>
+          <title>Error - Scratch (Gists) | Your Cross-Platform Scratchpad</title>
         </Helmet>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
@@ -195,10 +191,10 @@ export function Gists() {
   return (
     <>
       <Helmet>
-        <title>{user?.name || user?.login}'s Gists - Scratch</title>
+        <title>{user?.name || user?.login}'s Gists - Scratch (Gists)</title>
         <meta
           name="description"
-          content={`Manage and view ${user?.public_gists} gists from ${user?.name || user?.login} on Scratch`}
+          content={`Manage and view ${user?.public_gists} gists from ${user?.name || user?.login} on Scratch (Gists)`}
         />
       </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -206,21 +202,11 @@ export function Gists() {
           <div className="max-w-6xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
+                <img
+                  src="/scratch-icon.png"
+                  alt="Scratch (Gists) logo"
+                  className="w-10 h-10 rounded-xl"
+                />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
                     {user?.name || user?.login}'s Gists
@@ -327,11 +313,10 @@ export function Gists() {
 
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                        gist.public
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}
+                      className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${gist.public
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-700'
+                        }`}
                     >
                       {gist.public ? '🌐 Public' : '🔒 Private'}
                     </span>
@@ -361,4 +346,3 @@ export function Gists() {
   );
 }
 
-export default Gists;

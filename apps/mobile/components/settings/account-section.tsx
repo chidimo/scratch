@@ -1,8 +1,8 @@
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { Image, Linking, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
 import { SectionTitle } from './section-title';
-import { useUserProfile } from '@/hooks/use-user-profile';
 
 export const AccountSection = () => {
   const { data: user } = useUserProfile();
@@ -57,11 +57,14 @@ const styles = {
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 14,
-    marginBottom: 2,
+    fontSize: 16,
+    marginBottom: 4,
   },
   userLogin: {
-    fontSize: 14,
+    fontSize: 16,
+    color: '#2563eb',
+    textDecorationLine: 'underline',
+    marginBottom: 6,
   },
   avatar: {
     width: 60,

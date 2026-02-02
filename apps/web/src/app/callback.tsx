@@ -116,10 +116,10 @@ export function Callback() {
   return (
     <>
       <Helmet>
-        <title>Authentication - Scratch | Your Cross-Platform Scratchpad</title>
+        <title>Authentication - Scratch (Gists) | Your Cross-Platform Scratchpad</title>
         <meta
           name="description"
-          content="Completing GitHub authentication for Scratch"
+          content="Completing GitHub authentication for Scratch (Gists)"
         />
       </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
