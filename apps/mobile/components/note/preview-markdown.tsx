@@ -1,8 +1,24 @@
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { StyleSheet } from 'react-native';
+import type { ComponentType } from 'react';
+import { StyleSheet, Text } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { oneDark, oneLight } from 'react-syntax-highlighter/styles/prism';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
+
+const SyntaxHighlighter = (
+  require('react-native-syntax-highlighter').default ??
+  require('react-native-syntax-highlighter')
+) as ComponentType<{
+  language?: string;
+  style?: Record<string, unknown>;
+  customStyle?: Record<string, unknown>;
+  highlighter?: string;
+  PreTag?: ComponentType<any>;
+  CodeTag?: ComponentType<any>;
+  children: string | string[];
+}>;
 
 type Props = {
   title: string;
@@ -10,6 +26,7 @@ type Props = {
 };
 
 export const PreviewMarkdown = ({ content, title }: Props) => {
+  const colorScheme = useColorScheme();
   const { text, mutedText, border, surface, surfaceAlt, tint } = useThemeColor(
     {},
     ['text', 'mutedText', 'border', 'surface', 'surfaceAlt', 'tint'],
@@ -22,13 +39,18 @@ export const PreviewMarkdown = ({ content, title }: Props) => {
     surfaceAlt,
     tint,
   });
+  const syntaxStyle = colorScheme === 'dark' ? oneDark : oneLight;
+  const markdownRules = createMarkdownRules({
+    surfaceAlt,
+    syntaxStyle,
+  });
 
   return (
     <ThemedView style={styles.previewContainer}>
       <ThemedText style={[styles.previewTitle, { borderBottomColor: border }]}>
         {title || 'Untitled'}
       </ThemedText>
-      <Markdown style={markdownStyles}>
+      <Markdown style={markdownStyles} rules={markdownRules}>
         {content || 'No content to preview'}
       </Markdown>
     </ThemedView>
@@ -144,5 +166,55 @@ const createMarkdownStyles = ({
   },
   strong: {
     fontWeight: 'bold' as const,
+  },
+});
+
+const createMarkdownRules = ({
+  surfaceAlt,
+  syntaxStyle,
+}: {
+  surfaceAlt: string;
+  syntaxStyle: typeof oneDark;
+}) => ({
+  fence: (node: { content: string; info?: string; key: string }) => {
+    const language = node.info?.trim() || 'text';
+    return (
+      <SyntaxHighlighter
+        key={node.key}
+        language={language}
+        style={syntaxStyle}
+        highlighter="prism"
+        PreTag={Text}
+        CodeTag={Text}
+        customStyle={{
+          backgroundColor: surfaceAlt,
+          padding: 12,
+          borderRadius: 6,
+          marginBottom: 12,
+        }}
+      >
+        {node.content}
+      </SyntaxHighlighter>
+    );
+  },
+  code_block: (node: { content: string; key: string }) => {
+    return (
+      <SyntaxHighlighter
+        key={node.key}
+        language="text"
+        style={syntaxStyle}
+        highlighter="prism"
+        PreTag={Text}
+        CodeTag={Text}
+        customStyle={{
+          backgroundColor: surfaceAlt,
+          padding: 12,
+          borderRadius: 6,
+          marginBottom: 12,
+        }}
+      >
+        {node.content}
+      </SyntaxHighlighter>
+    );
   },
 });
