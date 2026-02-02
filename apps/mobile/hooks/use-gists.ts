@@ -212,8 +212,6 @@ export const useGistById = (id: string | null) => {
       const githubClient = getGithubClient();
       const gistData = await githubClient.getGist(id);
 
-      console.log(JSON.stringify(gistData, null, 2));
-
       // Find the markdown file
       const mdFiles = Object.keys(gistData.files).filter((filename) =>
         filename.endsWith('.md'),
