@@ -27,8 +27,7 @@
     "vscode": "^1.82.0"
   },
   "categories": [
-    "Other",
-    "Productivity"
+    "Other"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
