@@ -3,7 +3,10 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import type { ComponentType } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Markdown from 'react-native-markdown-display';
-import { oneDark, oneLight } from 'react-syntax-highlighter/styles/prism';
+import {
+  atomOneDark,
+  atomOneLight,
+} from 'react-syntax-highlighter/styles/hljs';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
 
@@ -39,7 +42,7 @@ export const PreviewMarkdown = ({ content, title }: Props) => {
     surfaceAlt,
     tint,
   });
-  const syntaxStyle = colorScheme === 'dark' ? oneDark : oneLight;
+  const syntaxStyle = colorScheme === 'dark' ? atomOneDark : atomOneLight;
   const markdownRules = createMarkdownRules({
     surfaceAlt,
     syntaxStyle,
@@ -174,16 +177,22 @@ const createMarkdownRules = ({
   syntaxStyle,
 }: {
   surfaceAlt: string;
-  syntaxStyle: typeof oneDark;
+  syntaxStyle: typeof atomOneDark;
 }) => ({
-  fence: (node: { content: string; info?: string; key: string }) => {
-    const language = node.info?.trim() || 'text';
+  fence: (node: {
+    content: string;
+    info?: string;
+    lang?: string;
+    key: string;
+  }) => {
+    const rawLanguage = node.info?.trim() || node.lang?.trim() || 'text';
+    const language = normalizeLanguage(rawLanguage);
     return (
       <SyntaxHighlighter
         key={node.key}
         language={language}
         style={syntaxStyle}
-        highlighter="prism"
+        highlighter="highlightjs"
         PreTag={Text}
         CodeTag={Text}
         customStyle={{
@@ -203,7 +212,7 @@ const createMarkdownRules = ({
         key={node.key}
         language="text"
         style={syntaxStyle}
-        highlighter="prism"
+        highlighter="highlightjs"
         PreTag={Text}
         CodeTag={Text}
         customStyle={{
@@ -218,3 +227,21 @@ const createMarkdownRules = ({
     );
   },
 });
+
+const normalizeLanguage = (value: string): string => {
+  const language = value.toLowerCase();
+  switch (language) {
+    case 'js':
+      return 'javascript';
+    case 'jsx':
+      return 'jsx';
+    case 'ts':
+      return 'typescript';
+    case 'tsx':
+      return 'tsx';
+    case 'py':
+      return 'python';
+    default:
+      return language || 'text';
+  }
+};

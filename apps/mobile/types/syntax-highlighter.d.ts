@@ -24,3 +24,10 @@ declare module 'react-syntax-highlighter/styles/prism' {
   export const oneDark: SyntaxHighlighterStyle;
   export const oneLight: SyntaxHighlighterStyle;
 }
+
+declare module 'react-syntax-highlighter/styles/hljs' {
+  import { SyntaxHighlighterStyle } from 'react-native-syntax-highlighter';
+
+  export const atomOneDark: SyntaxHighlighterStyle;
+  export const atomOneLight: SyntaxHighlighterStyle;
+}
