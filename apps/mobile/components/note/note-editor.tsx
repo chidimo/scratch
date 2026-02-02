@@ -47,10 +47,10 @@ const styles = StyleSheet.create({
   titleInput: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 8,
     height: 'auto',
-    padding: 0,
     paddingBottom: 8,
+    padding: 0,
   },
   contentInput: {
     fontSize: 16,

@@ -33,7 +33,7 @@ export const SignOutSection = () => {
 const styles = {
   section: {
     marginBottom: 20,
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   settingItem: {
     padding: 12,

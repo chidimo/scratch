@@ -1,0 +1,132 @@
+{
+  "name": "scratch",
+  "displayName": "Scratchpad",
+  "description": "Local .scratch folder integration for the Scratchpad system.",
+  "version": "0.1.0",
+  "publisher": "chidimo",
+  "license": "MIT",
+  "homepage": "https://github.com/chidimo/scratch",
+  "bugs": {
+    "url": "https://github.com/chidimo/scratch/issues"
+  },
+  "icon": "icon.png",
+  "keywords": [
+    "chidimo",
+    "scratchpad",
+    "developer",
+    "notes",
+    "gist",
+    "productivity",
+    "vscode-extension"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:chidimo/scratch.git"
+  },
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Other",
+    "productivity"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "scratch.createScratchFolder",
+        "title": "Scratch: Create .scratch Folder"
+      },
+      {
+        "command": "scratch.openScratchFolder",
+        "title": "Scratch: Open .scratch Folder"
+      },
+      {
+        "command": "scratch.showUserIdentity",
+        "title": "Scratch: Show User Identity"
+      },
+      {
+        "command": "scratch.showGithubStatus",
+        "title": "Scratch: Show GitHub Status"
+      },
+      {
+        "command": "scratch.signInGithub",
+        "title": "Scratch: Sign In to GitHub"
+      },
+      {
+        "command": "scratch.signOutGithub",
+        "title": "Scratch: Sign Out of GitHub"
+      },
+      {
+        "command": "scratch.syncGists",
+        "title": "Scratch: Sync GitHub Gists"
+      },
+      {
+        "command": "scratch.refreshGists",
+        "title": "Scratch: Refresh Imported Gists"
+      },
+      {
+        "command": "scratch.refreshScratchState",
+        "title": "Scratch: Refresh Scratch State"
+      }
+    ],
+    "configuration": {
+      "title": "Scratch",
+      "properties": {
+        "scratch.scratchFolderName": {
+          "type": "string",
+          "default": ".scratch",
+          "description": "Folder name used to store scratch notes in each workspace."
+        },
+        "scratch.autoCreateScratchFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically create the scratch folder when missing."
+        },
+        "scratch.watchScratchFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Watch scratch folder files and log changes."
+        },
+        "scratch.userIdStrategy": {
+          "type": "string",
+          "default": "git",
+          "enum": [
+            "git"
+          ],
+          "description": "User identification strategy for the extension."
+        },
+        "scratch.gistAutoRefreshMinutes": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Auto-refresh imported gists every N minutes. Set to 0 to disable."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package --allow-missing-repository",
+    "package:clean": "rm -f *.vsix",
+    "package:with-build": "yarn compile && yarn package",
+    "publish:vsce": "vsce publish --allow-missing-repository -p $VSCE_PAT",
+    "publish:ovsx": "ovsx publish -p $OVSX_TOKEN",
+    "publish:all": "yarn publish:vsce && yarn publish:ovsx"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.82.0",
+    "@vscode/vsce": "^3.7.1",
+    "ovsx": "^0.10.8",
+    "typescript": "^5.0.0"
+  }
+}

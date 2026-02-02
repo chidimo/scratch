@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     padding: 8,
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
@@ -36,9 +36,9 @@ const styles = StyleSheet.create({
 
 const markdownStyles = {
   body: {
+    padding: 8,
     fontSize: 16,
     lineHeight: 24,
-    padding: 8,
   },
   heading1: {
     fontSize: 24,

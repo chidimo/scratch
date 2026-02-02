@@ -41,7 +41,6 @@ export const NoteActionBar = ({
           onPress={onPreview}
           title={isPreviewing ? 'Edit' : 'Preview'}
           disabled={!canSave || isSaving}
-          isLoading={isSaving}
           variant="SUCCESS"
         />
         <CustomButton

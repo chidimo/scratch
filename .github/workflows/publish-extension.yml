@@ -1,0 +1,50 @@
+name: Publish VSCode Extension
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run build/package only (no publish)"
+        required: false
+        default: "true"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/extension
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "yarn"
+          cache-dependency-path: apps/extension/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build extension
+        run: yarn compile
+
+      - name: Package extension
+        run: yarn package
+
+      - name: Publish to VS Code Marketplace
+        if: ${{ github.event_name == 'push' || inputs.dry_run != 'true' }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: yarn publish:vsce
+
+      - name: Publish to Open VSX
+        if: ${{ github.event_name == 'push' || inputs.dry_run != 'true' }}
+        env:
+          OVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
+        run: yarn publish:ovsx
