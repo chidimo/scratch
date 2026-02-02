@@ -1,6 +1,6 @@
 # Scratchpad VSCode Extension
 
-This extension provides workspace integration for `.scratch` folders used by the Scratchpad system.
+Scratchpad brings a lightweight `.scratch` workspace into VS Code with GitHub Gist sync.
 
 ## Features
 
@@ -8,12 +8,20 @@ This extension provides workspace integration for `.scratch` folders used by the
 - Creates the folder automatically if enabled
 - Logs file changes within the scratch folder
 - Shows user identity based on Git configuration
+- Syncs GitHub Gists into `.scratch/gists`
+- Two-way updates for markdown gists (local edits push to GitHub)
+- Optional auto-refresh to pull remote changes on a timer
 
 ## Commands
 
 - `Scratch: Create .scratch Folder`
 - `Scratch: Open .scratch Folder`
 - `Scratch: Show User Identity`
+- `Scratch: Sign In to GitHub`
+- `Scratch: Sign Out of GitHub`
+- `Scratch: Show GitHub Status`
+- `Scratch: Sync GitHub Gists`
+- `Scratch: Refresh Imported Gists`
 - `Scratch: Refresh Scratch State`
 
 ## Configuration
@@ -22,3 +30,4 @@ This extension provides workspace integration for `.scratch` folders used by the
 - `scratch.autoCreateScratchFolder`
 - `scratch.watchScratchFolder`
 - `scratch.userIdStrategy`
+- `scratch.gistAutoRefreshMinutes`

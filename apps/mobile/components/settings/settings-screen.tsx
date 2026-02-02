@@ -9,6 +9,7 @@ import { SignOutSection } from './sign-out-section';
 import { ThemeSelector } from './theme-selector';
 import { HorizontalSeparator } from '../horizontal-separator';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { GetExtension } from './get-extension';
 
 export const SettingsScreen = () => {
   const { data: user, isPending } = useUserProfile();
@@ -37,6 +38,8 @@ export const SettingsScreen = () => {
   return (
     <ParallaxScrollView headerImage={null}>
       <AccountSection />
+      <HorizontalSeparator />
+      <GetExtension />
       <HorizontalSeparator />
       <GitHubApiSection />
       <HorizontalSeparator />

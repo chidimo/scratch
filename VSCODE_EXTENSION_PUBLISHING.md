@@ -76,9 +76,10 @@ Required:
 
 One-time setup:
 
-- Create a publisher: https://marketplace.visualstudio.com/manage
+- Create a publisher: <https://marketplace.visualstudio.com/manage>
 - Generate a PAT in Azure DevOps:
-  - Scope: `Marketplace > Publish`
+  - Go to <https://dev.azure.com/> → User settings → Personal access tokens
+  - Create a token with scope: `Marketplace > Publish`
 - Login: `npx vsce login <publisher>`
 
 Publish:
@@ -90,9 +91,11 @@ Publish:
 
 One-time setup:
 
-- Create account: https://open-vsx.org
+- Create account: <https://open-vsx.org>
 - Create a namespace (often same as your publisher)
-- Generate a token in Open VSX
+- Generate a token in Open VSX:
+  - Go to <https://open-vsx.org/user-settings/tokens>
+  - Create a token with `Publish` permission
 
 Publish:
 
@@ -107,6 +110,11 @@ Publish:
 - `npx vsce publish`
 - `npx ovsx publish -p <TOKEN>`
 
+Tagging:
+
+- `git tag v0.1.1`
+- `git push origin v0.1.1`
+
 ## 7) Automate Releases (CI/CD)
 
 Use GitHub Actions to:
@@ -114,6 +122,20 @@ Use GitHub Actions to:
 - Compile and test
 - Package
 - Publish to both marketplaces on tag push (e.g. `vX.Y.Z`)
+
+Workflow file:
+
+- `.github/workflows/publish-extension.yml`
+
+Required GitHub secrets:
+
+- `VSCE_PAT`
+- `OVSX_TOKEN`
+
+Manual workflow trigger (dry run):
+
+- Actions → “Publish VSCode Extension” → Run workflow
+- Set `dry_run=true` to skip publishing and only build/package
 
 ## 8) “All Stores” Reality Check
 

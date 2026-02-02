@@ -12,7 +12,7 @@ export const GetExtension = () => {
                 onPress={() => Linking.openURL('https://marketplace.visualstudio.com/items?itemName=scratch.scratch-vscode')}
             >
                 <ThemedText style={styles.extensionLinkText}>
-                    Get the VSCode Extension
+                    VSCode Marketplace
                 </ThemedText>
             </TouchableOpacity>
 
@@ -21,7 +21,16 @@ export const GetExtension = () => {
                 onPress={() => Linking.openURL('https://marketplace.visualstudio.com/items?itemName=scratch.scratch-vscode')}
             >
                 <ThemedText style={styles.extensionLinkText}>
-                    Open Open VSX Marketplace
+                    Open VSX Marketplace
+                </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.extensionLinkButton}
+                onPress={() => Linking.openURL('https://github.com/chidimo/scratch')}
+            >
+                <ThemedText style={styles.extensionLinkText}>
+                    On GitHub
                 </ThemedText>
             </TouchableOpacity>
         </ThemedView>
@@ -30,11 +39,9 @@ export const GetExtension = () => {
 
 const styles = StyleSheet.create({
     section: {
-        marginBottom: 20,
-        paddingVertical: 8,
+        paddingVertical: 4,
     },
     extensionLinkButton: {
-        marginTop: 16,
         paddingVertical: 8,
         paddingHorizontal: 12,
     },
