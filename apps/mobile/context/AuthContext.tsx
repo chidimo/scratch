@@ -1,21 +1,21 @@
 import {
-  GISTS_STORAGE_KEY,
-  GITHUB_ENDPOINT,
-  PUBLIC_AUTH_SCHEME,
-  TOKEN_STORAGE_KEY,
-  USER_STORAGE_KEY,
+    GISTS_STORAGE_KEY,
+    GITHUB_ENDPOINT,
+    PUBLIC_AUTH_SCHEME,
+    TOKEN_STORAGE_KEY,
+    USER_STORAGE_KEY,
 } from '@/constants/app-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContextType, AuthProviderProps, AuthState } from '@scratch/shared';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from 'react';
 
 // GitHub OAuth discovery endpoints
@@ -27,15 +27,25 @@ const discovery = {
 
 // Environment variables
 const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.EXPO_PUBLIC_GITHUB_CLIENT_SECRET;
 const AUTH_USE_PROXY =
   process.env.EXPO_PUBLIC_AUTH_USE_PROXY?.toLowerCase() !== 'false';
 
-console.log(
-  'Environment check - Client ID:',
-  GITHUB_CLIENT_ID ? 'Set' : 'Not set',
-);
-console.log('Environment check - Auth proxy:', AUTH_USE_PROXY ? 'On' : 'Off');
-console.log('Environment check - Auth scheme:', PUBLIC_AUTH_SCHEME);
+const validateEnv = (): string[] => {
+  const missing: string[] = [];
+
+  if (!GITHUB_CLIENT_ID) {
+    missing.push('EXPO_PUBLIC_GITHUB_CLIENT_ID');
+  }
+  if (!GITHUB_CLIENT_SECRET) {
+    missing.push('EXPO_PUBLIC_GITHUB_CLIENT_SECRET');
+  }
+  if (!PUBLIC_AUTH_SCHEME) {
+    missing.push('PUBLIC_AUTH_SCHEME');
+  }
+
+  return missing;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -63,13 +73,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     discovery,
   );
 
-  // Log the redirect URI for debugging
   useEffect(() => {
-    if (request) {
-      console.log(JSON.stringify(request, null, 2));
-      console.log('OAuth Request redirect URI:', request.redirectUri);
+    const missing = validateEnv();
+    if (missing.length > 0) {
+      const message = `Missing required environment variables: ${missing.join(
+        ', ',
+      )}`;
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: message,
+      }));
+      throw new Error(message);
     }
-  }, [request]);
+  }, []);
 
   useEffect(() => {
     loadStoredAuth();
@@ -107,7 +124,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Handle auth response
     if (response?.type === 'success') {
       const { code } = response.params;
-      console.log('Got authorization code:', code.substring(0, 10) + '...');
       completeAuth(code);
     } else if (response?.type === 'error') {
       console.error('Auth error:', response.error);
@@ -126,7 +142,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signIn = useCallback(async () => {
     try {
-      console.log('Starting sign-in process...');
       await promptAsync();
     } catch (error) {
       console.error('Error during sign in:', error);
@@ -163,19 +178,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     async (code: string, codeVerifier?: string | null) => {
       // Prevent duplicate auth calls
       if (isAuthInProgress) {
-        console.log('Auth already in progress, skipping duplicate call');
         return;
       }
 
       setIsAuthInProgress(true);
-
-      console.log('completeAuth called with:', {
-        code: code.substring(0, 10) + '...',
-        codeVerifier: codeVerifier
-          ? `${codeVerifier.length} chars`
-          : 'Not provided',
-        timestamp: new Date().toISOString(),
-      });
 
       try {
         // Use the exact redirect URI from the OAuth request
@@ -187,25 +193,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           });
         const requestCodeVerifier = request?.codeVerifier;
 
-        console.log('Using redirect URI:', actualRedirectUri);
-        console.log(
-          'Using PKCE:',
-          requestCodeVerifier
-            ? `Yes (${requestCodeVerifier.length} chars)`
-            : 'No',
-        );
-        console.log('Request object:', {
-          hasCodeVerifier: !!requestCodeVerifier,
-          hasRedirectUri: !!actualRedirectUri,
-          clientId: GITHUB_CLIENT_ID?.substring(0, 10) + '...',
-        });
-
         // Exchange code for token directly with GitHub (as per Expo docs)
         const tokenUrl = `${GITHUB_ENDPOINT}/login/oauth/access_token`;
 
         const requestBody: any = {
           client_id: GITHUB_CLIENT_ID!,
-          client_secret: process.env.EXPO_PUBLIC_GITHUB_CLIENT_SECRET,
+          client_secret: GITHUB_CLIENT_SECRET,
           code,
           redirect_uri: actualRedirectUri,
         };
@@ -216,16 +209,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           requestBody.code_verifier = finalCodeVerifier;
         }
 
-        console.log('Token exchange request body:', {
-          ...requestBody,
-          client_secret: requestBody.client_secret
-            ? '***PRESENT***'
-            : '***MISSING***',
-          code_verifier: requestBody.code_verifier
-            ? `${requestBody.code_verifier.length} chars`
-            : 'Not using PKCE',
-        });
-
         const response = await fetch(tokenUrl, {
           method: 'POST',
           headers: {
@@ -234,8 +217,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           },
           body: JSON.stringify(requestBody),
         });
-
-        console.log('Token exchange response status:', response.status);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -246,12 +227,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
 
         const tokenData = await response.json();
-        console.log('Token exchange result:', tokenData);
 
         if (tokenData.access_token) {
           await AsyncStorage.setItem(TOKEN_STORAGE_KEY, tokenData.access_token);
-
-          console.log('Got access token, fetching user profile...');
 
           setAuthState({
             token: tokenData.access_token,
