@@ -6,10 +6,14 @@ on:
       - "v*"
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: "Run build/package only (no publish)"
+      publish_vsce:
+        description: "Publish to VS Code Marketplace"
         required: false
         default: "true"
+      publish_ovsx:
+        description: "Publish to Open VSX"
+        required: false
+        default: "false"
 
 jobs:
   publish:
@@ -38,13 +42,13 @@ jobs:
         run: yarn package
 
       - name: Publish to VS Code Marketplace
-        if: ${{ github.event_name == 'push' || inputs.dry_run != 'true' }}
+        if: ${{ (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.publish_vsce == 'true') }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: yarn publish:vsce
 
       - name: Publish to Open VSX
-        if: ${{ github.event_name == 'push' || inputs.dry_run != 'true' }}
+        if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_ovsx == 'true')) && env.OVSX_TOKEN != ''
         env:
           OVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
         run: yarn publish:ovsx
