@@ -1,6 +1,6 @@
 {
   "name": "scratch",
-  "displayName": "Scratchpad",
+  "displayName": "Scratchpad (Gists)",
   "description": "Local .scratch folder integration for the Scratchpad system.",
   "version": "0.1.0",
   "publisher": "chidimo",
