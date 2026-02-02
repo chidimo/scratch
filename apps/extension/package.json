@@ -28,7 +28,7 @@
   },
   "categories": [
     "Other",
-    "productivity"
+    "Productivity"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
