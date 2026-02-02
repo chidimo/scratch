@@ -234,6 +234,19 @@ Building a cross-platform scratchpad system with mobile app (React Native/Expo) 
 - [ ] Configure environment variables for Netlify function
 - [ ] Add production redirect URL to GitHub OAuth app
 
+### Web App Enhancement (Backlog)
+
+**Objective:**
+
+- Enable full gist management in the web app (create/edit/delete)
+
+**Tasks:**
+
+- [ ] Add gist create/edit/delete flows in web app
+- [ ] Evaluate TipTap for rich markdown editing (vs. lightweight editor)
+- [ ] Implement gist metadata management (description, filenames)
+- [ ] Add confirmation + error states for delete operations
+
 ## Technical Implementation Details
 
 ### Mobile App Architecture
