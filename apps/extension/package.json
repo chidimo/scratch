@@ -83,7 +83,7 @@
       "properties": {
         "scratch.storagePath": {
           "type": "string",
-          "default": "~/Documents/Scratch(Gists)",
+          "default": "~/.scratch",
           "description": "Global folder used to store Scratchpad gists."
         },
         "scratch.scratchFolderName": {
