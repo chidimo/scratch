@@ -9,7 +9,8 @@ function resolveStoragePath(rawPath: string | undefined): string {
   }
 
   if (rawPath.startsWith('~')) {
-    return path.join(os.homedir(), rawPath.slice(1));
+    const relativePath = rawPath.slice(1).replace(/^[/\\]+/, '');
+    return path.join(os.homedir(), relativePath);
   }
 
   return rawPath;
