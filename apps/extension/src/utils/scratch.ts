@@ -1,62 +1,31 @@
 import * as vscode from "vscode";
-import { ScratchConfig, ScratchFolderInfo } from "../types";
-import { getWorkspaceFolders } from "./workspace";
+import { ScratchConfig } from "../types";
 
+const GISTS_FOLDER_NAME = "gists";
 
-export async function getScratchFolderInfos(
-  config: ScratchConfig
-): Promise<ScratchFolderInfo[]> {
-  const folders = getWorkspaceFolders();
-
-  const infos = await Promise.all(
-    folders.map(async (workspaceFolder) => {
-      const scratchUri = vscode.Uri.joinPath(
-        workspaceFolder.uri,
-        config.scratchFolderName
-      );
-
-      try {
-        const stat = await vscode.workspace.fs.stat(scratchUri);
-        const exists =
-          (stat.type & vscode.FileType.Directory) ===
-          vscode.FileType.Directory;
-
-        return { workspaceFolder, scratchUri, exists };
-      } catch (error) {
-        if (error instanceof vscode.FileSystemError && error.code === "FileNotFound") {
-          return { workspaceFolder, scratchUri, exists: false };
-        }
-
-        vscode.window.showErrorMessage(
-          `Failed to stat scratch folder: ${scratchUri.fsPath}`
-        );
-        return { workspaceFolder, scratchUri, exists: false };
-      }
-    })
-  );
-
-  return infos;
+export function getScratchRoot(config: ScratchConfig): vscode.Uri {
+  return vscode.Uri.file(config.storagePath);
 }
 
-export async function ensureScratchFolder(
-  info: ScratchFolderInfo,
-  config: ScratchConfig
-): Promise<ScratchFolderInfo> {
-  if (info.exists || !config.autoCreateScratchFolder) {
-    return info;
-  }
+export function getGistsRoot(config: ScratchConfig): vscode.Uri {
+  return vscode.Uri.joinPath(getScratchRoot(config), GISTS_FOLDER_NAME);
+}
 
-  await vscode.workspace.fs.createDirectory(info.scratchUri);
-  return { ...info, exists: true };
+export async function ensureScratchRoot(
+  config: ScratchConfig
+): Promise<vscode.Uri> {
+  const root = getScratchRoot(config);
+  await vscode.workspace.fs.createDirectory(root);
+  await vscode.workspace.fs.createDirectory(getGistsRoot(config));
+  return root;
 }
 
 export function createScratchWatcher(
-  workspaceFolder: vscode.WorkspaceFolder,
   config: ScratchConfig
 ): vscode.FileSystemWatcher {
   const pattern = new vscode.RelativePattern(
-    workspaceFolder,
-    `${config.scratchFolderName}/**/*`
+    getScratchRoot(config),
+    `${GISTS_FOLDER_NAME}/**/*`
   );
 
   return vscode.workspace.createFileSystemWatcher(pattern);

@@ -13,10 +13,14 @@ import {
   listGists,
   updateGistFile,
 } from "./services/gist-sync";
-import { ScratchFolderInfo } from "./types";
 import { getGitUserIdentity } from "./utils/git";
-import { createScratchWatcher, ensureScratchFolder, getScratchFolderInfos } from "./utils/scratch";
+import {
+  createScratchWatcher,
+  ensureScratchRoot,
+  getGistsRoot,
+} from "./utils/scratch";
 import { hasWorkspaceFolders } from "./utils/workspace";
+import { GistTreeProvider } from "./views/gist-tree";
 
 let watchers: vscode.FileSystemWatcher[] = [];
 const gistUpdateTimers = new Map<string, NodeJS.Timeout>();
@@ -31,10 +35,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.StatusBarAlignment.Left,
     100
   );
+  const gistTreeProvider = new GistTreeProvider();
   hydrateGistIdCache(context);
   const disposables: vscode.Disposable[] = [
     outputChannel,
     statusBar,
+    vscode.window.registerTreeDataProvider(
+      "scratch.gistsView",
+      gistTreeProvider
+    ),
     vscode.commands.registerCommand(
       "scratch.refreshScratchState",
       refreshScratchState
@@ -52,39 +61,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("scratch.createNote", handleCreateNote),
     vscode.commands.registerCommand("scratch.openScratchFolder", async () => {
       const config = getScratchConfig();
-      const scratchInfos = await getScratchFolderInfos(config);
-      const existing = scratchInfos.filter((info) => info.exists);
-
-      if (!existing.length) {
-        vscode.window.showWarningMessage(
-          "Scratchpad: no scratch folder found in the workspace."
-        );
-        return;
-      }
-
-      if (existing.length === 1) {
-        await vscode.commands.executeCommand(
-          "revealInExplorer",
-          existing[0].scratchUri
-        );
-        return;
-      }
-
-      const selected = await vscode.window.showQuickPick(
-        existing.map((info) => ({
-          label: info.workspaceFolder.name,
-          description: info.scratchUri.fsPath,
-          info,
-        })),
-        { placeHolder: "Select a scratch folder to reveal" }
-      );
-
-      if (selected) {
-        await vscode.commands.executeCommand(
-          "revealInExplorer",
-          selected.info.scratchUri
-        );
-      }
+      const scratchRoot = await ensureScratchRoot(config);
+      await vscode.commands.executeCommand("revealInExplorer", scratchRoot);
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration("scratch")) {
@@ -105,30 +83,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   async function refreshScratchState(): Promise<void> {
     const config = getScratchConfig();
-    const scratchInfos = await getScratchFolderInfos(config);
-
-    if (!scratchInfos.length) {
-      outputChannel.appendLine("No workspace folders detected.");
-      return;
-    }
-
-    const ensured = await Promise.all(
-      scratchInfos.map(async (info) => ensureScratchFolder(info, config))
-    );
-
-    for (const info of ensured) {
-      if (info.exists) {
-        outputChannel.appendLine(
-          `Scratch folder ready: ${info.scratchUri.fsPath}`
-        );
-      } else {
-        outputChannel.appendLine(
-          `Scratch folder missing: ${info.scratchUri.fsPath}`
-        );
-      }
-    }
-
-    resetWatchers(config, outputChannel, ensured);
+    const scratchRoot = await ensureScratchRoot(config);
+    outputChannel.appendLine(`Scratch folder ready: ${scratchRoot.fsPath}`);
+    resetWatchers(config, outputChannel, scratchRoot);
+    gistTreeProvider.refresh();
   }
 
   async function showUserIdentity(): Promise<void> {
@@ -206,10 +164,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
 
       const config = getScratchConfig();
-      const targetInfo = await pickScratchTarget(config);
-      if (!targetInfo) {
-        return;
-      }
+      await ensureScratchRoot(config);
 
       statusBar.text = "$(sync~spin) Scratch: Loading gists...";
       statusBar.command = "scratch.showGithubStatus";
@@ -223,8 +178,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       updateGistIdCache(context, selectedGists.map((gist) => gist.id));
 
       const encoder = new TextEncoder();
-      const root = vscode.Uri.joinPath(targetInfo.scratchUri, "gists");
-      await vscode.workspace.fs.createDirectory(root);
+      const root = getGistsRoot(config);
 
       for (const gist of selectedGists) {
         const gistDetail = await fetchGist(session.accessToken, gist.id);
@@ -260,6 +214,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         `Scratchpad: gist sync failed. ${String(error)}`
       );
     } finally {
+      gistTreeProvider.refresh();
       await updateStatusBar();
     }
   }
@@ -276,12 +231,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
 
       const config = getScratchConfig();
-      const targetInfo = await pickScratchTarget(config);
-      if (!targetInfo) {
-        return;
-      }
-
-      const root = vscode.Uri.joinPath(targetInfo.scratchUri, "gists");
+      await ensureScratchRoot(config);
+      const root = getGistsRoot(config);
       const entries = await vscode.workspace.fs.readDirectory(root);
       const gistIds = entries
         .filter(([, type]) => type === vscode.FileType.Directory)
@@ -334,6 +285,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         `Scratchpad: gist refresh failed. ${String(error)}`
       );
     } finally {
+      gistTreeProvider.refresh();
       await updateStatusBar();
     }
   }
@@ -358,46 +310,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   }
 
 
-
-  async function pickScratchTarget(
-    config: ReturnType<typeof getScratchConfig>
-  ): Promise<ScratchFolderInfo | undefined> {
-    const scratchInfos = await getScratchFolderInfos(config);
-
-    if (!scratchInfos.length) {
-      vscode.window.showWarningMessage(
-        "Scratchpad: open a workspace to sync gists."
-      );
-      return undefined;
-    }
-
-    const ensured = await Promise.all(
-      scratchInfos.map(async (info) => ensureScratchFolder(info, config))
-    );
-
-    const availableTargets = ensured.filter((info) => info.exists);
-    if (!availableTargets.length) {
-      vscode.window.showWarningMessage(
-        "Scratchpad: no scratch folder available for sync."
-      );
-      return undefined;
-    }
-
-    if (availableTargets.length === 1) {
-      return availableTargets[0];
-    }
-
-    const selectedTarget = await vscode.window.showQuickPick(
-      availableTargets.map((info) => ({
-        label: info.workspaceFolder.name,
-        description: info.scratchUri.fsPath,
-        info,
-      })),
-      { placeHolder: "Select a scratch folder for gist import" }
-    );
-
-    return selectedTarget?.info;
-  }
 
   async function pickMarkdownGists(
     accessToken: string
@@ -447,7 +359,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const selections = await vscode.window.showQuickPick(gistChoices, {
       canPickMany: true,
-      placeHolder: "Select markdown gists to import into .scratch",
+      placeHolder: "Select markdown gists to import into Scratch",
     });
 
     if (!selections || selections.length === 0) {
@@ -495,10 +407,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       const filename = `${trimmedTitle}.md`;
 
       const config = getScratchConfig();
-      const targetInfo = await pickScratchTarget(config);
-      if (!targetInfo) {
-        return;
-      }
+      await ensureScratchRoot(config);
 
       statusBar.text = "$(sync~spin) Scratch: Creating note...";
       statusBar.command = "scratch.showGithubStatus";
@@ -521,8 +430,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       updateGistIdCache(context, [created.id]);
 
       const encoder = new TextEncoder();
-      const gistsRoot = vscode.Uri.joinPath(targetInfo.scratchUri, "gists");
-      await vscode.workspace.fs.createDirectory(gistsRoot);
+      const gistsRoot = getGistsRoot(config);
 
       const gistFolder = vscode.Uri.joinPath(gistsRoot, created.id);
       await vscode.workspace.fs.createDirectory(gistFolder);
@@ -544,6 +452,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         `Scratchpad: failed to create note. ${String(error)}`
       );
     } finally {
+      gistTreeProvider.refresh();
       await updateStatusBar();
     }
   }
@@ -616,7 +525,7 @@ export function deactivate(): void {
 function resetWatchers(
   config: ReturnType<typeof getScratchConfig>,
   outputChannel: vscode.OutputChannel,
-  scratchInfos: Awaited<ReturnType<typeof getScratchFolderInfos>>
+  scratchRoot: vscode.Uri
 ): void {
   disposeWatchers();
 
@@ -625,45 +534,34 @@ function resetWatchers(
     return;
   }
 
-  watchers = scratchInfos.map((info) =>
-    createScratchWatcher(info.workspaceFolder, config)
-  );
+  watchers = [createScratchWatcher(config)];
 
   for (const watcher of watchers) {
     watcher.onDidCreate((uri) => {
       outputChannel.appendLine(`Scratch file created: ${uri.fsPath}`);
-      void guardGistFolderMutation(uri, scratchInfos, outputChannel, "create");
-      const scratchRoot = getScratchRootForUri(uri, scratchInfos);
-      if (scratchRoot) {
-        scheduleGistUpdate({
-          scratchRoot,
-          fileUri: uri,
-          outputChannel,
-        });
-      }
+      void guardGistFolderMutation(uri, scratchRoot, outputChannel, "create");
+      scheduleGistUpdate({
+        scratchRoot,
+        fileUri: uri,
+        outputChannel,
+      });
     });
     watcher.onDidChange((uri) => {
       outputChannel.appendLine(`Scratch file updated: ${uri.fsPath}`);
-      const scratchRoot = getScratchRootForUri(uri, scratchInfos);
-      if (scratchRoot) {
-        scheduleGistUpdate({
-          scratchRoot,
-          fileUri: uri,
-          outputChannel,
-        });
-      }
+      scheduleGistUpdate({
+        scratchRoot,
+        fileUri: uri,
+        outputChannel,
+      });
     });
     watcher.onDidDelete((uri) => {
       outputChannel.appendLine(`Scratch file deleted: ${uri.fsPath}`);
-      void guardGistFolderMutation(uri, scratchInfos, outputChannel, "delete");
-      const scratchRoot = getScratchRootForUri(uri, scratchInfos);
-      if (scratchRoot) {
-        scheduleGistDelete({
-          scratchRoot,
-          fileUri: uri,
-          outputChannel,
-        });
-      }
+      void guardGistFolderMutation(uri, scratchRoot, outputChannel, "delete");
+      scheduleGistDelete({
+        scratchRoot,
+        fileUri: uri,
+        outputChannel,
+      });
     });
   }
 }
@@ -673,24 +571,6 @@ function disposeWatchers(): void {
     watcher.dispose();
   }
   watchers = [];
-}
-
-function getScratchRootForUri(
-  uri: vscode.Uri,
-  scratchInfos: Awaited<ReturnType<typeof getScratchFolderInfos>>
-): vscode.Uri | undefined {
-  for (const info of scratchInfos) {
-    if (!info.exists) {
-      continue;
-    }
-
-    const relative = path.relative(info.scratchUri.fsPath, uri.fsPath);
-    if (!relative.startsWith("..") && !path.isAbsolute(relative)) {
-      return info.scratchUri;
-    }
-  }
-
-  return undefined;
 }
 
 function isMarkdownFile(name: string): boolean {
@@ -884,15 +764,10 @@ function updateGistIdCache(
 
 async function guardGistFolderMutation(
   uri: vscode.Uri,
-  scratchInfos: Awaited<ReturnType<typeof getScratchFolderInfos>>,
+  scratchRoot: vscode.Uri,
   outputChannel: vscode.OutputChannel,
   type: "create" | "delete"
 ): Promise<void> {
-  const scratchRoot = getScratchRootForUri(uri, scratchInfos);
-  if (!scratchRoot) {
-    return;
-  }
-
   const relativePath = path.relative(scratchRoot.fsPath, uri.fsPath);
   const segments = relativePath.split(path.sep);
 

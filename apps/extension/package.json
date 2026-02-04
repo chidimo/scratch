@@ -61,7 +61,8 @@
       },
       {
         "command": "scratch.syncGists",
-        "title": "Scratch: Sync GitHub Gists"
+        "title": "Scratch: Sync GitHub Gists",
+        "icon": "sync"
       },
       {
         "command": "scratch.refreshGists",
@@ -69,7 +70,8 @@
       },
       {
         "command": "scratch.createNote",
-        "title": "Scratch: Create Note"
+        "title": "Scratch: Create Note",
+        "icon": "add"
       },
       {
         "command": "scratch.refreshScratchState",
@@ -79,6 +81,11 @@
     "configuration": {
       "title": "Scratch",
       "properties": {
+        "scratch.storagePath": {
+          "type": "string",
+          "default": "~/Documents/Scratch(Gists)",
+          "description": "Global folder used to store Scratchpad gists."
+        },
         "scratch.scratchFolderName": {
           "type": "string",
           "default": ".scratch",
@@ -109,6 +116,28 @@
           "description": "Auto-refresh imported gists every N minutes. Set to 0 to disable."
         }
       }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "scratch.gistsView",
+          "name": "Scratch Gists"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "scratch.syncGists",
+          "when": "view == scratch.gistsView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "scratch.createNote",
+          "when": "view == scratch.gistsView",
+          "group": "navigation@2"
+        }
+      ]
     }
   },
   "scripts": {

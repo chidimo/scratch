@@ -14,9 +14,6 @@ export const useGists = ({ searchTerm }: { searchTerm?: string }) => {
     ? [GISTS_QUERY_KEY, normalizedSearch]
     : [GISTS_QUERY_KEY];
 
-  console.log({ queryKey })
-
-
   return useQuery({
     queryKey,
     queryFn: async () => {
@@ -72,6 +69,8 @@ export const useGists = ({ searchTerm }: { searchTerm?: string }) => {
         });
     },
     enabled: !!token,
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
   });
 };
 
