@@ -70,7 +70,7 @@ export class GistTreeProvider
         return [];
       }
 
-      const gistFolder = vscode.Uri.joinPath(gistsRoot, element.label);
+      const gistFolder = vscode.Uri.joinPath(gistsRoot, element.label as string);
       const entries = await vscode.workspace.fs.readDirectory(gistFolder);
       const markdownFiles = entries
         .filter(([name, type]) => type === vscode.FileType.File && isMarkdownFile(name))
