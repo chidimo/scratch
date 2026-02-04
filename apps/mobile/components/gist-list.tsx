@@ -1,27 +1,24 @@
 import { useGists } from '@/hooks/use-gists';
 import { Note } from '@scratch/shared';
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { GistItem } from './gist-item';
 import { SearchInput } from './search-input';
 import { ThemedView } from './themed-view';
 import { ThemedText } from './themed-text';
-import { CustomButton } from './form-elements/custom-button';
+import { NewNoteButton } from './note/new-note-button';
 
 export const GistList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const router = useRouter();
 
-  const { data: gists, refetch, isPending } = useGists(searchTerm);
+  const { data: gists, refetch, isPending } = useGists({ searchTerm });
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -33,9 +30,6 @@ export const GistList = () => {
     setSearchTerm(term);
   };
 
-  const handleCreateNote = () => {
-    router.push('/note/new');
-  };
 
   const renderNoteItem = ({ item }: { item: Note }) => <GistItem gist={item} />;
 
@@ -48,12 +42,8 @@ export const GistList = () => {
           <SearchInput onSearch={handleSearch} />
         </View>
 
-        <CustomButton
-          title="+ New"
-          variant="PRIMARY"
-          onPress={handleCreateNote}
-          containerStyle={{ width: 100 }}
-        />
+        <NewNoteButton />
+
       </View>
       <FlatList
         data={gists}
@@ -66,10 +56,10 @@ export const GistList = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <ThemedText style={styles.emptyTitle}>
-              {searchTerm.trim() ? 'No notes found' : 'No notes yet'}
+              {searchTerm?.trim() ? 'No notes found' : 'No notes yet'}
             </ThemedText>
             <ThemedText style={styles.emptySubtitle}>
-              {searchTerm.trim()
+              {searchTerm?.trim()
                 ? `Try searching for something else`
                 : 'Create your first note to get started'}
             </ThemedText>
@@ -78,7 +68,7 @@ export const GistList = () => {
         ListHeaderComponent={
           <View style={styles.header}>
             <ThemedText style={styles.headerTitle}>
-              {searchTerm.trim() ? 'Search Results' : 'My Notes'}
+              {searchTerm?.trim() ? 'Search Results' : 'My Notes'}
             </ThemedText>
           </View>
         }

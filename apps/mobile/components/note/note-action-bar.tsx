@@ -40,7 +40,6 @@ export const NoteActionBar = ({
           containerStyle={{ width: '22%' }}
           onPress={onPreview}
           title={isPreviewing ? 'Edit' : 'Preview'}
-          disabled={!canSave || isSaving}
           variant="SUCCESS"
         />
         <CustomButton

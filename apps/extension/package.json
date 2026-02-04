@@ -68,6 +68,10 @@
         "title": "Scratch: Refresh Imported Gists"
       },
       {
+        "command": "scratch.createNote",
+        "title": "Scratch: Create Note"
+      },
+      {
         "command": "scratch.refreshScratchState",
         "title": "Scratch: Refresh Scratch State"
       }

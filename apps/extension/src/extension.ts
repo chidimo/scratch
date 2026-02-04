@@ -7,6 +7,7 @@ import {
 } from "./auth/github";
 import { getScratchConfig } from "./config";
 import {
+  createGist,
   fetchGist,
   GistSummary,
   listGists,
@@ -48,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("scratch.signOutGithub", handleGithubSignOut),
     vscode.commands.registerCommand("scratch.syncGists", handleGistSync),
     vscode.commands.registerCommand("scratch.refreshGists", handleGistRefresh),
+    vscode.commands.registerCommand("scratch.createNote", handleCreateNote),
     vscode.commands.registerCommand("scratch.openScratchFolder", async () => {
       const config = getScratchConfig();
       const scratchInfos = await getScratchFolderInfos(config);
@@ -465,6 +467,85 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         selection.type === "gist"
       )
       .map((selection) => selection.gist);
+  }
+
+  async function handleCreateNote(): Promise<void> {
+    try {
+      const session = await getGithubSession(true);
+
+      if (!session) {
+        vscode.window.showWarningMessage(
+          "Scratchpad: GitHub sign-in required to create notes."
+        );
+        return;
+      }
+
+      const title = await vscode.window.showInputBox({
+        prompt: "Enter a title for the new note",
+        placeHolder: "Untitled note",
+        validateInput: (value) =>
+          value.trim().length ? undefined : "Title is required.",
+      });
+
+      if (!title) {
+        return;
+      }
+
+      const trimmedTitle = title.trim();
+      const filename = `${trimmedTitle}.md`;
+
+      const config = getScratchConfig();
+      const targetInfo = await pickScratchTarget(config);
+      if (!targetInfo) {
+        return;
+      }
+
+      statusBar.text = "$(sync~spin) Scratch: Creating note...";
+      statusBar.command = "scratch.showGithubStatus";
+
+      const created = await createGist(session.accessToken, {
+        description: trimmedTitle,
+        files: {
+          [filename]: "",
+        },
+        isPublic: false,
+      });
+
+      if (!created.id) {
+        vscode.window.showErrorMessage(
+          "Scratchpad: failed to create gist for new note."
+        );
+        return;
+      }
+
+      updateGistIdCache(context, [created.id]);
+
+      const encoder = new TextEncoder();
+      const gistsRoot = vscode.Uri.joinPath(targetInfo.scratchUri, "gists");
+      await vscode.workspace.fs.createDirectory(gistsRoot);
+
+      const gistFolder = vscode.Uri.joinPath(gistsRoot, created.id);
+      await vscode.workspace.fs.createDirectory(gistFolder);
+
+      const fileUri = vscode.Uri.joinPath(gistFolder, filename);
+      await vscode.workspace.fs.writeFile(fileUri, encoder.encode(""));
+
+      const document = await vscode.workspace.openTextDocument(fileUri);
+      await vscode.window.showTextDocument(document, { preview: false });
+
+      outputChannel.appendLine(
+        `Created new note gist ${created.id} (${filename}).`
+      );
+      vscode.window.showInformationMessage(
+        "Scratchpad: new note created and opened."
+      );
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: failed to create note. ${String(error)}`
+      );
+    } finally {
+      await updateStatusBar();
+    }
   }
 
   async function handleGithubSignIn(): Promise<void> {

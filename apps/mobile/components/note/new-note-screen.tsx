@@ -5,15 +5,17 @@ import { useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
-  ScrollView,
   StyleSheet,
+  View,
 } from 'react-native';
 import { CustomButton } from '../../components/form-elements/custom-button';
+import { CustomInput } from '../../components/form-elements/custom-input';
 import { ThemedText } from '../../components/themed-text';
 import { ThemedView } from '../../components/themed-view';
-import { PreviewMarkdown } from './preview-markdown';
-import { NoteEditor } from './note-editor';
+
+const PLACEHOLDER_CONTENT = '# New note\n\nStart writing here.\n';
 
 export const NewNoteScreen = () => {
   const { token } = useAuth();
@@ -21,21 +23,11 @@ export const NewNoteScreen = () => {
   const createGist = useCreateGist();
 
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [isPreview, setIsPreview] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(true);
 
-  const handlePreview = () => {
-    setIsPreview(!isPreview);
-  };
-
-  const handleSave = async () => {
+  const handleContinue = async () => {
     if (!title.trim()) {
       Alert.alert('Error', 'Please enter a title');
-      return;
-    }
-
-    if (!content.trim()) {
-      Alert.alert('Error', 'Please enter content');
       return;
     }
 
@@ -45,20 +37,20 @@ export const NewNoteScreen = () => {
     }
 
     try {
-      await createGist.mutateAsync({
+      const gist = await createGist.mutateAsync({
         description: title.trim(),
         files: {
-          [`${title.trim()}.md`]: { content: content.trim() },
+          [`${title.trim()}.md`]: { content: PLACEHOLDER_CONTENT },
         },
         public: false,
       });
 
-      Alert.alert('Success', 'Note created successfully!', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
+      setIsModalVisible(false);
+      if (gist?.id) {
+        router.replace(`/note/${gist.id}`);
+      } else {
+        router.back();
+      }
     } catch (error) {
       console.error('Error creating note:', error);
       Alert.alert('Error', 'Failed to create note. Please try again.');
@@ -66,79 +58,57 @@ export const NewNoteScreen = () => {
   };
 
   const handleCancel = () => {
-    if (title.trim() || content.trim()) {
-      Alert.alert(
-        'Discard Changes',
-        'Are you sure you want to discard your changes?',
-        [
-          { text: 'Keep Editing', style: 'cancel' },
-          {
-            text: 'Discard',
-            style: 'destructive',
-            onPress: () => router.back(),
-          },
-        ],
-      );
-    } else {
-      router.back();
+    if (createGist.isPending) {
+      return;
     }
+    setIsModalVisible(false);
+    router.back();
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ThemedView style={styles.header}>
-        <ThemedText style={styles.headerTitle}>New Note</ThemedText>
-      </ThemedView>
-
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
+    <ThemedView style={styles.container}>
+      <Modal
+        visible={isModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancel}
       >
-        {isPreview ? (
-          <PreviewMarkdown title={title} content={content} />
-        ) : (
-          <NoteEditor
-            title={title}
-            content={content}
-            isTitleEditable={!createGist.isPending}
-            isContentEditable={!createGist.isPending}
-            onTitleChange={setTitle}
-            onContentChange={setContent}
-          />
-        )}
-      </ScrollView>
-
-      <ThemedView style={styles.actionBar}>
-        <ThemedView style={styles.actionBarInner}>
-          <CustomButton
-            containerStyle={{ width: '30%' }}
-            onPress={handleCancel}
-            title="Cancel"
-            variant="CANCEL"
-            disabled={createGist.isPending}
-          />
-          <CustomButton
-            containerStyle={{ width: '30%' }}
-            onPress={handlePreview}
-            title={isPreview ? 'Edit' : 'Preview'}
-            variant="SUCCESS"
-            disabled={createGist.isPending}
-          />
-          <CustomButton
-            containerStyle={{ width: '30%' }}
-            onPress={handleSave}
-            title={createGist.isPending ? 'Saving...' : 'Save'}
-            disabled={createGist.isPending || !title.trim() || !content.trim()}
-            isLoading={createGist.isPending}
-            variant="PRIMARY"
-          />
-        </ThemedView>
-      </ThemedView>
-    </KeyboardAvoidingView>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalBackdrop} />
+          <ThemedView style={styles.modalCard}>
+            <ThemedText style={styles.modalTitle}>New Note</ThemedText>
+            <CustomInput
+              label="Title"
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter a title"
+              editable={!createGist.isPending}
+              returnKeyType="done"
+            />
+            <ThemedView style={styles.modalActions}>
+              <CustomButton
+                containerStyle={{ width: '45%' }}
+                onPress={handleCancel}
+                title="Cancel"
+                variant="CANCEL"
+                disabled={createGist.isPending}
+              />
+              <CustomButton
+                containerStyle={{ width: '45%' }}
+                onPress={handleContinue}
+                title={createGist.isPending ? 'Creating...' : 'Continue'}
+                disabled={createGist.isPending || !title.trim()}
+                isLoading={createGist.isPending}
+                variant="PRIMARY"
+              />
+            </ThemedView>
+          </ThemedView>
+        </KeyboardAvoidingView>
+      </Modal>
+    </ThemedView>
   );
 };
 
@@ -146,139 +116,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  modalOverlay: {
+    flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 18,
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalCard: {
+    width: '90%',
+    borderRadius: 12,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
     fontWeight: '600',
   },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  contentContainer: {
-    paddingBottom: 120,
-  },
-  previewContainer: {
-    flex: 1,
-  },
-  previewTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  titleInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 16,
-    padding: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    paddingBottom: 8,
-  },
-  contentInput: {
-    fontSize: 16,
-    color: '#000',
-    lineHeight: 24,
-    minHeight: 300,
-    padding: 0,
-  },
-  actionBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-  },
-  actionBarInner: {
+  modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
   },
 });
-
-const markdownStyles = {
-  body: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  heading1: {
-    fontSize: 24,
-    fontWeight: 'bold' as const,
-    marginBottom: 16,
-  },
-  heading2: {
-    fontSize: 20,
-    fontWeight: 'bold' as const,
-    marginBottom: 12,
-  },
-  heading3: {
-    fontSize: 18,
-    fontWeight: 'bold' as const,
-    marginBottom: 8,
-  },
-  paragraph: {
-    marginBottom: 12,
-  },
-  code_inline: {
-    backgroundColor: '#f5f5f5',
-    padding: 2,
-    borderRadius: 3,
-    fontFamily: 'monospace' as const,
-  },
-  code_block: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 6,
-    fontFamily: 'monospace' as const,
-    marginBottom: 12,
-  },
-  fence: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 6,
-    fontFamily: 'monospace' as const,
-    marginBottom: 12,
-  },
-  list_item: {
-    marginBottom: 4,
-  },
-  bullet_list: {
-    marginBottom: 12,
-  },
-  ordered_list: {
-    marginBottom: 12,
-  },
-  blockquote: {
-    backgroundColor: '#f9f9f9',
-    borderLeftWidth: 4,
-    borderLeftColor: '#ddd',
-    paddingLeft: 12,
-    marginBottom: 12,
-  },
-  link: {
-    color: '#007AFF',
-    textDecorationLine: 'underline' as const,
-  },
-  em: {
-    fontStyle: 'italic' as const,
-  },
-  strong: {
-    fontWeight: 'bold' as const,
-  },
-};

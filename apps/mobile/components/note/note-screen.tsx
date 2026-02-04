@@ -1,4 +1,4 @@
-import { useGistOperationsById } from '@/hooks/use-gists';
+import { useDeleteGistById, useGistById, useUpdateGistById } from '@/hooks/use-gists';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -23,8 +23,14 @@ export const NoteScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
-  const { note, isLoading, error, updateNote, deleteNote, isMutating } =
-    useGistOperationsById(id);
+  const [isDeletingNote, setIsDeletingNote] = useState(false);
+  const { mutateAsync: deleteGist, isPending: isDeleting } = useDeleteGistById();
+  const { mutateAsync: updateGist, isPending: isUpdating } = useUpdateGistById();
+  const { data: note, error, isPending } = useGistById(id, {
+    enabled: !isDeletingNote && !isDeleting,
+  });
+
+  const isMutating = isUpdating || isDeleting;
 
   const [drafts, setDrafts] = useState<
     Record<string, { title: string; content: string }>
@@ -34,6 +40,7 @@ export const NoteScreen = () => {
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const pagerRef = useRef<ScrollView | null>(null);
   const [pagerWidth, setPagerWidth] = useState(0);
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update form when note data changes
   useEffect(() => {
@@ -129,6 +136,67 @@ export const NoteScreen = () => {
     }
   };
 
+  useEffect(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
+    }
+
+    if (!note || !id || isPreviewing || isMutating || isDeletingNote) {
+      return;
+    }
+
+    const fileName = activeFile ?? note.file_name ?? note.md_files?.[0];
+    if (!fileName) {
+      return;
+    }
+
+    const draft = drafts[fileName];
+    if (!draft) {
+      return;
+    }
+
+    const baselineTitle = fileName.replace('.md', '');
+    const baselineContent = note.file_contents?.[fileName] ?? '';
+    const hasChanges =
+      draft.title.trim() !== baselineTitle.trim() ||
+      draft.content !== baselineContent;
+
+    if (!hasChanges || !draft.title.trim()) {
+      return;
+    }
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      const gistId = note.gist_id ?? id ?? '';
+      if (!gistId) {
+        return;
+      }
+      updateGist({
+        id: gistId,
+        title: draft.title.trim(),
+        content: draft.content,
+        isPublic,
+        fileName,
+      });
+    }, 750);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [
+    activeFile,
+    drafts,
+    id,
+    isDeletingNote,
+    isMutating,
+    isPreviewing,
+    isPublic,
+    note,
+    updateGist,
+  ]);
+
   const handleSave = async () => {
     if (!activeDraft.title.trim()) {
       Alert.alert('Error', 'Please enter a title');
@@ -147,7 +215,7 @@ export const NoteScreen = () => {
 
     try {
       const gistId = note?.gist_id ?? id ?? '';
-      await updateNote.mutateAsync({
+      await updateGist({
         id: gistId,
         title: activeDraft.title.trim(),
         content: activeDraft.content.trim(),
@@ -158,7 +226,7 @@ export const NoteScreen = () => {
       Alert.alert('Success', 'Note updated successfully!', [
         {
           text: 'OK',
-          onPress: () => router.back(),
+          onPress: () => router.push('/'),
         },
       ]);
     } catch (error) {
@@ -179,7 +247,7 @@ export const NoteScreen = () => {
     setIsPublic(nextValue);
 
     try {
-      await updateNote.mutateAsync({
+      await updateGist({
         id: gistId,
         title: nextTitle,
         content: nextContent,
@@ -212,16 +280,43 @@ export const NoteScreen = () => {
           {
             text: 'Discard',
             style: 'destructive',
-            onPress: () => router.back(),
+            onPress: () => router.push('/'),
           },
         ],
       );
     } else {
-      router.back();
+      router.push('/');
     }
   };
 
   const handleDelete = () => {
+    const handleDeleteConfirm = async () => {
+      if (!id) return;
+      setIsDeletingNote(true);
+
+      try {
+        const gistId = note?.gist_id ?? id ?? '';
+        await deleteGist({
+          id: gistId,
+          fileName: activeFile ?? note?.file_name,
+          mdFileCount: note?.md_file_count,
+        }, {
+          onSuccess: () => {
+            router.push('/');
+          },
+          onError: (error) => {
+            console.error('Error deleting note:', error);
+            Alert.alert('Error', 'Failed to delete note. Please try again.');
+            setIsDeletingNote(false);
+          }
+        });
+      } catch (error) {
+        console.error('Error deleting note:', error);
+        Alert.alert('Error', 'Failed to delete note. Please try again.');
+        setIsDeletingNote(false);
+      }
+    };
+
     Alert.alert(
       'Delete Note',
       'Are you sure you want to delete this note? This action cannot be undone.',
@@ -230,27 +325,8 @@ export const NoteScreen = () => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            if (!id) return;
-
-            try {
-              const gistId = note?.gist_id ?? id ?? '';
-              await deleteNote.mutateAsync({
-                id: gistId,
-                fileName: activeFile ?? note?.file_name,
-                mdFileCount: note?.md_file_count,
-              });
-
-              Alert.alert('Success', 'Note deleted successfully!', [
-                {
-                  text: 'OK',
-                  onPress: () => router.replace('/'),
-                },
-              ]);
-            } catch (error) {
-              console.error('Error deleting note:', error);
-              Alert.alert('Error', 'Failed to delete note. Please try again.');
-            }
+          onPress: () => {
+            void handleDeleteConfirm();
           },
         },
       ],
@@ -261,7 +337,7 @@ export const NoteScreen = () => {
     setIsPreviewing((value) => !value);
   };
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <ThemedView style={styles.loadingContainer}>
         <ActivityIndicator />

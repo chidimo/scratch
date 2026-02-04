@@ -21,6 +21,44 @@ function createOctokit(accessToken: string): Octokit {
   return new Octokit({ auth: accessToken });
 }
 
+export async function createGist(
+  accessToken: string,
+  options: {
+    description: string;
+    files: Record<string, string>;
+    isPublic?: boolean;
+  }
+): Promise<GistDetail> {
+  const octokit = createOctokit(accessToken);
+  const response = await octokit.request("POST /gists", {
+    description: options.description,
+    public: options.isPublic ?? false,
+    files: Object.keys(options.files).reduce(
+      (acc, filename) => {
+        acc[filename] = { content: options.files[filename] };
+        return acc;
+      },
+      {} as Record<string, { content: string }>
+    ),
+  });
+
+  const files = Object.values(response.data.files ?? {})
+    .filter((file) => Boolean(file?.filename))
+    .map((file) => ({
+      filename: file?.filename ?? "untitled.txt",
+      content: file?.content ?? "",
+    }));
+
+  return {
+    id: response.data.id ?? "",
+    description: response.data.description ?? null,
+    htmlUrl: response.data.html_url ?? "",
+    fileCount: files.length,
+    fileNames: files.map((file) => file.filename),
+    files,
+  };
+}
+
 export async function listGists(accessToken: string): Promise<GistSummary[]> {
   const octokit = createOctokit(accessToken);
   const response = await octokit.request("GET /gists", {

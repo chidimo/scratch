@@ -5,14 +5,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Note } from '@scratch/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-// Query key for gists
 export const GISTS_QUERY_KEY = 'gists';
 
-export const useGists = (searchTerm?: string) => {
+export const useGists = ({ searchTerm }: { searchTerm?: string }) => {
   const { token } = useAuth();
+  const normalizedSearch = searchTerm?.trim();
+  const queryKey = normalizedSearch
+    ? [GISTS_QUERY_KEY, normalizedSearch]
+    : [GISTS_QUERY_KEY];
+
+  console.log({ queryKey })
+
 
   return useQuery({
-    queryKey: [GISTS_QUERY_KEY, searchTerm],
+    queryKey,
     queryFn: async () => {
       const githubClient = getGithubClient();
       const gistsData = await githubClient.getUserGists();
@@ -84,20 +90,27 @@ export const useCreateGist = () => {
       public?: boolean;
     }) => {
       const githubClient = getGithubClient();
+      if (!files || Object.keys(files).length === 0) {
+        throw new Error('At least one file is required to create a gist.');
+      }
 
       // Convert files format to match GithubClient interface
       const filesForClient: { [filename: string]: string } = {};
       Object.entries(files).forEach(([filename, fileData]) => {
         filesForClient[filename] = fileData.content;
       });
+      console.log('creating gist', { description, filesForClient, isPublic });
 
-      return await githubClient.createGist(
+      const gist = await githubClient.createGist(
         description,
         filesForClient,
         isPublic,
       );
+      console.log('gist created', gist);
+      return gist;
     },
     onSuccess: () => {
+      console.log('invalidating gists query', [GISTS_QUERY_KEY]);
       queryClient.invalidateQueries({ queryKey: [GISTS_QUERY_KEY] });
     },
     onError: (error) => {
@@ -199,8 +212,12 @@ export const useRefreshGists = () => {
 };
 
 // Hook to fetch a single note by ID
-export const useGistById = (id: string | null) => {
+export const useGistById = (
+  id: string | null,
+  options?: { enabled?: boolean },
+) => {
   const { token } = useAuth();
+  const isEnabled = options?.enabled ?? true;
 
   return useQuery({
     queryKey: [GISTS_QUERY_KEY, id],
@@ -246,28 +263,6 @@ export const useGistById = (id: string | null) => {
         sync_status: 'synced' as const,
       };
     },
-    enabled: !!id && !!token,
+    enabled: !!id && !!token && isEnabled,
   });
-};
-
-// Combined hook for note operations
-export const useGistOperationsById = (id: string | null) => {
-  const noteQuery = useGistById(id);
-  const updateNote = useUpdateGistById();
-  const deleteNote = useDeleteGistById();
-
-  return {
-    // Query
-    note: noteQuery.data,
-    isLoading: noteQuery.isLoading,
-    error: noteQuery.error,
-    refetch: noteQuery.refetch,
-
-    // Mutations
-    updateNote,
-    deleteNote,
-
-    // Combined loading state
-    isMutating: updateNote.isPending || deleteNote.isPending,
-  };
 };
