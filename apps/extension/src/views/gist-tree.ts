@@ -73,7 +73,7 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
             new GistTreeItem(
               'gist',
               name,
-              vscode.TreeItemCollapsibleState.Collapsed,
+              vscode.TreeItemCollapsibleState.Expanded,
             ),
         );
       }
