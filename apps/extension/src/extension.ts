@@ -1,7 +1,10 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+
 import { getGithubSession, signInGithub, signOutGithub } from './auth/github';
 import { getScratchConfig } from './config';
+import { GistTreeProvider } from './views/gist-tree';
+
 import {
   createGist,
   fetchGist,
@@ -16,14 +19,19 @@ import {
   getGistsRoot,
 } from './utils/scratch';
 import { hasWorkspaceFolders } from './utils/workspace';
-import { GistTreeProvider } from './views/gist-tree';
 
-let watchers: vscode.FileSystemWatcher[] = [];
-const gistUpdateTimers = new Map<string, NodeJS.Timeout>();
-const GIST_UPDATE_DEBOUNCE_MS = 2000;
+import {
+  GIST_UPDATE_DEBOUNCE_MS,
+  GITHUB_PROVIDER_ID,
+  MESSAGES,
+  VIEW_ID,
+} from './constants';
+
 const gistIdCache = new Set<string>();
 const gistDeleteTimers = new Map<string, NodeJS.Timeout>();
 let lastGistRefreshAt: Date | null = null;
+let watchers: vscode.FileSystemWatcher[] = [];
+const gistUpdateTimers = new Map<string, NodeJS.Timeout>();
 
 export async function activate(
   context: vscode.ExtensionContext,
@@ -38,10 +46,7 @@ export async function activate(
   const disposables: vscode.Disposable[] = [
     outputChannel,
     statusBar,
-    vscode.window.registerTreeDataProvider(
-      'scratch.gistsView',
-      gistTreeProvider,
-    ),
+    vscode.window.registerTreeDataProvider(VIEW_ID, gistTreeProvider),
     vscode.commands.registerCommand(
       'scratch.refreshScratchState',
       refreshScratchState,
@@ -84,7 +89,7 @@ export async function activate(
       }
     }),
     vscode.authentication.onDidChangeSessions(async (event) => {
-      if (event.provider.id === 'github') {
+      if (event.provider.id === GITHUB_PROVIDER_ID) {
         await updateStatusBar();
       }
     }),
@@ -476,7 +481,7 @@ export async function activate(
     try {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showWarningMessage('No file is currently open.');
+        vscode.window.showWarningMessage(MESSAGES.noFileOpen);
         return;
       }
 
@@ -486,7 +491,7 @@ export async function activate(
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
-        vscode.window.showWarningMessage('This file is not a Scratch note.');
+        vscode.window.showWarningMessage(MESSAGES.notScratchNote);
         return;
       }
 
@@ -521,7 +526,7 @@ export async function activate(
     try {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showWarningMessage('No file is currently open.');
+        vscode.window.showWarningMessage(MESSAGES.noFileOpen);
         return;
       }
 
@@ -531,7 +536,7 @@ export async function activate(
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
-        vscode.window.showWarningMessage('This file is not a Scratch note.');
+        vscode.window.showWarningMessage(MESSAGES.notScratchNote);
         return;
       }
 
@@ -540,7 +545,7 @@ export async function activate(
         prompt: 'Enter new name for the note',
         value: currentName,
         validateInput: (value) =>
-          value.trim().length ? undefined : 'Name is required.',
+          value.trim().length ? undefined : MESSAGES.nameRequired,
       });
 
       if (!newName || newName.trim() === currentName) {

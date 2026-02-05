@@ -120,7 +120,7 @@
         },
         "scratch.gistAutoRefreshMinutes": {
           "type": "number",
-          "default": 0,
+          "default": 30,
           "minimum": 0,
           "description": "Auto-refresh imported gists every N minutes. Set to 0 to disable."
         }

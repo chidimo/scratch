@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getScratchConfig } from '../config';
+import { MARKDOWN_EXTENSIONS } from '../constants';
 import { getGistsRoot } from '../utils/scratch';
 
 type TreeItemKind = 'gist' | 'file' | 'empty';
@@ -33,7 +34,7 @@ class GistTreeItem extends vscode.TreeItem {
 
 function isMarkdownFile(name: string): boolean {
   const lower = name.toLowerCase();
-  return lower.endsWith('.md') || lower.endsWith('.markdown');
+  return MARKDOWN_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
 export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
