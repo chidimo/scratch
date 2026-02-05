@@ -2,7 +2,7 @@
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
   "description": "Local .scratch folder integration for the Scratchpad system.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",
@@ -62,7 +62,7 @@
       {
         "command": "scratch.syncGists",
         "title": "Scratch: Sync GitHub Gists",
-        "icon": "sync"
+        "icon": "$(sync)"
       },
       {
         "command": "scratch.refreshGists",
@@ -71,11 +71,19 @@
       {
         "command": "scratch.createNote",
         "title": "Scratch: Create Note",
-        "icon": "add"
+        "icon": "$(add)"
       },
       {
         "command": "scratch.refreshScratchState",
         "title": "Scratch: Refresh Scratch State"
+      },
+      {
+        "command": "scratch.deleteNote",
+        "title": "Delete Note"
+      },
+      {
+        "command": "scratch.renameNote",
+        "title": "Rename Note"
       }
     ],
     "configuration": {
@@ -117,11 +125,20 @@
         }
       }
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "scratch",
+          "title": "Scratch",
+          "icon": "$(notebook)"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "scratch": [
         {
           "id": "scratch.gistsView",
-          "name": "Scratch Gists"
+          "name": "Scratch (Gists)"
         }
       ]
     },
@@ -130,12 +147,24 @@
         {
           "command": "scratch.syncGists",
           "when": "view == scratch.gistsView",
-          "group": "navigation@1"
+          "group": "navigation"
         },
         {
           "command": "scratch.createNote",
           "when": "view == scratch.gistsView",
-          "group": "navigation@2"
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "scratch.deleteNote",
+          "when": "view == scratch.gistsView && viewItem == file",
+          "group": "inline@1"
+        },
+        {
+          "command": "scratch.renameNote",
+          "when": "view == scratch.gistsView && viewItem == file",
+          "group": "inline@2"
         }
       ]
     }
