@@ -66,7 +66,8 @@
       },
       {
         "command": "scratch.refreshGists",
-        "title": "Scratch: Refresh Imported Gists"
+        "title": "Scratch: Refresh Imported Gists",
+        "icon": "$(refresh)"
       },
       {
         "command": "scratch.createNote",
@@ -87,7 +88,7 @@
       }
     ],
     "configuration": {
-      "title": "Scratch",
+      "title": "Scratch (Gists)",
       "properties": {
         "scratch.storagePath": {
           "type": "string",
@@ -129,7 +130,7 @@
       "activitybar": [
         {
           "id": "scratch",
-          "title": "Scratch",
+          "title": "Scratch (Gists)",
           "icon": "$(notebook)"
         }
       ]
@@ -151,6 +152,11 @@
         },
         {
           "command": "scratch.createNote",
+          "when": "view == scratch.gistsView",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshGists",
           "when": "view == scratch.gistsView",
           "group": "navigation"
         }

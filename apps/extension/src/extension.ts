@@ -3,17 +3,17 @@ import * as vscode from 'vscode';
 import { getGithubSession, signInGithub, signOutGithub } from './auth/github';
 import { getScratchConfig } from './config';
 import {
-    createGist,
-    fetchGist,
-    GistSummary,
-    listGists,
-    updateGistFile,
+  createGist,
+  fetchGist,
+  GistSummary,
+  listGists,
+  updateGistFile,
 } from './services/gist-sync';
 import { getGitUserIdentity } from './utils/git';
 import {
-    createScratchWatcher,
-    ensureScratchRoot,
-    getGistsRoot,
+  createScratchWatcher,
+  ensureScratchRoot,
+  getGistsRoot,
 } from './utils/scratch';
 import { hasWorkspaceFolders } from './utils/workspace';
 import { GistTreeProvider } from './views/gist-tree';
@@ -610,9 +610,9 @@ export async function activate(
       const lastRefreshLabel = lastGistRefreshAt
         ? `Last refresh: ${lastGistRefreshAt.toLocaleString()}`
         : 'Last refresh: never';
-      statusBar.text = '$(sync) Scratch: Sync gists';
-      statusBar.tooltip = `Scratchpad: Sync gists (${session.account.label})\n${lastRefreshLabel}`;
-      statusBar.command = 'scratch.syncGists';
+      statusBar.text = '$(refresh) Scratch: Refresh gists';
+      statusBar.tooltip = `Scratchpad: Refresh gists (${session.account.label})\n${lastRefreshLabel}`;
+      statusBar.command = 'scratch.refreshGists';
     } catch (error) {
       statusBar.text = '$(github) Scratch: Auth error';
       statusBar.tooltip = `Scratchpad: ${String(error)}`;
