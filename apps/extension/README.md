@@ -30,4 +30,4 @@ Scratchpad brings a lightweight `.scratch` workspace into VS Code with GitHub Gi
 - `scratch.autoCreateScratchFolder`
 - `scratch.watchScratchFolder`
 - `scratch.userIdStrategy`
-- `scratch.gistAutoRefreshMinutes`
+- `scratch.gistAutoRefreshMinutes` (default: 0; options: 0, 5, 10, 15, 20, 25, 30 minutes; 0 disables auto-refresh)

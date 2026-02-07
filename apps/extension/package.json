@@ -70,6 +70,11 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "scratch.refreshGistsInProgress",
+        "title": "Scratch: Refresh Imported Gists",
+        "icon": "$(sync~spin)"
+      },
+      {
         "command": "scratch.createNote",
         "title": "Scratch: Create Note",
         "icon": "$(add)"
@@ -120,9 +125,26 @@
         },
         "scratch.gistAutoRefreshMinutes": {
           "type": "number",
-          "default": 30,
-          "minimum": 0,
-          "description": "Auto-refresh imported gists every N minutes. Set to 0 to disable."
+          "default": 0,
+          "enum": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "enumDescriptions": [
+            "Disabled - no auto-refresh",
+            "5 minutes",
+            "10 minutes",
+            "15 minutes",
+            "20 minutes",
+            "25 minutes",
+            "30 minutes"
+          ],
+          "description": "Auto-refresh imported gists every N minutes. Setting to 0 disables auto-refresh."
         }
       }
     },
@@ -157,8 +179,19 @@
         },
         {
           "command": "scratch.refreshGists",
-          "when": "view == scratch.gistsView",
+          "when": "view == scratch.gistsView && !scratch.isRefreshingGists",
           "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshGistsInProgress",
+          "when": "view == scratch.gistsView && scratch.isRefreshingGists",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "scratch.refreshGistsInProgress",
+          "when": "false"
         }
       ],
       "view/item/context": [

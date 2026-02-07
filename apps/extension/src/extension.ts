@@ -70,6 +70,10 @@ export async function activate(
     ),
     vscode.commands.registerCommand('scratch.syncGists', handleGistSync),
     vscode.commands.registerCommand('scratch.refreshGists', handleGistRefresh),
+    vscode.commands.registerCommand(
+      'scratch.refreshGistsInProgress',
+      handleGistRefresh,
+    ),
     vscode.commands.registerCommand('scratch.createNote', handleCreateNote),
     vscode.commands.registerCommand('scratch.deleteNote', handleDeleteNote),
     vscode.commands.registerCommand('scratch.renameNote', handleRenameNote),
@@ -94,6 +98,12 @@ export async function activate(
       }
     }),
   ];
+
+  await vscode.commands.executeCommand(
+    'setContext',
+    'scratch.isRefreshingGists',
+    false,
+  );
 
   async function refreshScratchState(): Promise<void> {
     const config = getScratchConfig();
@@ -238,6 +248,11 @@ export async function activate(
 
   async function handleGistRefresh(): Promise<void> {
     try {
+      await vscode.commands.executeCommand(
+        'setContext',
+        'scratch.isRefreshingGists',
+        true,
+      );
       const session = await getGithubSession(true);
 
       if (!session) {
@@ -294,14 +309,20 @@ export async function activate(
       }
 
       lastGistRefreshAt = new Date();
+      const refreshIntervalMinutes = config.gistAutoRefreshMinutes;
       vscode.window.showInformationMessage(
-        `Scratchpad: refreshed ${gistIds.length} gist(s).`,
+        `Scratchpad: refreshed ${gistIds.length} gist(s).\nRefresh interval: ${refreshIntervalMinutes} minutes`,
       );
     } catch (error) {
       vscode.window.showErrorMessage(
         `Scratchpad: gist refresh failed. ${String(error)}`,
       );
     } finally {
+      await vscode.commands.executeCommand(
+        'setContext',
+        'scratch.isRefreshingGists',
+        false,
+      );
       gistTreeProvider.refresh();
       await updateStatusBar();
     }
@@ -370,7 +391,6 @@ export async function activate(
         type: 'gist' as const,
         label: gist.description?.trim() || 'Untitled gist',
         description: `${gist.fileCount} files`,
-        detail: gist.htmlUrl,
         gist,
       })),
     ];
