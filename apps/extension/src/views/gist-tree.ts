@@ -1,3 +1,4 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { getScratchConfig } from '../config';
 import { MARKDOWN_EXTENSIONS } from '../constants';
@@ -38,6 +39,8 @@ function isMarkdownFile(name: string): boolean {
 }
 
 export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
+  constructor(private readonly options: { flat: boolean }) {}
+
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<
     GistTreeItem | undefined
   >();
@@ -53,6 +56,40 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
 
     try {
       if (!element) {
+        if (this.options.flat) {
+          const markdownFiles = await listMarkdownFiles(gistsRoot);
+
+          if (!markdownFiles.length) {
+            return [
+              new GistTreeItem(
+                'empty',
+                'No gists yet',
+                vscode.TreeItemCollapsibleState.None,
+              ),
+            ];
+          }
+
+          return markdownFiles.map((file) => {
+            const segments = file.relativePath.split('/').filter(Boolean);
+            const gistId = segments[0] ?? '';
+            const fileLabel = segments.slice(1).join('/') || file.relativePath;
+            const item = new GistTreeItem(
+              'file',
+              fileLabel,
+              vscode.TreeItemCollapsibleState.None,
+              file.uri,
+              file.relativePath,
+            );
+            item.description = gistId;
+            item.command = {
+              command: 'vscode.open',
+              title: 'Open Note',
+              arguments: [file.uri],
+            };
+            return item;
+          });
+        }
+
         const entries = await vscode.workspace.fs.readDirectory(gistsRoot);
         const gistFolders = entries
           .filter(([, type]) => type === vscode.FileType.Directory)
@@ -74,7 +111,7 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
             new GistTreeItem(
               'gist',
               name,
-              vscode.TreeItemCollapsibleState.Expanded,
+              vscode.TreeItemCollapsibleState.Collapsed,
             ),
         );
       }
@@ -136,4 +173,26 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
   getTreeItem(element: GistTreeItem): vscode.TreeItem {
     return element;
   }
+}
+
+async function listMarkdownFiles(
+  root: vscode.Uri,
+  prefix = '',
+): Promise<{ relativePath: string; uri: vscode.Uri }[]> {
+  const entries = await vscode.workspace.fs.readDirectory(root);
+  const results: { relativePath: string; uri: vscode.Uri }[] = [];
+
+  for (const [name, type] of entries) {
+    const entryUri = vscode.Uri.joinPath(root, name);
+    if (type === vscode.FileType.Directory) {
+      const nestedPrefix = prefix ? `${prefix}/${name}` : name;
+      const nested = await listMarkdownFiles(entryUri, nestedPrefix);
+      results.push(...nested);
+    } else if (type === vscode.FileType.File && isMarkdownFile(name)) {
+      const relativePath = prefix ? path.posix.join(prefix, name) : name;
+      results.push({ relativePath, uri: entryUri });
+    }
+  }
+
+  return results;
 }

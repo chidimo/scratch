@@ -11,6 +11,7 @@ import {
   GistSummary,
   listGists,
   updateGistFile,
+  updateGistFiles,
 } from './services/gist-sync';
 import { getGitUserIdentity } from './utils/git';
 import {
@@ -24,6 +25,7 @@ import {
   GIST_UPDATE_DEBOUNCE_MS,
   GITHUB_PROVIDER_ID,
   MESSAGES,
+  VIEW_FLAT_ID,
   VIEW_ID,
 } from './constants';
 
@@ -41,12 +43,14 @@ export async function activate(
     vscode.StatusBarAlignment.Left,
     100,
   );
-  const gistTreeProvider = new GistTreeProvider();
+  const gistTreeProvider = new GistTreeProvider({ flat: false });
+  const gistFlatTreeProvider = new GistTreeProvider({ flat: true });
   hydrateGistIdCache(context);
   const disposables: vscode.Disposable[] = [
     outputChannel,
     statusBar,
     vscode.window.registerTreeDataProvider(VIEW_ID, gistTreeProvider),
+    vscode.window.registerTreeDataProvider(VIEW_FLAT_ID, gistFlatTreeProvider),
     vscode.commands.registerCommand(
       'scratch.refreshScratchState',
       refreshScratchState,
@@ -110,7 +114,12 @@ export async function activate(
     const scratchRoot = await ensureScratchRoot(config);
     outputChannel.appendLine(`Scratch folder ready: ${scratchRoot.fsPath}`);
     resetWatchers(config, outputChannel, scratchRoot);
+    refreshGistViews();
+  }
+
+  function refreshGistViews(): void {
     gistTreeProvider.refresh();
+    gistFlatTreeProvider.refresh();
   }
 
   async function showUserIdentity(): Promise<void> {
@@ -241,7 +250,7 @@ export async function activate(
         `Scratchpad: gist sync failed. ${String(error)}`,
       );
     } finally {
-      gistTreeProvider.refresh();
+      refreshGistViews();
       await updateStatusBar();
     }
   }
@@ -323,7 +332,7 @@ export async function activate(
         'scratch.isRefreshingGists',
         false,
       );
-      gistTreeProvider.refresh();
+      refreshGistViews();
       await updateStatusBar();
     }
   }
@@ -371,6 +380,35 @@ export async function activate(
       return undefined;
     }
 
+    const config = getScratchConfig();
+    await ensureScratchRoot(config);
+    const gistsRoot = getGistsRoot(config);
+    const importedIds = new Set<string>();
+
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(gistsRoot);
+      for (const [name, type] of entries) {
+        if (type === vscode.FileType.Directory) {
+          importedIds.add(name);
+        }
+      }
+    } catch (error) {
+      outputChannel.appendLine(
+        `Failed to list imported gists: ${String(error)}`,
+      );
+    }
+
+    const unimportedMarkdownGists = markdownGists.filter(
+      (gist) => !importedIds.has(gist.id),
+    );
+
+    if (!unimportedMarkdownGists.length) {
+      vscode.window.showInformationMessage(
+        'Scratchpad: all markdown gists are already imported.',
+      );
+      return undefined;
+    }
+
     type GistChoice =
       | { type: 'all'; label: string; description: string }
       | {
@@ -385,9 +423,9 @@ export async function activate(
       {
         type: 'all',
         label: 'Import all markdown gists',
-        description: `${markdownGists.length} gists`,
+        description: `${unimportedMarkdownGists.length} gists`,
       },
-      ...markdownGists.map((gist) => ({
+      ...unimportedMarkdownGists.map((gist) => ({
         type: 'gist' as const,
         label: gist.description?.trim() || 'Untitled gist',
         description: `${gist.fileCount} files`,
@@ -407,7 +445,7 @@ export async function activate(
     const includeAll = selections.some((selection) => selection.type === 'all');
 
     if (includeAll) {
-      return markdownGists;
+      return unimportedMarkdownGists;
     }
 
     return selections
@@ -448,11 +486,12 @@ export async function activate(
 
       statusBar.text = '$(sync~spin) Scratch: Creating note...';
       statusBar.command = 'scratch.showGithubStatus';
+      const noteContent = '# Untitled note\n';
 
       const created = await createGist(session.accessToken, {
         description: trimmedTitle,
         files: {
-          [filename]: '# ' + trimmedTitle + '\n\n',
+          [filename]: noteContent,
         },
         isPublic: false,
       });
@@ -473,10 +512,7 @@ export async function activate(
       await vscode.workspace.fs.createDirectory(gistFolder);
 
       const fileUri = vscode.Uri.joinPath(gistFolder, filename);
-      await vscode.workspace.fs.writeFile(
-        fileUri,
-        encoder.encode('# ' + trimmedTitle + '\n\n'),
-      );
+      await vscode.workspace.fs.writeFile(fileUri, encoder.encode(noteContent));
 
       const document = await vscode.workspace.openTextDocument(fileUri);
       await vscode.window.showTextDocument(document, { preview: false });
@@ -492,7 +528,7 @@ export async function activate(
         `Scratchpad: failed to create note. ${String(error)}`,
       );
     } finally {
-      gistTreeProvider.refresh();
+      refreshGistViews();
       await updateStatusBar();
     }
   }
@@ -533,8 +569,9 @@ export async function activate(
         'workbench.action.closeActiveEditor',
       );
 
+      await removeEmptyGistFolder(gistsRoot, fileUri, outputChannel);
       vscode.window.showInformationMessage('Note deleted successfully.');
-      gistTreeProvider.refresh();
+      refreshGistViews();
     } catch (error) {
       vscode.window.showErrorMessage(
         `Scratchpad: failed to delete note. ${String(error)}`,
@@ -553,6 +590,7 @@ export async function activate(
       const fileUri = editor.document.uri;
       const config = getScratchConfig();
       const gistsRoot = getGistsRoot(config);
+      const scratchRoot = await ensureScratchRoot(config);
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
@@ -576,16 +614,38 @@ export async function activate(
       const newFileName = `${trimmedName}.md`;
       const parentDir = fileUri.with({ path: path.dirname(fileUri.path) });
       const newFileUri = vscode.Uri.joinPath(parentDir, newFileName);
+      const gistInfo = getGistInfoFromUri(scratchRoot, fileUri);
+      const contents = await vscode.workspace.fs.readFile(fileUri);
+      const content = Buffer.from(contents).toString('utf-8');
 
       // Rename the file
       await vscode.workspace.fs.rename(fileUri, newFileUri);
+
+      if (gistInfo) {
+        const oldFilePath = normalizePath(gistInfo.filePath);
+        const parentPath = path.posix.dirname(oldFilePath);
+        const newFilePath =
+          parentPath === '.' ? newFileName : `${parentPath}/${newFileName}`;
+        const session = await getGithubSession(false);
+
+        if (session) {
+          await updateGistFiles({
+            accessToken: session.accessToken,
+            gistId: gistInfo.gistId,
+            files: {
+              [oldFilePath]: null,
+              [newFilePath]: content,
+            },
+          });
+        }
+      }
 
       // Open the renamed file
       const document = await vscode.workspace.openTextDocument(newFileUri);
       await vscode.window.showTextDocument(document, { preview: false });
 
       vscode.window.showInformationMessage('Note renamed successfully.');
-      gistTreeProvider.refresh();
+      refreshGistViews();
     } catch (error) {
       vscode.window.showErrorMessage(
         `Scratchpad: failed to rename note. ${String(error)}`,
@@ -755,6 +815,37 @@ async function removeStaleMarkdownFiles(
   }
 }
 
+async function removeEmptyGistFolder(
+  gistsRoot: vscode.Uri,
+  fileUri: vscode.Uri,
+  outputChannel?: vscode.OutputChannel,
+): Promise<void> {
+  const relativePath = path.relative(gistsRoot.fsPath, fileUri.fsPath);
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    return;
+  }
+
+  const segments = relativePath.split(path.sep).filter(Boolean);
+  if (segments.length < 2) {
+    return;
+  }
+
+  const gistId = segments[0];
+  const gistFolder = vscode.Uri.joinPath(gistsRoot, gistId);
+
+  try {
+    const entries = await vscode.workspace.fs.readDirectory(gistFolder);
+    if (!entries.length) {
+      await vscode.workspace.fs.delete(gistFolder, { useTrash: true });
+      outputChannel?.appendLine(`Removed empty gist folder ${gistId}.`);
+    }
+  } catch (error) {
+    outputChannel?.appendLine(
+      `Failed to remove empty gist folder ${gistId}: ${String(error)}`,
+    );
+  }
+}
+
 function getGistInfoFromUri(
   scratchRoot: vscode.Uri,
   fileUri: vscode.Uri,
@@ -868,6 +959,12 @@ function scheduleGistDelete(options: {
 
         options.outputChannel.appendLine(
           `Deleted gist file ${gistInfo.gistId} -> ${gistInfo.filePath}`,
+        );
+        const gistsRoot = vscode.Uri.joinPath(options.scratchRoot, 'gists');
+        await removeEmptyGistFolder(
+          gistsRoot,
+          options.fileUri,
+          options.outputChannel,
         );
       } catch (error) {
         options.outputChannel.appendLine(

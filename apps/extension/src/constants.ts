@@ -2,6 +2,7 @@
 
 export const EXTENSION_ID = 'scratch';
 export const VIEW_ID = 'scratch.gistsView';
+export const VIEW_FLAT_ID = 'scratch.gistsFlatView';
 
 // GitHub authentication
 export const GITHUB_PROVIDER_ID = 'github';

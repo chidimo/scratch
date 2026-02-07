@@ -160,6 +160,10 @@
     "views": {
       "scratch": [
         {
+          "id": "scratch.gistsFlatView",
+          "name": "Scratch (Notes)"
+        },
+        {
           "id": "scratch.gistsView",
           "name": "Scratch (Gists)"
         }
@@ -173,8 +177,18 @@
           "group": "navigation"
         },
         {
+          "command": "scratch.syncGists",
+          "when": "view == scratch.gistsFlatView",
+          "group": "navigation"
+        },
+        {
           "command": "scratch.createNote",
           "when": "view == scratch.gistsView",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.createNote",
+          "when": "view == scratch.gistsFlatView",
           "group": "navigation"
         },
         {
@@ -183,8 +197,18 @@
           "group": "navigation"
         },
         {
+          "command": "scratch.refreshGists",
+          "when": "view == scratch.gistsFlatView && !scratch.isRefreshingGists",
+          "group": "navigation"
+        },
+        {
           "command": "scratch.refreshGistsInProgress",
           "when": "view == scratch.gistsView && scratch.isRefreshingGists",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshGistsInProgress",
+          "when": "view == scratch.gistsFlatView && scratch.isRefreshingGists",
           "group": "navigation"
         }
       ],
@@ -201,8 +225,18 @@
           "group": "inline@1"
         },
         {
+          "command": "scratch.deleteNote",
+          "when": "view == scratch.gistsFlatView && viewItem == file",
+          "group": "inline@1"
+        },
+        {
           "command": "scratch.renameNote",
           "when": "view == scratch.gistsView && viewItem == file",
+          "group": "inline@2"
+        },
+        {
+          "command": "scratch.renameNote",
+          "when": "view == scratch.gistsFlatView && viewItem == file",
           "group": "inline@2"
         }
       ]
