@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 // GitHub User interface - matches GitHub API response
 interface GitHubUser {
@@ -83,7 +83,7 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [gists, setGists] = useState<Gist[]>([]);
@@ -175,18 +175,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const value: AuthContextType = {
-    user,
-    token,
-    gists,
-    isLoading,
-    error,
-    login,
-    logout,
-    fetchGists,
-    setUser,
-    setToken,
-  };
+  const value: AuthContextType = useMemo(() => {
+    return {
+      user,
+      token,
+      gists,
+      isLoading,
+      error,
+      login,
+      logout,
+      fetchGists,
+      setUser,
+      setToken,
+    }
+  }, [user, token, gists, isLoading, error, login, logout, fetchGists, setUser, setToken]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
