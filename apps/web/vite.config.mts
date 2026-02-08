@@ -3,6 +3,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import path from 'node:path';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -17,7 +20,14 @@ export default defineConfig(() => ({
   },
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   css: {
-    postcss: './postcss.config.cjs',
+    postcss: {
+      plugins: [
+        tailwindcss({
+          config: path.resolve(import.meta.dirname, 'tailwind.config.cjs'),
+        }),
+        autoprefixer(),
+      ],
+    },
   },
   // Uncomment this if you are using workers.
   // worker: {

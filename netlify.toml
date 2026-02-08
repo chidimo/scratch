@@ -1,10 +1,11 @@
 [build]
   base = "."
-  command = "npx nx build web"
+  command = "npx vite build --config apps/web/vite.config.mts"
   publish = "dist/apps/web"
 
 [build.environment]
   NODE_VERSION = "22"
+  NX_CLOUD = "false"
 
 [dev]
   command = "yarn web:dev"
@@ -15,11 +16,6 @@
 [[redirects]]
   from = "/callback"
   to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/.netlify/functions/github-token"
-  to = "/.netlify/functions/github-token"
   status = 200
 
 [[redirects]]
