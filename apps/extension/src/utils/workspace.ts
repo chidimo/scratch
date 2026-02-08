@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-unresolved
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
 export function getWorkspaceFolders(): vscode.WorkspaceFolder[] {
   return [...(vscode.workspace.workspaceFolders ?? [])];

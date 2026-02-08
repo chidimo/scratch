@@ -48,7 +48,11 @@ const useEditorToolbar = (editor: Editor) => {
   const { upload, uploading } = useFileUpload();
   const loading = useMemo(() => uploading, [uploading]);
 
-  const { isOn: isYoutubeOn, turnOn: turnYoutubeOn, turnOff: turnYoutubeOff } = useOnOffSwitch();
+  const {
+    isOn: isYoutubeOn,
+    turnOn: turnYoutubeOn,
+    turnOff: turnYoutubeOff,
+  } = useOnOffSwitch();
 
   const uploadFile = useCallback(() => {
     const input = document.createElement('input');
@@ -95,13 +99,15 @@ const useEditorToolbar = (editor: Editor) => {
       [
         {
           icon: mdiFormatHeader1,
-          action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+          action: () =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run(),
           label: 'Heading 1',
           isActive: () => editor.isActive('heading', { level: 1 }) ?? false,
         },
         {
           icon: mdiFormatHeader2,
-          action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+          action: () =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run(),
           label: 'Heading 2',
           isActive: () => editor.isActive('heading', { level: 2 }) ?? false,
         },
@@ -185,9 +191,15 @@ const useEditorToolbar = (editor: Editor) => {
         isActive: () => editor.isActive('youtube'),
         embedModalOpen: () => isYoutubeOn,
       },
-      
     ],
-    [editor, modifyLink, uploadFile, turnYoutubeOn, turnYoutubeOff, isYoutubeOn],
+    [
+      editor,
+      modifyLink,
+      uploadFile,
+      turnYoutubeOn,
+      turnYoutubeOff,
+      isYoutubeOn,
+    ],
   );
   return { items, loading };
 };
@@ -200,16 +212,26 @@ export const RteToolbar = ({ editor }: { editor: Editor }) => {
   const renderToolbarItems = (item: Item[] | Item, index: number) => {
     const tbItem = item as ToolbarItem;
 
-    if (item === Spacer) return <div key={index} className="flex h-14 border-r border-r-gray-300" />;
+    if (item === Spacer)
+      return (
+        <div key={index} className="flex h-14 border-r border-r-gray-300" />
+      );
 
     if (Array.isArray(item)) {
       const activeItem = (item as ToolbarItem[]).find((a) => a.isActive());
 
       return (
-        <Menu as="div" className="relative divity inline-block text-left" key={index}>
+        <Menu
+          as="div"
+          className="relative divity inline-block text-left"
+          key={index}
+        >
           <Menu.Button className="flex px-2 h-10 items-center">
             {activeItem?.label}
-            <ChevronDownIcon className="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />
+            <ChevronDownIcon
+              className="-mr-1 ml-2 h-5 w-5"
+              aria-hidden="true"
+            />
           </Menu.Button>
           <Menu.Items className="origin-top-left absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white focus:outline-none z-50">
             {(item as ToolbarItem[]).map((a) => (
@@ -250,7 +272,11 @@ export const RteToolbar = ({ editor }: { editor: Editor }) => {
               tbItem.action();
             }}
           >
-            <Icon className="w-5 h-5" color={'currentColor'} path={tbItem.icon} />
+            <Icon
+              className="w-5 h-5"
+              color={'currentColor'}
+              path={tbItem.icon}
+            />
           </button>
           <EditorYouTubeUploader
             editor={editor}
@@ -268,7 +294,10 @@ export const RteToolbar = ({ editor }: { editor: Editor }) => {
         key={index}
         title={tbItem.label}
         aria-label={tbItem.label}
-        className={mergeClasses('px-2 h-10 flex items-center', tbItem.isActive() ? 'text-blue-500' : 'text-gray-800')}
+        className={mergeClasses(
+          'px-2 h-10 flex items-center',
+          tbItem.isActive() ? 'text-blue-500' : 'text-gray-800',
+        )}
         onClick={(e) => {
           e.preventDefault();
           tbItem.action();

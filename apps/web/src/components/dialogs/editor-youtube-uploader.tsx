@@ -7,7 +7,11 @@ type Props = {
   closeDialog: () => void;
 };
 
-export const EditorYouTubeUploader = ({ editor, active, closeDialog }: Props) => {
+export const EditorYouTubeUploader = ({
+  editor,
+  active,
+  closeDialog,
+}: Props) => {
   useEffect(() => {
     if (!active) return;
     const url = globalThis.prompt('Enter YouTube URL');

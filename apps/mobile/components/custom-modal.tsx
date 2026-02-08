@@ -1,21 +1,22 @@
-import * as React from 'react'
-import { KeyboardAvoidingView, Modal, Platform, StyleSheet, View } from 'react-native'
-import { ThemedText } from './themed-text'
-import { ThemedView } from './themed-view'
+import * as React from 'react';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { ThemedText } from './themed-text';
+import { ThemedView } from './themed-view';
 
 type Props = {
-  title: string | null
-  visible: boolean
-  onRequestClose: () => void
-}
+  title: string | null;
+  visible: boolean;
+  onRequestClose: () => void;
+};
 
 export const CustomModal = (props: React.PropsWithChildren<Props>) => {
-  const {
-    title,
-    children,
-    visible,
-    onRequestClose,
-  } = props
+  const { title, children, visible, onRequestClose } = props;
 
   return (
     <Modal
@@ -30,12 +31,14 @@ export const CustomModal = (props: React.PropsWithChildren<Props>) => {
       >
         <View style={styles.modalBackdrop} />
         <ThemedView style={styles.modalCard}>
-          {title ? <ThemedText style={styles.modalTitle}>{title}</ThemedText> : null}
+          {title ? (
+            <ThemedText style={styles.modalTitle}>{title}</ThemedText>
+          ) : null}
           {children}
         </ThemedView>
       </KeyboardAvoidingView>
     </Modal>
-  )
+  );
 };
 
 const styles = StyleSheet.create({

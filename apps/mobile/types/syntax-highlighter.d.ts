@@ -1,6 +1,6 @@
 declare module 'react-native-syntax-highlighter' {
   import * as React from 'react';
-    import { TextStyle, ViewStyle } from 'react-native';
+  import { TextStyle, ViewStyle } from 'react-native';
 
   export type SyntaxHighlighterStyle = Record<string, TextStyle | ViewStyle>;
 

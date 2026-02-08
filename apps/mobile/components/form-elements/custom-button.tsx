@@ -1,5 +1,5 @@
-import { useThemeColor } from "@/hooks/use-theme-color";
-import React, { ReactNode } from "react";
+import { useThemeColor } from '@/hooks/use-theme-color';
+import React, { ReactNode } from 'react';
 import {
   ActivityIndicator,
   GestureResponderEvent,
@@ -7,16 +7,16 @@ import {
   StyleProp,
   TextStyle,
   ViewStyle,
-} from "react-native";
-import { ThemedText } from "../themed-text";
-import { ThemedView } from "../themed-view";
+} from 'react-native';
+import { ThemedText } from '../themed-text';
+import { ThemedView } from '../themed-view';
 
 export type BtnVariant =
-  | "CANCEL"
-  | "DANGER"
-  | "PRIMARY"
-  | "SUCCESS"
-  | "SECONDARY";
+  | 'CANCEL'
+  | 'DANGER'
+  | 'PRIMARY'
+  | 'SUCCESS'
+  | 'SECONDARY';
 
 type Props = {
   title: string | ReactNode;
@@ -30,24 +30,24 @@ type Props = {
 
 export const CustomButton = (props: Props) => {
   const {
-    title = "",
+    title = '',
     onPress,
     disabled = false,
     isLoading = false,
     textStyle = {},
     containerStyle = {},
-    variant = "SUCCESS",
+    variant = 'SUCCESS',
   } = props;
 
   const { tint, surface, surfaceAlt, success, danger, onTint, text } =
     useThemeColor({}, [
-      "tint",
-      "surface",
-      "surfaceAlt",
-      "success",
-      "danger",
-      "onTint",
-      "text",
+      'tint',
+      'surface',
+      'surfaceAlt',
+      'success',
+      'danger',
+      'onTint',
+      'text',
     ]);
 
   const variantBg: Record<BtnVariant, string> = {
@@ -71,12 +71,12 @@ export const CustomButton = (props: Props) => {
       onPress={disabled ? () => null : onPress}
       style={({ pressed }) => {
         return [
-          typeof title === "string"
+          typeof title === 'string'
             ? {
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "100%",
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
                 height: 50,
                 borderRadius: 4,
                 paddingVertical: 8,
@@ -90,10 +90,10 @@ export const CustomButton = (props: Props) => {
     >
       <ThemedView
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "transparent",
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'transparent',
         }}
       >
         {isLoading && (
@@ -103,12 +103,12 @@ export const CustomButton = (props: Props) => {
             style={[{ marginRight: 3 }]}
           />
         )}
-        {typeof title === "string" ? (
+        {typeof title === 'string' ? (
           <ThemedText
             style={[
               {
                 fontSize: 18,
-                fontWeight: "bold",
+                fontWeight: 'bold',
                 color: variantText[variant],
               },
               textStyle,

@@ -283,7 +283,7 @@ interface AppState {
   user: User | null;
   notes: Note[];
   isLoading: boolean;
-  syncStatus: "synced" | "syncing" | "error";
+  syncStatus: 'synced' | 'syncing' | 'error';
   settings: AppSettings;
 }
 ```

@@ -10,10 +10,8 @@ import {
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
 
-const SyntaxHighlighter = (
-  require('react-native-syntax-highlighter').default ??
-  require('react-native-syntax-highlighter')
-) as ComponentType<{
+const SyntaxHighlighter = (require('react-native-syntax-highlighter').default ??
+  require('react-native-syntax-highlighter')) as ComponentType<{
   language?: string;
   style?: Record<string, unknown>;
   customStyle?: Record<string, unknown>;

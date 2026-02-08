@@ -138,7 +138,9 @@ export const Gists = () => {
     return (
       <>
         <Helmet>
-          <title>Loading - Scratch (Gists) | Your Cross-Platform Scratchpad</title>
+          <title>
+            Loading - Scratch (Gists) | Your Cross-Platform Scratchpad
+          </title>
         </Helmet>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
           <div className="text-center">
@@ -156,7 +158,9 @@ export const Gists = () => {
     return (
       <>
         <Helmet>
-          <title>Error - Scratch (Gists) | Your Cross-Platform Scratchpad</title>
+          <title>
+            Error - Scratch (Gists) | Your Cross-Platform Scratchpad
+          </title>
         </Helmet>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
@@ -312,10 +316,11 @@ export const Gists = () => {
 
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${gist.public
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-700'
-                        }`}
+                      className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                        gist.public
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
                     >
                       {gist.public ? '🌐 Public' : '🔒 Private'}
                     </span>
@@ -351,5 +356,4 @@ export const Gists = () => {
       </div>
     </>
   );
-}
-
+};

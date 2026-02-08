@@ -16,11 +16,6 @@
     "isolatedModules": true,
     "noEmit": false
   },
-  "include": [
-    "functions/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["functions/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

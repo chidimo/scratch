@@ -33,7 +33,7 @@ export const SearchInput = ({
       returnKeyType="search"
       autoCapitalize="none"
       autoCorrect={false}
-      containerStyle={{marginBottom: 0}}
+      containerStyle={{ marginBottom: 0 }}
     />
   );
 };

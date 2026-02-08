@@ -6,10 +6,7 @@ export const PrivacyPolicy = () => {
     <>
       <Helmet>
         <title>Privacy Policy - Scratch (Gists)</title>
-        <meta
-          name="description"
-          content="Privacy policy for Scratch (Gists)"
-        />
+        <meta name="description" content="Privacy policy for Scratch (Gists)" />
       </Helmet>
       <div className="min-h-screen bg-white">
         <div className="max-w-3xl mx-auto px-6 py-12">
@@ -25,19 +22,24 @@ export const PrivacyPolicy = () => {
           </h1>
 
           <section className="space-y-4 text-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900">Introduction</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Introduction
+            </h2>
             <p>
               Welcome to Scratch (Gists)! This privacy policy explains our
               practices regarding the collection, use, and disclosure of
               information when you use our application.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">Data Collection</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Data Collection
+            </h2>
             <p>
               Scratch (Gists) uses GitHub OAuth to sign you in and access your
-              gists. We store your access token locally on your device and use it
-              to sync gists with GitHub. We do not collect analytics or tracking
-              data beyond what is required for authentication and gist syncing.
+              gists. We store your access token locally on your device and use
+              it to sync gists with GitHub. We do not collect analytics or
+              tracking data beyond what is required for authentication and gist
+              syncing.
             </p>
 
             <h2 className="text-xl font-semibold text-gray-900">Data Usage</h2>
@@ -47,7 +49,9 @@ export const PrivacyPolicy = () => {
               within the app.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">Data Sharing</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Data Sharing
+            </h2>
             <p>
               We do not share your personal information with third parties. Your
               data is sent only to GitHub as part of authentication and gist
@@ -95,4 +99,4 @@ export const PrivacyPolicy = () => {
       </div>
     </>
   );
-}
+};

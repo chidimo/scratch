@@ -1,15 +1,15 @@
 // Fallback for using MaterialIcons on Android and web.
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons'
-import type { OpaqueColorValue, StyleProp, TextStyle } from 'react-native'
-import type { SymbolViewProps, SymbolWeight } from 'expo-symbols'
-import type { ComponentProps } from 'react'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import type { OpaqueColorValue, StyleProp, TextStyle } from 'react-native';
+import type { SymbolViewProps, SymbolWeight } from 'expo-symbols';
+import type { ComponentProps } from 'react';
 
 type IconMapping = Record<
   SymbolViewProps['name'],
   ComponentProps<typeof MaterialIcons>['name']
->
-type IconSymbolName = keyof typeof MAPPING
+>;
+type IconSymbolName = keyof typeof MAPPING;
 
 /**
  * Add your SF Symbols to Material Icons mappings here.
@@ -27,7 +27,7 @@ const MAPPING = {
   // Settings tab
   'gearshape.fill': 'settings',
   gobackward: 'arrow-back',
-} as IconMapping
+} as IconMapping;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
@@ -40,11 +40,11 @@ export const IconSymbol = ({
   color,
   style,
 }: {
-  name: IconSymbolName
-  size?: number
-  color: string | OpaqueColorValue
-  style?: StyleProp<TextStyle>
-  weight?: SymbolWeight
+  name: IconSymbolName;
+  size?: number;
+  color: string | OpaqueColorValue;
+  style?: StyleProp<TextStyle>;
+  weight?: SymbolWeight;
 }) => {
   return (
     <MaterialIcons
@@ -53,5 +53,5 @@ export const IconSymbol = ({
       name={MAPPING[name]}
       style={style}
     />
-  )
-}
+  );
+};

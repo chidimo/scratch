@@ -38,7 +38,6 @@ export const GistList = () => {
     setSearchTerm(term);
   };
 
-
   const renderNoteItem = ({ item }: { item: Note }) => <GistItem gist={item} />;
 
   return (
@@ -51,7 +50,6 @@ export const GistList = () => {
         </View>
 
         <NewNoteButton />
-
       </View>
       <FlatList
         data={gists}

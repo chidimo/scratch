@@ -1,9 +1,9 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
 export interface GitUserIdentity {
   name?: string;
   email?: string;
-  source: "git";
+  source: 'git';
 }
 
 export interface ScratchFolderInfo {
@@ -12,7 +12,7 @@ export interface ScratchFolderInfo {
   exists: boolean;
 }
 
-export type UserIdStrategy = "git";
+export type UserIdStrategy = 'git';
 
 export interface ScratchConfig {
   storagePath: string;

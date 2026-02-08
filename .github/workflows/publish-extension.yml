@@ -3,17 +3,17 @@ name: Publish VSCode Extension
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
   workflow_dispatch:
     inputs:
       publish_vsce:
-        description: "Publish to VS Code Marketplace"
+        description: 'Publish to VS Code Marketplace'
         required: false
-        default: "true"
+        default: 'true'
       publish_ovsx:
-        description: "Publish to Open VSX"
+        description: 'Publish to Open VSX'
         required: false
-        default: "false"
+        default: 'false'
 
 jobs:
   publish:
@@ -28,8 +28,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "yarn"
+          node-version: '22'
+          cache: 'yarn'
           cache-dependency-path: apps/extension/yarn.lock
 
       - name: Install dependencies

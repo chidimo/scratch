@@ -38,8 +38,7 @@ export const RichTextEditor = (props: Props) => {
     },
     editorProps: {
       attributes: {
-        class:
-          'prose max-w-none min-h-[240px] p-4 focus:outline-none',
+        class: 'prose max-w-none min-h-[240px] p-4 focus:outline-none',
       },
     },
   });
@@ -56,8 +55,7 @@ export const RichTextEditor = (props: Props) => {
     editor.setOptions({
       editorProps: {
         attributes: {
-          class:
-            'prose max-w-none min-h-[240px] p-4 focus:outline-none',
+          class: 'prose max-w-none min-h-[240px] p-4 focus:outline-none',
           'data-placeholder': placeholder,
         },
       },

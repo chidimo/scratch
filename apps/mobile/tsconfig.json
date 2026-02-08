@@ -2,23 +2,11 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "typeRoots": [
-      "./types",
-      "../../node_modules/@types"
-    ],
+    "typeRoots": ["./types", "../../node_modules/@types"],
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@scratch/shared": [
-        "../../libs/shared/src/index.ts"
-      ]
+      "@/*": ["./*"],
+      "@scratch/shared": ["../../libs/shared/src/index.ts"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
 }

@@ -1,4 +1,8 @@
-import { useDeleteGistById, useGistById, useUpdateGistById } from '@/hooks/use-gists';
+import {
+  useDeleteGistById,
+  useGistById,
+  useUpdateGistById,
+} from '@/hooks/use-gists';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -24,9 +28,15 @@ export const NoteScreen = () => {
   const router = useRouter();
 
   const [isDeletingNote, setIsDeletingNote] = useState(false);
-  const { mutateAsync: deleteGist, isPending: isDeleting } = useDeleteGistById();
-  const { mutateAsync: updateGist, isPending: isUpdating } = useUpdateGistById();
-  const { data: note, error, isPending } = useGistById(id, {
+  const { mutateAsync: deleteGist, isPending: isDeleting } =
+    useDeleteGistById();
+  const { mutateAsync: updateGist, isPending: isUpdating } =
+    useUpdateGistById();
+  const {
+    data: note,
+    error,
+    isPending,
+  } = useGistById(id, {
     enabled: !isDeletingNote && !isDeleting,
   });
 
@@ -296,20 +306,23 @@ export const NoteScreen = () => {
 
       try {
         const gistId = note?.gist_id ?? id ?? '';
-        await deleteGist({
-          id: gistId,
-          fileName: activeFile ?? note?.file_name,
-          mdFileCount: note?.md_file_count,
-        }, {
-          onSuccess: () => {
-            router.push('/');
+        await deleteGist(
+          {
+            id: gistId,
+            fileName: activeFile ?? note?.file_name,
+            mdFileCount: note?.md_file_count,
           },
-          onError: (error) => {
-            console.error('Error deleting note:', error);
-            Alert.alert('Error', 'Failed to delete note. Please try again.');
-            setIsDeletingNote(false);
-          }
-        });
+          {
+            onSuccess: () => {
+              router.push('/');
+            },
+            onError: (error) => {
+              console.error('Error deleting note:', error);
+              Alert.alert('Error', 'Failed to delete note. Please try again.');
+              setIsDeletingNote(false);
+            },
+          },
+        );
       } catch (error) {
         console.error('Error deleting note:', error);
         Alert.alert('Error', 'Failed to delete note. Please try again.');

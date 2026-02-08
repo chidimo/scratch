@@ -56,7 +56,9 @@ const LoadingState = () => (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <h2 className="text-2xl font-semibold text-gray-900">Loading gist...</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Loading gist...
+        </h2>
       </div>
     </div>
   </>
@@ -99,7 +101,9 @@ const NotFoundState = () => (
     </Helmet>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-6">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-10 w-full max-w-md text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">Gist not found</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          Gist not found
+        </h2>
         <p className="text-gray-600 mb-6">
           We couldn't find that gist in your list.
         </p>
@@ -217,14 +221,13 @@ const useGistFileSave = ({
 
 export const GistDetail = () => {
   const { gistId } = useParams();
-  const { user, token, gists, isLoading, error, fetchGists, login } =
-    useAuth();
+  const { user, token, gists, isLoading, error, fetchGists, login } = useAuth();
   const githubClient = useMemo(() => getGithubClient(), []);
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
-  const [initialContents, setInitialContents] = useState<Record<string, string>>(
-    {},
-  );
+  const [initialContents, setInitialContents] = useState<
+    Record<string, string>
+  >({});
   const [loadedGistId, setLoadedGistId] = useState<string | null>(null);
 
   const {
@@ -245,7 +248,7 @@ export const GistDetail = () => {
 
   const gist = useMemo(
     () => gists.find((item) => item.id === gistId),
-    [gists, gistId]
+    [gists, gistId],
   );
 
   useEffect(() => {
@@ -263,7 +266,7 @@ export const GistDetail = () => {
   }, [note, gistId, loadedGistId]);
 
   const markdownFiles = note?.md_files ?? [];
-  const activeContent = activeFile ? fileContents[activeFile] ?? '' : '';
+  const activeContent = activeFile ? (fileContents[activeFile] ?? '') : '';
   const isDirty =
     !!activeFile && activeContent !== (initialContents[activeFile] ?? '');
   const { saveError, saveMessage, setSaveError, setSaveMessage, handleSave } =
@@ -299,9 +302,7 @@ export const GistDetail = () => {
   return (
     <>
       <Helmet>
-        <title>
-          {gist.description || 'Untitled Gist'} - Scratch (Gists)
-        </title>
+        <title>{gist.description || 'Untitled Gist'} - Scratch (Gists)</title>
         <meta
           name="description"
           content={`Details for ${gist.description || 'a gist'} from ${gist.owner.login}`}
@@ -347,10 +348,11 @@ export const GistDetail = () => {
                   </p>
                 </div>
                 <span
-                  className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${gist.public
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-700'
-                    }`}
+                  className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                    gist.public
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
                 >
                   {gist.public ? '🌐 Public' : '🔒 Private'}
                 </span>
@@ -377,7 +379,9 @@ export const GistDetail = () => {
                 onClick={() => {
                   void handleSave();
                 }}
-                disabled={!isDirty || updateGistFileContent.isPending || !activeFile}
+                disabled={
+                  !isDirty || updateGistFileContent.isPending || !activeFile
+                }
                 className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {updateGistFileContent.isPending ? 'Saving...' : 'Save file'}
@@ -435,4 +439,3 @@ export const GistDetail = () => {
     </>
   );
 };
-

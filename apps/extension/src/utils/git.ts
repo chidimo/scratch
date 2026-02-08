@@ -1,18 +1,17 @@
 // eslint-disable-next-line import/no-unresolved
-import * as vscode from "vscode";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { GitUserIdentity } from "../types";
+import * as vscode from 'vscode';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { GitUserIdentity } from '../types';
 
 const execFileAsync = promisify(execFile);
 
-
 async function getGitConfigValue(
   cwd: string,
-  key: string
+  key: string,
 ): Promise<string | undefined> {
   try {
-    const { stdout } = await execFileAsync("git", ["config", "--get", key], {
+    const { stdout } = await execFileAsync('git', ['config', '--get', key], {
       cwd,
     });
 
@@ -20,19 +19,17 @@ async function getGitConfigValue(
     return value.length > 0 ? value : undefined;
   } catch (error) {
     console.error(error);
-    vscode.window.showErrorMessage(
-      `Failed to get Git config value: ${key}`
-    );
+    vscode.window.showErrorMessage(`Failed to get Git config value: ${key}`);
     return undefined;
   }
 }
 
 export async function getGitUserIdentity(
-  cwd: string
+  cwd: string,
 ): Promise<GitUserIdentity | null> {
   const [name, email] = await Promise.all([
-    getGitConfigValue(cwd, "user.name"),
-    getGitConfigValue(cwd, "user.email"),
+    getGitConfigValue(cwd, 'user.name'),
+    getGitConfigValue(cwd, 'user.email'),
   ]);
 
   if (!name && !email) {
@@ -42,6 +39,6 @@ export async function getGitUserIdentity(
   return {
     name,
     email,
-    source: "git",
+    source: 'git',
   };
 }

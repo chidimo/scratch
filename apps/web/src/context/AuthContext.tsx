@@ -187,11 +187,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       fetchGists,
       setUser,
       setToken,
-    }
-  }, [user, token, gists, isLoading, error, login, logout, fetchGists, setUser, setToken]);
+    };
+  }, [
+    user,
+    token,
+    gists,
+    isLoading,
+    error,
+    login,
+    logout,
+    fetchGists,
+    setUser,
+    setToken,
+  ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
 
 export function useAuth() {
   const context = useContext(AuthContext);

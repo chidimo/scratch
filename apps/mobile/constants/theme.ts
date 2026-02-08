@@ -3,10 +3,10 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import { Platform } from 'react-native'
+import { Platform } from 'react-native';
 
-const tintColorLight = '#2563EB'
-const tintColorDark = '#F97316'
+const tintColorLight = '#2563EB';
+const tintColorDark = '#F97316';
 
 export const Colors = {
   light: {
@@ -45,7 +45,7 @@ export const Colors = {
     overlay: 'rgba(0, 0, 0, 0.5)',
     switchKnob: '#1F2937',
   },
-}
+};
 
 export const Fonts = Platform.select({
   ios: {
@@ -71,4 +71,4 @@ export const Fonts = Platform.select({
       "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
-})
+});

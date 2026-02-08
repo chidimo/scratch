@@ -50,7 +50,9 @@ class GithubClient implements GithubClientAdapter {
     const token = await this.options.getToken();
 
     if (!token) {
-      throw new Error('GitHub client not initialized. Please authenticate first.');
+      throw new Error(
+        'GitHub client not initialized. Please authenticate first.',
+      );
     }
 
     if (!this.octokit || token !== this.currentToken) {
@@ -227,5 +229,6 @@ class GithubClient implements GithubClientAdapter {
   }
 }
 
-export const createGithubClient = (options: GithubClientOptions): GithubClientAdapter =>
-  new GithubClient(options);
+export const createGithubClient = (
+  options: GithubClientOptions,
+): GithubClientAdapter => new GithubClient(options);

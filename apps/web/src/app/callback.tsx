@@ -33,12 +33,13 @@ export function Callback() {
           throw new Error('Invalid state parameter');
         }
 
-
-        const functionBaseUrl = import.meta.env.DEV ? `http://localhost:8787/oauth` : `${import.meta.env.VITE_NETLIFY_FUNCTIONS_URL}/.netlify/functions`
+        const functionBaseUrl = import.meta.env.DEV
+          ? `http://localhost:8787/oauth`
+          : `${import.meta.env.VITE_NETLIFY_FUNCTIONS_URL}/.netlify/functions`;
 
         const functionUrl = `${functionBaseUrl}/github-token`;
         const redirectUri = `${globalThis.location.origin}/callback`;
-        console.log({ functionUrl, redirectUri, functionBaseUrl })
+        console.log({ functionUrl, redirectUri, functionBaseUrl });
 
         const tokenResponse = await fetch(functionUrl, {
           method: 'POST',
@@ -55,8 +56,8 @@ export function Callback() {
           const errorData = await tokenResponse.json();
           throw new Error(
             errorData.error_description ||
-            errorData.error ||
-            'Token exchange failed',
+              errorData.error ||
+              'Token exchange failed',
           );
         }
 
@@ -116,7 +117,9 @@ export function Callback() {
   return (
     <>
       <Helmet>
-        <title>Authentication - Scratch (Gists) | Your Cross-Platform Scratchpad</title>
+        <title>
+          Authentication - Scratch (Gists) | Your Cross-Platform Scratchpad
+        </title>
         <meta
           name="description"
           content="Completing GitHub authentication for Scratch (Gists)"

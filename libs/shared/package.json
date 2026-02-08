@@ -1,1 +1,25 @@
-{"name": "@scratch/shared", "version": "1.0.0", "description": "Shared types and utilities for scratch apps", "main": "./src/index.js", "types": "./src/index.d.ts", "exports": {".": {"import": "./src/index.js", "require": "./src/index.js", "types": "./src/index.d.ts"}}, "scripts": {"build": "tsc", "lint": "eslint . --ext .ts,.tsx"}, "dependencies": {"react": "19.1.0"}, "devDependencies": {"@types/react": "~19.1.0", "typescript": "~5.9.2"}}
+{
+  "name": "@scratch/shared",
+  "version": "1.0.0",
+  "description": "Shared types and utilities for scratch apps",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./src/index.js",
+      "types": "./src/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "react": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "typescript": "~5.9.2"
+  }
+}

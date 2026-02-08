@@ -224,10 +224,7 @@ export const useRefreshGists = ({
 
 export const useGistById = (
   id: string | null,
-  {
-    githubClient,
-    enabled = true,
-  }: BaseHookOptions,
+  { githubClient, enabled = true }: BaseHookOptions,
 ) => {
   return useQuery({
     queryKey: [GISTS_QUERY_KEY, id],

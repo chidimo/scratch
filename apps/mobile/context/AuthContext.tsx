@@ -1,21 +1,21 @@
 import {
-    GISTS_STORAGE_KEY,
-    GITHUB_ENDPOINT,
-    PUBLIC_AUTH_SCHEME,
-    TOKEN_STORAGE_KEY,
-    USER_STORAGE_KEY,
+  GISTS_STORAGE_KEY,
+  GITHUB_ENDPOINT,
+  PUBLIC_AUTH_SCHEME,
+  TOKEN_STORAGE_KEY,
+  USER_STORAGE_KEY,
 } from '@/constants/app-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContextType, AuthProviderProps, AuthState } from '@scratch/shared';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 
 // GitHub OAuth discovery endpoints
