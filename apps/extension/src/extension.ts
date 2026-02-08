@@ -1,8 +1,20 @@
-import * as path from 'node:path';
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
+import * as path from 'node:path';
 
 import { getGithubSession, signInGithub, signOutGithub } from './auth/github';
 import { getScratchConfig } from './config';
+import {
+  buildNoteTitleValidator,
+  collectExistingNoteNames,
+  createScratchWatcher,
+  getGistInfoFromUri,
+  getScratchContext,
+  isMarkdownFile,
+  normalizePath,
+  removeEmptyGistFolder,
+  removeStaleMarkdownFiles,
+} from './utils/scratch';
 import { GistTreeProvider } from './views/gist-tree';
 
 import {
@@ -14,19 +26,15 @@ import {
   updateGistFiles,
 } from './services/gist-sync';
 import { getGitUserIdentity } from './utils/git';
-import {
-  createScratchWatcher,
-  ensureScratchRoot,
-  getGistsRoot,
-} from './utils/scratch';
 import { hasWorkspaceFolders } from './utils/workspace';
 
 import {
+  COMMANDS,
   GIST_UPDATE_DEBOUNCE_MS,
   GITHUB_PROVIDER_ID,
   MESSAGES,
   VIEW_FLAT_ID,
-  VIEW_ID,
+  VIEW_WITH_GIST_ID,
 } from './constants';
 
 const gistIdCache = new Set<string>();
@@ -46,44 +54,56 @@ export async function activate(
   const gistTreeProvider = new GistTreeProvider({ flat: false });
   const gistFlatTreeProvider = new GistTreeProvider({ flat: true });
   hydrateGistIdCache(context);
+
+  const gistView = vscode.window.createTreeView(VIEW_WITH_GIST_ID, {
+    treeDataProvider: gistTreeProvider,
+  });
+  const gistFlatView = vscode.window.createTreeView(VIEW_FLAT_ID, {
+    treeDataProvider: gistFlatTreeProvider,
+  });
+
   const disposables: vscode.Disposable[] = [
     outputChannel,
     statusBar,
-    vscode.window.registerTreeDataProvider(VIEW_ID, gistTreeProvider),
-    vscode.window.registerTreeDataProvider(VIEW_FLAT_ID, gistFlatTreeProvider),
+    gistView,
+    gistFlatView,
     vscode.commands.registerCommand(
-      'scratch.refreshScratchState',
+      COMMANDS.refreshScratchState,
       refreshScratchState,
     ),
     vscode.commands.registerCommand(
-      'scratch.createScratchFolder',
+      COMMANDS.createScratchFolder,
       refreshScratchState,
     ),
     vscode.commands.registerCommand(
-      'scratch.showUserIdentity',
+      COMMANDS.showUserIdentity,
       showUserIdentity,
     ),
     vscode.commands.registerCommand(
-      'scratch.showGithubStatus',
+      COMMANDS.showGithubStatus,
       showGithubStatus,
     ),
-    vscode.commands.registerCommand('scratch.signInGithub', handleGithubSignIn),
+    vscode.commands.registerCommand(COMMANDS.signInGithub, handleGithubSignIn),
     vscode.commands.registerCommand(
-      'scratch.signOutGithub',
+      COMMANDS.signOutGithub,
       handleGithubSignOut,
     ),
-    vscode.commands.registerCommand('scratch.syncGists', handleGistSync),
-    vscode.commands.registerCommand('scratch.refreshGists', handleGistRefresh),
+    vscode.commands.registerCommand(COMMANDS.syncGists, handleGistSync),
+    vscode.commands.registerCommand(COMMANDS.refreshGists, handleGistRefresh),
     vscode.commands.registerCommand(
-      'scratch.refreshGistsInProgress',
+      COMMANDS.refreshGistsInProgress,
       handleGistRefresh,
     ),
-    vscode.commands.registerCommand('scratch.createNote', handleCreateNote),
-    vscode.commands.registerCommand('scratch.deleteNote', handleDeleteNote),
-    vscode.commands.registerCommand('scratch.renameNote', handleRenameNote),
-    vscode.commands.registerCommand('scratch.openScratchFolder', async () => {
-      const config = getScratchConfig();
-      const scratchRoot = await ensureScratchRoot(config);
+    vscode.commands.registerCommand(COMMANDS.createNote, handleCreateNote),
+    vscode.commands.registerCommand(COMMANDS.deleteNote, handleDeleteNote),
+    vscode.commands.registerCommand(COMMANDS.renameNote, handleRenameNote),
+    vscode.commands.registerCommand(
+      COMMANDS.addNoteToGist,
+      handleAddNoteToGist,
+    ),
+    vscode.commands.registerCommand(COMMANDS.deleteGist, handleDeleteGist),
+    vscode.commands.registerCommand(COMMANDS.openScratchFolder, async () => {
+      const { scratchRoot } = await getScratchContext();
       await vscode.commands.executeCommand('revealInExplorer', scratchRoot);
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
@@ -110,8 +130,7 @@ export async function activate(
   );
 
   async function refreshScratchState(): Promise<void> {
-    const config = getScratchConfig();
-    const scratchRoot = await ensureScratchRoot(config);
+    const { config, scratchRoot } = await getScratchContext();
     outputChannel.appendLine(`Scratch folder ready: ${scratchRoot.fsPath}`);
     resetWatchers(config, outputChannel, scratchRoot);
     refreshGistViews();
@@ -196,11 +215,10 @@ export async function activate(
         return;
       }
 
-      const config = getScratchConfig();
-      await ensureScratchRoot(config);
+      const { gistsRoot } = await getScratchContext();
 
       statusBar.text = '$(sync~spin) Scratch: Loading gists...';
-      statusBar.command = 'scratch.showGithubStatus';
+      statusBar.command = COMMANDS.showGithubStatus;
       outputChannel.appendLine('Scratchpad: fetching gist list...');
 
       const selectedGists = await pickMarkdownGists(session.accessToken);
@@ -214,11 +232,9 @@ export async function activate(
       );
 
       const encoder = new TextEncoder();
-      const root = getGistsRoot(config);
-
       for (const gist of selectedGists) {
         const gistDetail = await fetchGist(session.accessToken, gist.id);
-        const gistFolder = vscode.Uri.joinPath(root, gistDetail.id);
+        const gistFolder = vscode.Uri.joinPath(gistsRoot, gistDetail.id);
         await vscode.workspace.fs.createDirectory(gistFolder);
 
         const markdownFiles = gistDetail.files.filter((file) =>
@@ -243,7 +259,7 @@ export async function activate(
       }
 
       vscode.window.showInformationMessage(
-        `Scratchpad: imported ${selectedGists.length} gist(s) into ${root.fsPath}.`,
+        `Scratchpad: imported ${selectedGists.length} gist(s) into ${gistsRoot.fsPath}.`,
       );
     } catch (error) {
       vscode.window.showErrorMessage(
@@ -271,10 +287,8 @@ export async function activate(
         return;
       }
 
-      const config = getScratchConfig();
-      await ensureScratchRoot(config);
-      const root = getGistsRoot(config);
-      const entries = await vscode.workspace.fs.readDirectory(root);
+      const { config, gistsRoot } = await getScratchContext();
+      const entries = await vscode.workspace.fs.readDirectory(gistsRoot);
       const gistIds = entries
         .filter(([, type]) => type === vscode.FileType.Directory)
         .map(([name]) => name);
@@ -289,14 +303,14 @@ export async function activate(
       updateGistIdCache(context, gistIds);
 
       statusBar.text = '$(sync~spin) Scratch: Refreshing gists...';
-      statusBar.command = 'scratch.showGithubStatus';
+      statusBar.command = COMMANDS.showGithubStatus;
       outputChannel.appendLine('Scratchpad: refreshing gists from GitHub...');
 
       const encoder = new TextEncoder();
 
       for (const gistId of gistIds) {
         const gistDetail = await fetchGist(session.accessToken, gistId);
-        const gistFolder = vscode.Uri.joinPath(root, gistDetail.id);
+        const gistFolder = vscode.Uri.joinPath(gistsRoot, gistDetail.id);
         await vscode.workspace.fs.createDirectory(gistFolder);
 
         const markdownFiles = gistDetail.files.filter((file) =>
@@ -380,9 +394,7 @@ export async function activate(
       return undefined;
     }
 
-    const config = getScratchConfig();
-    await ensureScratchRoot(config);
-    const gistsRoot = getGistsRoot(config);
+    const { gistsRoot } = await getScratchContext();
     const importedIds = new Set<string>();
 
     try {
@@ -467,11 +479,13 @@ export async function activate(
         return;
       }
 
+      const { config, gistsRoot } = await getScratchContext();
+      const existingNoteNames = await collectExistingNoteNames(config);
+
       const title = await vscode.window.showInputBox({
         prompt: 'Enter a title for the new note',
         placeHolder: 'Untitled note',
-        validateInput: (value) =>
-          value.trim().length ? undefined : 'Title is required.',
+        validateInput: buildNoteTitleValidator(existingNoteNames),
       });
 
       if (!title) {
@@ -481,12 +495,9 @@ export async function activate(
       const trimmedTitle = title.trim();
       const filename = `${trimmedTitle}.md`;
 
-      const config = getScratchConfig();
-      await ensureScratchRoot(config);
-
       statusBar.text = '$(sync~spin) Scratch: Creating note...';
-      statusBar.command = 'scratch.showGithubStatus';
-      const noteContent = '# Untitled note\n';
+      statusBar.command = COMMANDS.showGithubStatus;
+      const noteContent = '# Start typing your note here...\n';
 
       const created = await createGist(session.accessToken, {
         description: trimmedTitle,
@@ -506,8 +517,6 @@ export async function activate(
       updateGistIdCache(context, [created.id]);
 
       const encoder = new TextEncoder();
-      const gistsRoot = getGistsRoot(config);
-
       const gistFolder = vscode.Uri.joinPath(gistsRoot, created.id);
       await vscode.workspace.fs.createDirectory(gistFolder);
 
@@ -542,8 +551,7 @@ export async function activate(
       }
 
       const fileUri = editor.document.uri;
-      const config = getScratchConfig();
-      const gistsRoot = getGistsRoot(config);
+      const { gistsRoot } = await getScratchContext();
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
@@ -588,9 +596,7 @@ export async function activate(
       }
 
       const fileUri = editor.document.uri;
-      const config = getScratchConfig();
-      const gistsRoot = getGistsRoot(config);
-      const scratchRoot = await ensureScratchRoot(config);
+      const { config, scratchRoot, gistsRoot } = await getScratchContext();
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
@@ -599,11 +605,12 @@ export async function activate(
       }
 
       const currentName = path.basename(fileUri.fsPath, '.md');
+      const existingNoteNames = await collectExistingNoteNames(config);
+      existingNoteNames.delete(`${currentName}.md`.toLowerCase());
       const newName = await vscode.window.showInputBox({
         prompt: 'Enter new name for the note',
         value: currentName,
-        validateInput: (value) =>
-          value.trim().length ? undefined : MESSAGES.nameRequired,
+        validateInput: buildNoteTitleValidator(existingNoteNames),
       });
 
       if (!newName || newName.trim() === currentName) {
@@ -653,6 +660,147 @@ export async function activate(
     }
   }
 
+  async function handleAddNoteToGist(item?: {
+    gistId?: string;
+  }): Promise<void> {
+    try {
+      const selectedItem = item ?? gistView.selection?.[0];
+      if (!selectedItem) {
+        vscode.window.showErrorMessage('Scratchpad: no gist selected.');
+        return;
+      }
+
+      const gistId = selectedItem.gistId;
+      if (!gistId) {
+        vscode.window.showErrorMessage('Scratchpad: could not determine gist.');
+        return;
+      }
+
+      const session = await getGithubSession(true);
+      if (!session) {
+        vscode.window.showWarningMessage(
+          'Scratchpad: GitHub sign-in required to create notes.',
+        );
+        return;
+      }
+
+      const { config, gistsRoot } = await getScratchContext();
+      const existingNoteNames = await collectExistingNoteNames(config);
+
+      const title = await vscode.window.showInputBox({
+        prompt: 'Enter a title for the new note',
+        placeHolder: 'Untitled note',
+        validateInput: buildNoteTitleValidator(existingNoteNames),
+      });
+
+      if (!title) {
+        return;
+      }
+
+      const trimmedTitle = title.trim();
+      const filename = `${trimmedTitle}.md`;
+
+      const gistFolder = vscode.Uri.joinPath(gistsRoot, gistId);
+
+      const encoder = new TextEncoder();
+      const fileUri = vscode.Uri.joinPath(gistFolder, filename);
+      await vscode.workspace.fs.writeFile(
+        fileUri,
+        encoder.encode('# ' + trimmedTitle + '\n\n'),
+      );
+
+      // Update in GitHub
+      await updateGistFile({
+        accessToken: session.accessToken,
+        gistId,
+        filename,
+        content: '# ' + trimmedTitle + '\n\n',
+      });
+
+      const document = await vscode.workspace.openTextDocument(fileUri);
+      await vscode.window.showTextDocument(document, { preview: false });
+
+      outputChannel.appendLine(`Added note to gist ${gistId} (${filename}).`);
+      vscode.window.showInformationMessage('Note added to gist.');
+      refreshGistViews();
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: failed to add note to gist. ${String(error)}`,
+      );
+    }
+  }
+
+  async function handleDeleteGist(item?: { gistId?: string }): Promise<void> {
+    try {
+      const selectedItem = item ?? gistView.selection?.[0];
+      if (!selectedItem) {
+        vscode.window.showErrorMessage('Scratchpad: no gist selected.');
+        return;
+      }
+
+      const gistId = selectedItem.gistId;
+      if (!gistId) {
+        vscode.window.showErrorMessage('Scratchpad: could not determine gist.');
+        return;
+      }
+
+      const confirmation = await vscode.window.showWarningMessage(
+        `Delete gist "${gistId}" and all its notes?`,
+        { modal: true },
+        'Delete',
+      );
+
+      if (confirmation !== 'Delete') {
+        return;
+      }
+
+      const { gistsRoot } = await getScratchContext();
+      const gistFolder = vscode.Uri.joinPath(gistsRoot, gistId);
+
+      // Delete locally
+      await vscode.workspace.fs.delete(gistFolder, {
+        recursive: true,
+        useTrash: true,
+      });
+
+      // Delete from GitHub if signed in
+      const session = await getGithubSession(false);
+      if (session) {
+        try {
+          const gistDetail = await fetchGist(session.accessToken, gistId);
+          const filesToDelete: Record<string, string | null> = {};
+          for (const file of gistDetail.files) {
+            filesToDelete[file.filename] = null;
+          }
+          await updateGistFiles({
+            accessToken: session.accessToken,
+            gistId,
+            files: filesToDelete,
+          });
+        } catch (error) {
+          outputChannel.appendLine(
+            `Failed to delete gist from GitHub: ${String(error)}`,
+          );
+        }
+      }
+
+      // Remove from cache
+      gistIdCache.delete(gistId);
+      await context.globalState.update(
+        'scratch.gistIds',
+        Array.from(gistIdCache),
+      );
+
+      outputChannel.appendLine(`Deleted gist ${gistId}.`);
+      vscode.window.showInformationMessage('Gist deleted.');
+      refreshGistViews();
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: failed to delete gist. ${String(error)}`,
+      );
+    }
+  }
+
   async function handleGithubSignIn(): Promise<void> {
     try {
       const sessionInfo = await signInGithub(context);
@@ -688,7 +836,7 @@ export async function activate(
       if (!session) {
         statusBar.text = '$(github) Scratch: Sign in';
         statusBar.tooltip = 'Scratchpad: Sign in to GitHub';
-        statusBar.command = 'scratch.signInGithub';
+        statusBar.command = COMMANDS.signInGithub;
         return;
       }
 
@@ -697,11 +845,11 @@ export async function activate(
         : 'Last refresh: never';
       statusBar.text = '$(refresh) Scratch: Refresh gists';
       statusBar.tooltip = `Scratchpad: Refresh gists (${session.account.label})\n${lastRefreshLabel}`;
-      statusBar.command = 'scratch.refreshGists';
+      statusBar.command = COMMANDS.refreshGists;
     } catch (error) {
       statusBar.text = '$(github) Scratch: Auth error';
       statusBar.tooltip = `Scratchpad: ${String(error)}`;
-      statusBar.command = 'scratch.showGithubStatus';
+      statusBar.command = COMMANDS.showGithubStatus;
     }
   }
 
@@ -767,105 +915,6 @@ function disposeWatchers(): void {
     watcher.dispose();
   }
   watchers = [];
-}
-
-function isMarkdownFile(name: string): boolean {
-  const lower = name.toLowerCase();
-  return lower.endsWith('.md') || lower.endsWith('.markdown');
-}
-
-function normalizePath(filePath: string): string {
-  return filePath.split(path.sep).join('/');
-}
-
-async function listMarkdownFiles(
-  root: vscode.Uri,
-): Promise<{ relativePath: string; uri: vscode.Uri }[]> {
-  const entries = await vscode.workspace.fs.readDirectory(root);
-  const results: { relativePath: string; uri: vscode.Uri }[] = [];
-
-  for (const [name, type] of entries) {
-    const entryUri = vscode.Uri.joinPath(root, name);
-    if (type === vscode.FileType.Directory) {
-      const nested = await listMarkdownFiles(entryUri);
-      results.push(
-        ...nested.map((item) => ({
-          relativePath: `${name}/${item.relativePath}`,
-          uri: item.uri,
-        })),
-      );
-    } else if (type === vscode.FileType.File && isMarkdownFile(name)) {
-      results.push({ relativePath: name, uri: entryUri });
-    }
-  }
-
-  return results;
-}
-
-async function removeStaleMarkdownFiles(
-  gistFolder: vscode.Uri,
-  remoteMarkdownPaths: Set<string>,
-): Promise<void> {
-  const localMarkdownFiles = await listMarkdownFiles(gistFolder);
-
-  for (const local of localMarkdownFiles) {
-    if (!remoteMarkdownPaths.has(normalizePath(local.relativePath))) {
-      await vscode.workspace.fs.delete(local.uri, { useTrash: true });
-    }
-  }
-}
-
-async function removeEmptyGistFolder(
-  gistsRoot: vscode.Uri,
-  fileUri: vscode.Uri,
-  outputChannel?: vscode.OutputChannel,
-): Promise<void> {
-  const relativePath = path.relative(gistsRoot.fsPath, fileUri.fsPath);
-  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-    return;
-  }
-
-  const segments = relativePath.split(path.sep).filter(Boolean);
-  if (segments.length < 2) {
-    return;
-  }
-
-  const gistId = segments[0];
-  const gistFolder = vscode.Uri.joinPath(gistsRoot, gistId);
-
-  try {
-    const entries = await vscode.workspace.fs.readDirectory(gistFolder);
-    if (!entries.length) {
-      await vscode.workspace.fs.delete(gistFolder, { useTrash: true });
-      outputChannel?.appendLine(`Removed empty gist folder ${gistId}.`);
-    }
-  } catch (error) {
-    outputChannel?.appendLine(
-      `Failed to remove empty gist folder ${gistId}: ${String(error)}`,
-    );
-  }
-}
-
-function getGistInfoFromUri(
-  scratchRoot: vscode.Uri,
-  fileUri: vscode.Uri,
-): { gistId: string; filePath: string } | undefined {
-  const relativePath = path.relative(scratchRoot.fsPath, fileUri.fsPath);
-  const segments = relativePath.split(path.sep);
-  const gistsIndex = segments.indexOf('gists');
-
-  if (gistsIndex < 0 || gistsIndex + 2 > segments.length - 1) {
-    return undefined;
-  }
-
-  const gistId = segments[gistsIndex + 1];
-  const fileSegments = segments.slice(gistsIndex + 2);
-  if (!gistId || fileSegments.length === 0) {
-    return undefined;
-  }
-
-  const filePath = fileSegments.join('/');
-  return { gistId, filePath };
 }
 
 function scheduleGistUpdate(options: {

@@ -1,8 +1,6 @@
-// Extension constants and default values
-
 export const EXTENSION_ID = 'scratch';
-export const VIEW_ID = 'scratch.gistsView';
-export const VIEW_FLAT_ID = 'scratch.gistsFlatView';
+export const VIEW_FLAT_ID = `${EXTENSION_ID}.gistsFlatView`;
+export const VIEW_WITH_GIST_ID = `${EXTENSION_ID}.gistsView`;
 
 // GitHub authentication
 export const GITHUB_PROVIDER_ID = 'github';
@@ -30,9 +28,6 @@ export const GITHUB_API_RATE_LIMITS = {
   authenticated: 5000, // requests per hour
 } as const;
 
-// File system constants
-export const MARKDOWN_EXTENSIONS = ['.md', '.markdown'];
-
 // UI messages
 export const MESSAGES = {
   noFileOpen: 'No file is currently open.',
@@ -46,4 +41,23 @@ export const MESSAGES = {
   rateLimitExceeded: 'GitHub API rate limit exceeded. Please try again later.',
   githubUpdateFailed:
     'GitHub update failed - changes may be restored on next sync.',
+} as const;
+
+// Command identifiers
+export const COMMANDS = {
+  refreshScratchState: `${EXTENSION_ID}.refreshScratchState`,
+  createScratchFolder: `${EXTENSION_ID}.createScratchFolder`,
+  showUserIdentity: `${EXTENSION_ID}.showUserIdentity`,
+  showGithubStatus: `${EXTENSION_ID}.showGithubStatus`,
+  signInGithub: `${EXTENSION_ID}.signInGithub`,
+  signOutGithub: `${EXTENSION_ID}.signOutGithub`,
+  syncGists: `${EXTENSION_ID}.syncGists`,
+  refreshGists: `${EXTENSION_ID}.refreshGists`,
+  refreshGistsInProgress: `${EXTENSION_ID}.refreshGistsInProgress`,
+  createNote: `${EXTENSION_ID}.createNote`,
+  deleteNote: `${EXTENSION_ID}.deleteNote`,
+  renameNote: `${EXTENSION_ID}.renameNote`,
+  addNoteToGist: `${EXTENSION_ID}.addNoteToGist`,
+  deleteGist: `${EXTENSION_ID}.deleteGist`,
+  openScratchFolder: `${EXTENSION_ID}.openScratchFolder`,
 } as const;

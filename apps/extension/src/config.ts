@@ -1,7 +1,9 @@
+// eslint-disable-next-line import/no-unresolved
+import * as vscode from 'vscode';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import * as vscode from 'vscode';
 import { ScratchConfig, UserIdStrategy } from './types';
+import { EXTENSION_ID } from './constants';
 
 function resolveStoragePath(rawPath: string | undefined): string {
   if (!rawPath) {
@@ -17,7 +19,7 @@ function resolveStoragePath(rawPath: string | undefined): string {
 }
 
 export function getScratchConfig(): ScratchConfig {
-  const config = vscode.workspace.getConfiguration('scratch');
+  const config = vscode.workspace.getConfiguration(EXTENSION_ID);
 
   return {
     storagePath: resolveStoragePath(config.get<string>('storagePath')),

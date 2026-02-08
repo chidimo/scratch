@@ -1,12 +1,13 @@
-import * as path from 'node:path';
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
-import { getScratchConfig } from '../config';
-import { MARKDOWN_EXTENSIONS } from '../constants';
-import { getGistsRoot } from '../utils/scratch';
+import * as path from 'node:path';
+import { getScratchContext, isMarkdownFile } from '../utils/scratch';
 
 type TreeItemKind = 'gist' | 'file' | 'empty';
 
 class GistTreeItem extends vscode.TreeItem {
+  gistId?: string;
+
   constructor(
     public readonly kind: TreeItemKind,
     label: string,
@@ -15,8 +16,14 @@ class GistTreeItem extends vscode.TreeItem {
     public readonly tooltip?: string,
   ) {
     super(label, collapsibleState);
+
     if (resourceUri) {
       this.resourceUri = resourceUri;
+    }
+
+    // Store gist ID for gist items
+    if (kind === 'gist') {
+      this.gistId = label;
     }
 
     // Set appropriate icons
@@ -33,9 +40,27 @@ class GistTreeItem extends vscode.TreeItem {
   }
 }
 
-function isMarkdownFile(name: string): boolean {
-  const lower = name.toLowerCase();
-  return MARKDOWN_EXTENSIONS.some((ext) => lower.endsWith(ext));
+async function listMarkdownFiles(
+  root: vscode.Uri,
+  prefix = '',
+): Promise<{ relativePath: string; uri: vscode.Uri }[]> {
+  const entries = await vscode.workspace.fs.readDirectory(root);
+  const results: { relativePath: string; uri: vscode.Uri }[] = [];
+
+  for (const [name, type] of entries) {
+    const entryUri = vscode.Uri.joinPath(root, name);
+
+    if (type === vscode.FileType.Directory) {
+      const nestedPrefix = prefix ? `${prefix}/${name}` : name;
+      const nested = await listMarkdownFiles(entryUri, nestedPrefix);
+      results.push(...nested);
+    } else if (type === vscode.FileType.File && isMarkdownFile(name)) {
+      const relativePath = prefix ? path.posix.join(prefix, name) : name;
+      results.push({ relativePath, uri: entryUri });
+    }
+  }
+
+  return results;
 }
 
 export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
@@ -51,8 +76,7 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
   }
 
   async getChildren(element?: GistTreeItem): Promise<GistTreeItem[]> {
-    const config = getScratchConfig();
-    const gistsRoot = getGistsRoot(config);
+    const { gistsRoot } = await getScratchContext();
 
     try {
       if (!element) {
@@ -69,25 +93,30 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
             ];
           }
 
-          return markdownFiles.map((file) => {
-            const segments = file.relativePath.split('/').filter(Boolean);
-            const gistId = segments[0] ?? '';
-            const fileLabel = segments.slice(1).join('/') || file.relativePath;
-            const item = new GistTreeItem(
-              'file',
-              fileLabel,
-              vscode.TreeItemCollapsibleState.None,
-              file.uri,
-              file.relativePath,
+          return markdownFiles
+            .map((file) => {
+              const segments = file.relativePath.split('/').filter(Boolean);
+              const gistId = segments[0] ?? '';
+              const fileLabel =
+                segments.slice(1).join('/') || file.relativePath;
+              const item = new GistTreeItem(
+                'file',
+                fileLabel,
+                vscode.TreeItemCollapsibleState.None,
+                file.uri,
+                file.relativePath,
+              );
+              item.description = gistId;
+              item.command = {
+                command: 'vscode.open',
+                title: 'Open Note',
+                arguments: [file.uri],
+              };
+              return item;
+            })
+            .sort((a, b) =>
+              (a.label as string).localeCompare(b.label as string),
             );
-            item.description = gistId;
-            item.command = {
-              command: 'vscode.open',
-              title: 'Open Note',
-              arguments: [file.uri],
-            };
-            return item;
-          });
         }
 
         const entries = await vscode.workspace.fs.readDirectory(gistsRoot);
@@ -112,6 +141,7 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
               'gist',
               name,
               vscode.TreeItemCollapsibleState.Collapsed,
+              vscode.Uri.joinPath(gistsRoot, name),
             ),
         );
       }
@@ -173,26 +203,4 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
   getTreeItem(element: GistTreeItem): vscode.TreeItem {
     return element;
   }
-}
-
-async function listMarkdownFiles(
-  root: vscode.Uri,
-  prefix = '',
-): Promise<{ relativePath: string; uri: vscode.Uri }[]> {
-  const entries = await vscode.workspace.fs.readDirectory(root);
-  const results: { relativePath: string; uri: vscode.Uri }[] = [];
-
-  for (const [name, type] of entries) {
-    const entryUri = vscode.Uri.joinPath(root, name);
-    if (type === vscode.FileType.Directory) {
-      const nestedPrefix = prefix ? `${prefix}/${name}` : name;
-      const nested = await listMarkdownFiles(entryUri, nestedPrefix);
-      results.push(...nested);
-    } else if (type === vscode.FileType.File && isMarkdownFile(name)) {
-      const relativePath = prefix ? path.posix.join(prefix, name) : name;
-      results.push({ relativePath, uri: entryUri });
-    }
-  }
-
-  return results;
 }

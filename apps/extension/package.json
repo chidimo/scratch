@@ -37,59 +37,69 @@
     "commands": [
       {
         "command": "scratch.createScratchFolder",
-        "title": "Scratch: Create .scratch Folder"
+        "title": "Scratch (Gists): Create .scratch Folder"
       },
       {
         "command": "scratch.openScratchFolder",
-        "title": "Scratch: Open .scratch Folder"
+        "title": "Scratch (Gists): Open .scratch Folder"
       },
       {
         "command": "scratch.showUserIdentity",
-        "title": "Scratch: Show User Identity"
+        "title": "Scratch (Gists): Show User Identity"
       },
       {
         "command": "scratch.showGithubStatus",
-        "title": "Scratch: Show GitHub Status"
+        "title": "Scratch (Gists): Show GitHub Status"
       },
       {
         "command": "scratch.signInGithub",
-        "title": "Scratch: Sign In to GitHub"
+        "title": "Scratch (Gists): Sign In to GitHub"
       },
       {
         "command": "scratch.signOutGithub",
-        "title": "Scratch: Sign Out of GitHub"
+        "title": "Scratch (Gists): Sign Out of GitHub"
       },
       {
         "command": "scratch.syncGists",
-        "title": "Scratch: Sync GitHub Gists",
+        "title": "Scratch (Gists): Sync GitHub Gists",
         "icon": "$(sync)"
       },
       {
         "command": "scratch.refreshGists",
-        "title": "Scratch: Refresh Imported Gists",
+        "title": "Scratch (Gists): Refresh Imported Gists",
         "icon": "$(refresh)"
       },
       {
         "command": "scratch.refreshGistsInProgress",
-        "title": "Scratch: Refresh Imported Gists",
+        "title": "Scratch (Gists): Refresh Imported Gists",
         "icon": "$(sync~spin)"
       },
       {
         "command": "scratch.createNote",
-        "title": "Scratch: Create Note",
+        "title": "Scratch (Gists): Create Note",
         "icon": "$(add)"
       },
       {
         "command": "scratch.refreshScratchState",
-        "title": "Scratch: Refresh Scratch State"
+        "title": "Scratch (Gists): Refresh Scratch State"
       },
       {
         "command": "scratch.deleteNote",
-        "title": "Delete Note"
+        "title": "Scratch (Gists): Delete Note"
       },
       {
         "command": "scratch.renameNote",
-        "title": "Rename Note"
+        "title": "Scratch (Gists): Rename Note"
+      },
+      {
+        "command": "scratch.addNoteToGist",
+        "title": "Scratch (Gists): Add Note",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "scratch.deleteGist",
+        "title": "Scratch (Gists): Delete Gist",
+        "icon": "$(trash)"
       }
     ],
     "configuration": {
@@ -161,11 +171,11 @@
       "scratch": [
         {
           "id": "scratch.gistsFlatView",
-          "name": "Scratch (Notes)"
+          "name": "Notes (Flat List)"
         },
         {
           "id": "scratch.gistsView",
-          "name": "Scratch (Gists)"
+          "name": "Notes (Grouped by Gist)"
         }
       ]
     },
@@ -220,19 +230,19 @@
       ],
       "view/item/context": [
         {
-          "command": "scratch.deleteNote",
-          "when": "view == scratch.gistsView && viewItem == file",
+          "command": "scratch.addNoteToGist",
+          "when": "view == scratch.gistsView && viewItem == gist",
           "group": "inline@1"
+        },
+        {
+          "command": "scratch.deleteGist",
+          "when": "view == scratch.gistsView && viewItem == gist",
+          "group": "inline@2"
         },
         {
           "command": "scratch.deleteNote",
           "when": "view == scratch.gistsFlatView && viewItem == file",
           "group": "inline@1"
-        },
-        {
-          "command": "scratch.renameNote",
-          "when": "view == scratch.gistsView && viewItem == file",
-          "group": "inline@2"
         },
         {
           "command": "scratch.renameNote",

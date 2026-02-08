@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
 import { DEFAULT_GITHUB_SCOPES, GITHUB_PROVIDER_ID } from '../constants';
 
