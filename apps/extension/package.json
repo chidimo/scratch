@@ -2,7 +2,7 @@
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
   "description": "Local .scratch folder integration for the Scratchpad system.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",
@@ -267,6 +267,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "yarn compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
