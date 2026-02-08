@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
 
@@ -281,14 +282,12 @@ export const Gists = () => {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-4">
-                      <a
-                        href={gist.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        to={`/gists/${gist.id}`}
                         className="hover:text-blue-600 transition-colors"
                       >
                         {gist.description || 'Untitled Gist'}
-                      </a>
+                      </Link>
                     </h3>
                     <span className="text-sm text-gray-500 whitespace-nowrap">
                       {new Date(gist.updated_at).toLocaleDateString()}
@@ -320,14 +319,22 @@ export const Gists = () => {
                     >
                       {gist.public ? '🌐 Public' : '🔒 Private'}
                     </span>
-                    <a
-                      href={gist.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
-                    >
-                      View on GitHub →
-                    </a>
+                    <div className="flex items-center gap-4">
+                      <Link
+                        to={`/gists/${gist.id}`}
+                        className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                      >
+                        Open details →
+                      </Link>
+                      <a
+                        href={gist.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-600 hover:text-gray-700 font-medium text-sm transition-colors"
+                      >
+                        View on GitHub
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}
