@@ -2,7 +2,7 @@
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
   "description": "Local .scratch folder integration for the Scratchpad system.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",
@@ -37,48 +37,79 @@
     "commands": [
       {
         "command": "scratch.createScratchFolder",
-        "title": "Scratch: Create .scratch Folder"
+        "title": "Scratch (Gists): Create .scratch Folder"
       },
       {
         "command": "scratch.openScratchFolder",
-        "title": "Scratch: Open .scratch Folder"
+        "title": "Scratch (Gists): Open .scratch Folder"
       },
       {
         "command": "scratch.showUserIdentity",
-        "title": "Scratch: Show User Identity"
+        "title": "Scratch (Gists): Show User Identity"
       },
       {
         "command": "scratch.showGithubStatus",
-        "title": "Scratch: Show GitHub Status"
+        "title": "Scratch (Gists): Show GitHub Status"
       },
       {
         "command": "scratch.signInGithub",
-        "title": "Scratch: Sign In to GitHub"
+        "title": "Scratch (Gists): Sign In to GitHub"
       },
       {
         "command": "scratch.signOutGithub",
-        "title": "Scratch: Sign Out of GitHub"
+        "title": "Scratch (Gists): Sign Out of GitHub"
       },
       {
         "command": "scratch.syncGists",
-        "title": "Scratch: Sync GitHub Gists"
+        "title": "Scratch (Gists): Sync GitHub Gists",
+        "icon": "$(sync)"
       },
       {
         "command": "scratch.refreshGists",
-        "title": "Scratch: Refresh Imported Gists"
+        "title": "Scratch (Gists): Refresh Imported Gists",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "scratch.refreshGistsInProgress",
+        "title": "Scratch (Gists): Refresh Imported Gists",
+        "icon": "$(sync~spin)"
       },
       {
         "command": "scratch.createNote",
-        "title": "Scratch: Create Note"
+        "title": "Scratch (Gists): Create Note",
+        "icon": "$(add)"
       },
       {
         "command": "scratch.refreshScratchState",
-        "title": "Scratch: Refresh Scratch State"
+        "title": "Scratch (Gists): Refresh Scratch State"
+      },
+      {
+        "command": "scratch.deleteNote",
+        "title": "Delete Note"
+      },
+      {
+        "command": "scratch.renameNote",
+        "title": "Rename Note"
+      },
+      {
+        "command": "scratch.addNoteToGist",
+        "title": "Scratch (Gists): Add Note",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "scratch.deleteGist",
+        "title": "Scratch (Gists): Delete Gist",
+        "icon": "$(trash)"
       }
     ],
     "configuration": {
-      "title": "Scratch",
+      "title": "Scratch (Gists)",
       "properties": {
+        "scratch.storagePath": {
+          "type": "string",
+          "default": "~/.scratch",
+          "description": "Global folder used to store Scratchpad gists."
+        },
         "scratch.scratchFolderName": {
           "type": "string",
           "default": ".scratch",
@@ -105,10 +136,120 @@
         "scratch.gistAutoRefreshMinutes": {
           "type": "number",
           "default": 0,
-          "minimum": 0,
-          "description": "Auto-refresh imported gists every N minutes. Set to 0 to disable."
+          "enum": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30
+          ],
+          "enumDescriptions": [
+            "Disabled - no auto-refresh",
+            "5 minutes",
+            "10 minutes",
+            "15 minutes",
+            "20 minutes",
+            "25 minutes",
+            "30 minutes"
+          ],
+          "description": "Auto-refresh imported gists every N minutes. Setting to 0 disables auto-refresh."
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "scratch",
+          "title": "Scratch (Gists)",
+          "icon": "$(notebook)"
+        }
+      ]
+    },
+    "views": {
+      "scratch": [
+        {
+          "id": "scratch.gistsFlatView",
+          "name": "Notes (Flat List)"
+        },
+        {
+          "id": "scratch.gistsView",
+          "name": "Notes (Grouped by Gist)"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "scratch.syncGists",
+          "when": "view == scratch.gistsView",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.syncGists",
+          "when": "view == scratch.gistsFlatView",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.createNote",
+          "when": "view == scratch.gistsView",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.createNote",
+          "when": "view == scratch.gistsFlatView",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshGists",
+          "when": "view == scratch.gistsView && !scratch.isRefreshingGists",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshGists",
+          "when": "view == scratch.gistsFlatView && !scratch.isRefreshingGists",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshGistsInProgress",
+          "when": "view == scratch.gistsView && scratch.isRefreshingGists",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshGistsInProgress",
+          "when": "view == scratch.gistsFlatView && scratch.isRefreshingGists",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "scratch.refreshGistsInProgress",
+          "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "scratch.addNoteToGist",
+          "when": "view == scratch.gistsView && viewItem == gist",
+          "group": "inline@1"
+        },
+        {
+          "command": "scratch.deleteGist",
+          "when": "view == scratch.gistsView && viewItem == gist",
+          "group": "inline@2"
+        },
+        {
+          "command": "scratch.deleteNote",
+          "when": "view == scratch.gistsFlatView && viewItem == file",
+          "group": "inline@1"
+        },
+        {
+          "command": "scratch.renameNote",
+          "when": "view == scratch.gistsFlatView && viewItem == file",
+          "group": "inline@2"
+        }
+      ]
     }
   },
   "scripts": {

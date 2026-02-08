@@ -1,4 +1,4 @@
-import { Octokit } from "@octokit/rest";
+import { Octokit } from '@octokit/rest';
 
 export interface GistSummary {
   id: string;
@@ -27,10 +27,10 @@ export async function createGist(
     description: string;
     files: Record<string, string>;
     isPublic?: boolean;
-  }
+  },
 ): Promise<GistDetail> {
   const octokit = createOctokit(accessToken);
-  const response = await octokit.request("POST /gists", {
+  const response = await octokit.request('POST /gists', {
     description: options.description,
     public: options.isPublic ?? false,
     files: Object.keys(options.files).reduce(
@@ -38,21 +38,21 @@ export async function createGist(
         acc[filename] = { content: options.files[filename] };
         return acc;
       },
-      {} as Record<string, { content: string }>
+      {} as Record<string, { content: string }>,
     ),
   });
 
   const files = Object.values(response.data.files ?? {})
     .filter((file) => Boolean(file?.filename))
     .map((file) => ({
-      filename: file?.filename ?? "untitled.txt",
-      content: file?.content ?? "",
+      filename: file?.filename ?? 'untitled.txt',
+      content: file?.content ?? '',
     }));
 
   return {
-    id: response.data.id ?? "",
+    id: response.data.id ?? '',
     description: response.data.description ?? null,
-    htmlUrl: response.data.html_url ?? "",
+    htmlUrl: response.data.html_url ?? '',
     fileCount: files.length,
     fileNames: files.map((file) => file.filename),
     files,
@@ -61,7 +61,7 @@ export async function createGist(
 
 export async function listGists(accessToken: string): Promise<GistSummary[]> {
   const octokit = createOctokit(accessToken);
-  const response = await octokit.request("GET /gists", {
+  const response = await octokit.request('GET /gists', {
     per_page: 50,
     page: 1,
   });
@@ -78,24 +78,24 @@ export async function listGists(accessToken: string): Promise<GistSummary[]> {
 
 export async function fetchGist(
   accessToken: string,
-  gistId: string
+  gistId: string,
 ): Promise<GistDetail> {
   const octokit = createOctokit(accessToken);
-  const response = await octokit.request("GET /gists/{gist_id}", {
+  const response = await octokit.request('GET /gists/{gist_id}', {
     gist_id: gistId,
   });
 
   const files = Object.values(response.data.files ?? {})
     .filter((file) => Boolean(file?.filename))
     .map((file) => ({
-      filename: file?.filename ?? "untitled.txt",
-      content: file?.content ?? "",
+      filename: file?.filename ?? 'untitled.txt',
+      content: file?.content ?? '',
     }));
 
   return {
     id: response.data.id ?? gistId,
     description: response.data.description ?? null,
-    htmlUrl: response.data.html_url ?? "",
+    htmlUrl: response.data.html_url ?? '',
     fileCount: files.length,
     fileNames: files.map((file) => file.filename),
     files,
@@ -113,7 +113,25 @@ export async function updateGistFile(options: {
     [options.filename]:
       options.content === null ? null : { content: options.content },
   };
-  await octokit.request("PATCH /gists/{gist_id}", {
+  await octokit.request('PATCH /gists/{gist_id}', {
+    gist_id: options.gistId,
+    files: files as unknown as Record<string, { content?: string }>,
+  });
+}
+
+export async function updateGistFiles(options: {
+  accessToken: string;
+  gistId: string;
+  files: Record<string, string | null>;
+}): Promise<void> {
+  const octokit = createOctokit(options.accessToken);
+  const files: Record<string, { content?: string } | null> = {};
+
+  for (const [filename, content] of Object.entries(options.files)) {
+    files[filename] = content === null ? null : { content };
+  }
+
+  await octokit.request('PATCH /gists/{gist_id}', {
     gist_id: options.gistId,
     files: files as unknown as Record<string, { content?: string }>,
   });

@@ -1,6 +1,7 @@
 import { useGists } from '@/hooks/use-gists';
 import { Note } from '@scratch/shared';
-import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -19,6 +20,13 @@ export const GistList = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: gists, refetch, isPending } = useGists({ searchTerm });
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+      return undefined;
+    }, [refetch]),
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);

@@ -1,17 +1,35 @@
-import * as vscode from "vscode";
-import { ScratchConfig, UserIdStrategy } from "./types";
+// eslint-disable-next-line import/no-unresolved
+import * as vscode from 'vscode';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { ScratchConfig, UserIdStrategy } from './types';
+import { EXTENSION_ID } from './constants';
+
+function resolveStoragePath(rawPath: string | undefined): string {
+  if (!rawPath) {
+    return path.join(os.homedir(), '.scratch');
+  }
+
+  if (rawPath.startsWith('~')) {
+    const relativePath = rawPath.slice(1).replace(/^[/\\]+/, '');
+    return path.join(os.homedir(), relativePath);
+  }
+
+  return rawPath;
+}
 
 export function getScratchConfig(): ScratchConfig {
-  const config = vscode.workspace.getConfiguration("scratch");
+  const config = vscode.workspace.getConfiguration(EXTENSION_ID);
 
   return {
-    scratchFolderName: config.get<string>("scratchFolderName", ".scratch"),
+    storagePath: resolveStoragePath(config.get<string>('storagePath')),
+    scratchFolderName: config.get<string>('scratchFolderName', '.scratch'),
     autoCreateScratchFolder: config.get<boolean>(
-      "autoCreateScratchFolder",
-      true
+      'autoCreateScratchFolder',
+      true,
     ),
-    watchScratchFolder: config.get<boolean>("watchScratchFolder", true),
-    userIdStrategy: config.get<UserIdStrategy>("userIdStrategy", "git"),
-    gistAutoRefreshMinutes: config.get<number>("gistAutoRefreshMinutes", 0),
+    watchScratchFolder: config.get<boolean>('watchScratchFolder', true),
+    userIdStrategy: config.get<UserIdStrategy>('userIdStrategy', 'git'),
+    gistAutoRefreshMinutes: config.get<number>('gistAutoRefreshMinutes', 0),
   };
 }

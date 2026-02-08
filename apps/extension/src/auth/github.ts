@@ -1,7 +1,10 @@
-import * as vscode from "vscode";
-
-const GITHUB_PROVIDER_ID = "github";
-const DEFAULT_SCOPES = ["read:user", "gist"];
+// eslint-disable-next-line import/no-unresolved
+import * as vscode from 'vscode';
+import {
+  DEFAULT_GITHUB_SCOPES,
+  GITHUB_PROVIDER_ID,
+  SECRET_KEYS,
+} from '../constants';
 
 interface GithubSessionInfo {
   accountLabel: string;
@@ -9,25 +12,28 @@ interface GithubSessionInfo {
 }
 
 export async function getGithubSession(
-  createIfNone = false
+  createIfNone = false,
 ): Promise<vscode.AuthenticationSession | undefined> {
   return vscode.authentication.getSession(
     GITHUB_PROVIDER_ID,
-    DEFAULT_SCOPES,
-    { createIfNone }
+    DEFAULT_GITHUB_SCOPES,
+    { createIfNone },
   );
 }
 
 export async function signInGithub(
-  context: vscode.ExtensionContext
+  context: vscode.ExtensionContext,
 ): Promise<GithubSessionInfo> {
   const session = await getGithubSession(true);
 
   if (!session) {
-    throw new Error("GitHub authentication session was not created.");
+    throw new Error('GitHub authentication session was not created.');
   }
 
-  await context.secrets.store("scratch.github.accessToken", session.accessToken);
+  await context.secrets.store(
+    SECRET_KEYS.githubAccessToken,
+    session.accessToken,
+  );
 
   return {
     accountLabel: session.account.label,
@@ -36,7 +42,7 @@ export async function signInGithub(
 }
 
 export async function signOutGithub(
-  context: vscode.ExtensionContext
+  context: vscode.ExtensionContext,
 ): Promise<void> {
-  await context.secrets.delete("scratch.github.accessToken");
+  await context.secrets.delete(SECRET_KEYS.githubAccessToken);
 }

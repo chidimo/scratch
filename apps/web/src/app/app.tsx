@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import Callback from './callback';
+import { GistDetail } from './gist';
 import { Gists } from './gists';
 import { PrivacyPolicy } from './privacy';
 
@@ -9,6 +10,7 @@ export function App() {
     <AuthProvider>
       <Routes>
         <Route path="/" element={<Gists />} />
+        <Route path="/gists/:gistId" element={<GistDetail />} />
         <Route path="/callback" element={<Callback />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
       </Routes>

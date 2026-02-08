@@ -20,6 +20,56 @@ This project solves the common developer problem of losing great ideas while awa
 - ✅ **Offline support** with automatic sync
 - ✅ **Rich text editing** with markdown support
 
+## 🔌 VSCode Extension Features
+
+### 📝 Note Management
+
+- **Create Notes**: Create new notes that automatically sync as GitHub Gists
+- **Add to Gist**: Add additional notes to existing gists
+- **Delete Notes**: Remove individual notes with automatic GitHub sync
+- **Rename Notes**: Rename notes locally and on GitHub simultaneously
+- **Delete Gists**: Remove entire gists and all their notes
+
+### 🔄 Sync & Auto-Refresh
+
+- **Manual Sync**: Import selected GitHub Gists into your workspace
+- **Auto-Refresh**: Configurable auto-refresh (5, 10, 15, 20, 25, or 30 minutes)
+- **Smart Filtering**: Only shows unimported gists when syncing
+- **Two-Way Sync**: Local changes automatically push to GitHub
+- **File Watching**: Detects file changes and syncs in the background
+- **Empty Folder Cleanup**: Automatically removes empty gist folders
+
+### 📊 Two View Modes
+
+- **Flat View (Notes)**: See all your notes in a single list
+  - Quick access with filename and gist ID
+  - Inline delete and rename actions
+- **Grouped View (Gists)**: Notes organized by gist ID
+  - Collapsible gist folders
+  - Add note or delete gist actions on folders
+  - Clean hierarchical structure
+
+### 🔐 GitHub Integration
+
+- **OAuth Authentication**: Secure sign-in with GitHub
+- **Session Management**: Persistent sessions across restarts
+- **Status Indicator**: Status bar shows auth state and last refresh
+- **Rate Limit Protection**: Configurable refresh intervals to avoid API limits
+
+### ⚙️ Configuration Options
+
+- **Storage Path**: Customize where gists are stored (default: `~/.scratch`)
+- **Auto-Refresh Interval**: Choose from 0 (disabled), 5, 10, 15, 20, 25, or 30 minutes
+- **Folder Watching**: Enable/disable automatic file change detection
+- **Auto-Create Folder**: Automatically create scratch folder on startup
+
+### 🎯 Quick Actions
+
+- **Inline Icons**: Hover over items to see available actions
+- **Context Menus**: Right-click for additional options
+- **Command Palette**: Access all commands via `Cmd/Ctrl+Shift+P`
+- **Status Bar**: Click to refresh gists or sign in
+
 ## 📚 Documentation
 
 - **[Technical Findings](./FINDINGS.md)** - Detailed technical feasibility analysis
