@@ -31,21 +31,7 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:scratch.createScratchFolder",
-    "onCommand:scratch.openScratchFolder",
-    "onCommand:scratch.showUserIdentity",
-    "onCommand:scratch.showGithubStatus",
-    "onCommand:scratch.signInGithub",
-    "onCommand:scratch.signOutGithub",
-    "onCommand:scratch.syncGists",
-    "onCommand:scratch.refreshGists",
-    "onCommand:scratch.createNote",
-    "onCommand:scratch.refreshScratchState",
-    "onCommand:scratch.deleteNote",
-    "onCommand:scratch.renameNote",
-    "onCommand:scratch.addNoteToGist",
-    "onCommand:scratch.deleteGist"
+    "onStartupFinished"
   ],
   "contributes": {
     "commands": [
