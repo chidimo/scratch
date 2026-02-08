@@ -10,8 +10,6 @@ const PORT = process.env.DEV_AUTH_SERVER_PORT || 8787;
 const clientId = process.env.GITHUB_CLIENT_ID;
 const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 
-console.log({ clientId, clientSecret });
-
 app.use(
   cors({
     origin: [

@@ -35,11 +35,10 @@ export function Callback() {
 
         const functionBaseUrl = import.meta.env.DEV
           ? `http://localhost:8787/oauth`
-          : `${import.meta.env.VITE_NETLIFY_FUNCTIONS_URL}/.netlify/functions`;
+          : '/.netlify/functions';
 
         const functionUrl = `${functionBaseUrl}/github-token`;
         const redirectUri = `${globalThis.location.origin}/callback`;
-        console.log({ functionUrl, redirectUri, functionBaseUrl });
 
         const tokenResponse = await fetch(functionUrl, {
           method: 'POST',
