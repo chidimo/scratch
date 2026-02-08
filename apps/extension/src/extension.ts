@@ -131,6 +131,10 @@ export async function activate(
 
       await vscode.commands.executeCommand('revealFileInOS', scratchRoot);
     }),
+    vscode.commands.registerCommand(
+      COMMANDS.openExtensionSettings,
+      openExtensionSettings,
+    ),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('scratch')) {
         refreshScratchState().catch((error) => {
@@ -234,6 +238,13 @@ export async function activate(
         `Scratchpad: failed to read GitHub session. ${String(error)}`,
       );
     }
+  }
+
+  async function openExtensionSettings(): Promise<void> {
+    await vscode.commands.executeCommand(
+      'workbench.action.openSettings',
+      'Scratch (Gists)',
+    );
   }
 
   async function handleGistSync(): Promise<void> {
