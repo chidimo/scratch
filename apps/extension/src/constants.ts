@@ -43,6 +43,11 @@ export const MESSAGES = {
     'GitHub update failed - changes may be restored on next sync.',
 } as const;
 
+// Secret keys
+export const SECRET_KEYS = {
+  githubAccessToken: 'scratch.github.accessToken',
+} as const;
+
 // Command identifiers
 export const COMMANDS = {
   refreshScratchState: `${EXTENSION_ID}.refreshScratchState`,

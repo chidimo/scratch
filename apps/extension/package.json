@@ -85,11 +85,11 @@
       },
       {
         "command": "scratch.deleteNote",
-        "title": "Scratch (Gists): Delete Note"
+        "title": "Delete Note"
       },
       {
         "command": "scratch.renameNote",
-        "title": "Scratch (Gists): Rename Note"
+        "title": "Rename Note"
       },
       {
         "command": "scratch.addNoteToGist",

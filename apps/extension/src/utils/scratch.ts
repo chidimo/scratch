@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import { ScratchConfig } from '../types';
 import { getScratchConfig } from '../config';
+import { getGithubSession } from '../auth/github';
 
 const GISTS_FOLDER_NAME = 'gists';
 
@@ -171,4 +172,27 @@ export function getGistInfoFromUri(
 
   const filePath = fileSegments.join('/');
   return { gistId, filePath };
+}
+
+export async function ensureGithubSession(
+  scratchSignedIn: boolean,
+  action: string,
+): Promise<vscode.AuthenticationSession | undefined> {
+  if (!scratchSignedIn) {
+    vscode.window.showWarningMessage(
+      `Scratchpad: GitHub sign-in required to ${action}.`,
+    );
+    return undefined;
+  }
+
+  const session = await getGithubSession(true);
+
+  if (!session) {
+    vscode.window.showWarningMessage(
+      `Scratchpad: GitHub sign-in required to ${action}.`,
+    );
+    return undefined;
+  }
+
+  return session;
 }

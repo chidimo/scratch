@@ -8,6 +8,7 @@ import {
   buildNoteTitleValidator,
   collectExistingNoteNames,
   createScratchWatcher,
+  ensureGithubSession,
   getGistInfoFromUri,
   getScratchContext,
   isMarkdownFile,
@@ -33,6 +34,7 @@ import {
   GIST_UPDATE_DEBOUNCE_MS,
   GITHUB_PROVIDER_ID,
   MESSAGES,
+  SECRET_KEYS,
   VIEW_FLAT_ID,
   VIEW_WITH_GIST_ID,
 } from './constants';
@@ -51,8 +53,22 @@ export async function activate(
     vscode.StatusBarAlignment.Left,
     100,
   );
-  const gistTreeProvider = new GistTreeProvider({ flat: false });
-  const gistFlatTreeProvider = new GistTreeProvider({ flat: true });
+  let scratchSignedIn = false;
+  const updateScratchSignedIn = async (): Promise<void> => {
+    scratchSignedIn = Boolean(
+      await context.secrets.get(SECRET_KEYS.githubAccessToken),
+    );
+  };
+  await updateScratchSignedIn();
+
+  const gistTreeProvider = new GistTreeProvider({
+    flat: false,
+    isSignedIn: () => scratchSignedIn,
+  });
+  const gistFlatTreeProvider = new GistTreeProvider({
+    flat: true,
+    isSignedIn: () => scratchSignedIn,
+  });
   hydrateGistIdCache(context);
 
   const gistView = vscode.window.createTreeView(VIEW_WITH_GIST_ID, {
@@ -185,11 +201,18 @@ export async function activate(
 
   async function showGithubStatus(): Promise<void> {
     try {
+      if (!scratchSignedIn) {
+        vscode.window.showWarningMessage(
+          'Scratchpad: not signed in. Run Scratch (Gists): Sign In to GitHub.',
+        );
+        return;
+      }
+
       const session = await getGithubSession(false);
 
       if (!session) {
         vscode.window.showWarningMessage(
-          'Scratchpad: no GitHub session found. Run Scratch: Sign In to GitHub.',
+          'Scratchpad: no GitHub session found. Run Scratch (Gists): Sign In to GitHub.',
         );
         return;
       }
@@ -206,12 +229,8 @@ export async function activate(
 
   async function handleGistSync(): Promise<void> {
     try {
-      const session = await getGithubSession(true);
-
+      const session = await ensureGithubSession(scratchSignedIn, 'sync gists');
       if (!session) {
-        vscode.window.showWarningMessage(
-          'Scratchpad: GitHub sign-in required to sync gists.',
-        );
         return;
       }
 
@@ -278,12 +297,12 @@ export async function activate(
         'scratch.isRefreshingGists',
         true,
       );
-      const session = await getGithubSession(true);
 
+      const session = await ensureGithubSession(
+        scratchSignedIn,
+        'refresh gists',
+      );
       if (!session) {
-        vscode.window.showWarningMessage(
-          'Scratchpad: GitHub sign-in required to refresh gists.',
-        );
         return;
       }
 
@@ -470,12 +489,11 @@ export async function activate(
 
   async function handleCreateNote(): Promise<void> {
     try {
-      const session = await getGithubSession(true);
-
+      const session = await ensureGithubSession(
+        scratchSignedIn,
+        'create notes',
+      );
       if (!session) {
-        vscode.window.showWarningMessage(
-          'Scratchpad: GitHub sign-in required to create notes.',
-        );
         return;
       }
 
@@ -633,7 +651,7 @@ export async function activate(
         const parentPath = path.posix.dirname(oldFilePath);
         const newFilePath =
           parentPath === '.' ? newFileName : `${parentPath}/${newFileName}`;
-        const session = await getGithubSession(false);
+        const session = scratchSignedIn ? await getGithubSession(false) : null;
 
         if (session) {
           await updateGistFiles({
@@ -664,6 +682,14 @@ export async function activate(
     gistId?: string;
   }): Promise<void> {
     try {
+      const session = await ensureGithubSession(
+        scratchSignedIn,
+        'add notes to gist',
+      );
+      if (!session) {
+        return;
+      }
+
       const selectedItem = item ?? gistView.selection?.[0];
       if (!selectedItem) {
         vscode.window.showErrorMessage('Scratchpad: no gist selected.');
@@ -673,14 +699,6 @@ export async function activate(
       const gistId = selectedItem.gistId;
       if (!gistId) {
         vscode.window.showErrorMessage('Scratchpad: could not determine gist.');
-        return;
-      }
-
-      const session = await getGithubSession(true);
-      if (!session) {
-        vscode.window.showWarningMessage(
-          'Scratchpad: GitHub sign-in required to create notes.',
-        );
         return;
       }
 
@@ -704,17 +722,16 @@ export async function activate(
 
       const encoder = new TextEncoder();
       const fileUri = vscode.Uri.joinPath(gistFolder, filename);
-      await vscode.workspace.fs.writeFile(
-        fileUri,
-        encoder.encode('# ' + trimmedTitle + '\n\n'),
-      );
+      const noteContent = '# Start typing your note here...\n';
+
+      await vscode.workspace.fs.writeFile(fileUri, encoder.encode(noteContent));
 
       // Update in GitHub
       await updateGistFile({
         accessToken: session.accessToken,
         gistId,
         filename,
-        content: '# ' + trimmedTitle + '\n\n',
+        content: noteContent,
       });
 
       const document = await vscode.workspace.openTextDocument(fileUri);
@@ -764,7 +781,7 @@ export async function activate(
       });
 
       // Delete from GitHub if signed in
-      const session = await getGithubSession(false);
+      const session = scratchSignedIn ? await getGithubSession(false) : null;
       if (session) {
         try {
           const gistDetail = await fetchGist(session.accessToken, gistId);
@@ -804,6 +821,8 @@ export async function activate(
   async function handleGithubSignIn(): Promise<void> {
     try {
       const sessionInfo = await signInGithub(context);
+      await updateScratchSignedIn();
+      refreshGistViews();
       vscode.window.showInformationMessage(
         `Scratchpad: GitHub signed in as ${sessionInfo.accountLabel}.`,
       );
@@ -818,6 +837,8 @@ export async function activate(
   async function handleGithubSignOut(): Promise<void> {
     try {
       await signOutGithub(context);
+      await updateScratchSignedIn();
+      refreshGistViews();
       vscode.window.showInformationMessage(
         'Scratchpad: GitHub token removed. Sign out from the Accounts menu to revoke access.',
       );
@@ -831,6 +852,13 @@ export async function activate(
 
   async function updateStatusBar(): Promise<void> {
     try {
+      if (!scratchSignedIn) {
+        statusBar.text = '$(github) Scratch: Sign in';
+        statusBar.tooltip = 'Scratchpad: Sign in to GitHub';
+        statusBar.command = COMMANDS.signInGithub;
+        return;
+      }
+
       const session = await getGithubSession(false);
 
       if (!session) {

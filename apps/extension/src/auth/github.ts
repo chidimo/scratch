@@ -1,6 +1,10 @@
 // eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
-import { DEFAULT_GITHUB_SCOPES, GITHUB_PROVIDER_ID } from '../constants';
+import {
+  DEFAULT_GITHUB_SCOPES,
+  GITHUB_PROVIDER_ID,
+  SECRET_KEYS,
+} from '../constants';
 
 interface GithubSessionInfo {
   accountLabel: string;
@@ -27,7 +31,7 @@ export async function signInGithub(
   }
 
   await context.secrets.store(
-    'scratch.github.accessToken',
+    SECRET_KEYS.githubAccessToken,
     session.accessToken,
   );
 
@@ -40,5 +44,5 @@ export async function signInGithub(
 export async function signOutGithub(
   context: vscode.ExtensionContext,
 ): Promise<void> {
-  await context.secrets.delete('scratch.github.accessToken');
+  await context.secrets.delete(SECRET_KEYS.githubAccessToken);
 }

@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
 import * as path from 'node:path';
+import { COMMANDS } from '../constants';
 import { getScratchContext, isMarkdownFile } from '../utils/scratch';
 
 type TreeItemKind = 'gist' | 'file' | 'empty';
@@ -64,7 +65,9 @@ async function listMarkdownFiles(
 }
 
 export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
-  constructor(private readonly options: { flat: boolean }) {}
+  constructor(
+    private readonly options: { flat: boolean; isSignedIn: () => boolean },
+  ) {}
 
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<
     GistTreeItem | undefined
@@ -76,9 +79,25 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
   }
 
   async getChildren(element?: GistTreeItem): Promise<GistTreeItem[]> {
-    const { gistsRoot } = await getScratchContext();
-
     try {
+      if (!this.options.isSignedIn()) {
+        const signInItem = new GistTreeItem(
+          'empty',
+          'Sign in to GitHub',
+          vscode.TreeItemCollapsibleState.None,
+          undefined,
+          'Sign in to GitHub to view and sync gists.',
+        );
+        signInItem.iconPath = new vscode.ThemeIcon('account');
+        signInItem.command = {
+          command: COMMANDS.signInGithub,
+          title: 'Sign In to GitHub',
+        };
+        return [signInItem];
+      }
+
+      const { gistsRoot } = await getScratchContext();
+
       if (!element) {
         if (this.options.flat) {
           const markdownFiles = await listMarkdownFiles(gistsRoot);
