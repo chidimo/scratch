@@ -120,7 +120,16 @@ export async function activate(
     vscode.commands.registerCommand(COMMANDS.deleteGist, handleDeleteGist),
     vscode.commands.registerCommand(COMMANDS.openScratchFolder, async () => {
       const { scratchRoot } = await getScratchContext();
-      await vscode.commands.executeCommand('revealInExplorer', scratchRoot);
+      const inWorkspace = Boolean(
+        vscode.workspace.getWorkspaceFolder(scratchRoot),
+      );
+
+      if (inWorkspace) {
+        await vscode.commands.executeCommand('revealInExplorer', scratchRoot);
+        return;
+      }
+
+      await vscode.commands.executeCommand('revealFileInOS', scratchRoot);
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('scratch')) {
