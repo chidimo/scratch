@@ -2,7 +2,7 @@
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
   "description": "Local .scratch folder integration for the Scratchpad system.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",
@@ -31,7 +31,21 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:scratch.createScratchFolder",
+    "onCommand:scratch.openScratchFolder",
+    "onCommand:scratch.showUserIdentity",
+    "onCommand:scratch.showGithubStatus",
+    "onCommand:scratch.signInGithub",
+    "onCommand:scratch.signOutGithub",
+    "onCommand:scratch.syncGists",
+    "onCommand:scratch.refreshGists",
+    "onCommand:scratch.createNote",
+    "onCommand:scratch.refreshScratchState",
+    "onCommand:scratch.deleteNote",
+    "onCommand:scratch.renameNote",
+    "onCommand:scratch.addNoteToGist",
+    "onCommand:scratch.deleteGist"
   ],
   "contributes": {
     "commands": [
