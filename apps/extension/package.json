@@ -183,7 +183,7 @@
         {
           "id": "scratch",
           "title": "Scratch (Gists)",
-          "icon": "icon.png"
+          "icon": "media/activity-icon.svg"
         }
       ]
     },
