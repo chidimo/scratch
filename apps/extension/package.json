@@ -90,11 +90,15 @@
       },
       {
         "command": "scratch.deleteNote",
-        "title": "Delete Note"
+        "title": "Delete"
       },
       {
         "command": "scratch.renameNote",
-        "title": "Rename Note"
+        "title": "Rename"
+      },
+      {
+        "command": "scratch.openNoteInBrowser",
+        "title": "Open in Browser"
       },
       {
         "command": "scratch.addNoteToGist",
@@ -105,6 +109,11 @@
         "command": "scratch.deleteGist",
         "title": "Scratch (Gists): Delete Gist",
         "icon": "$(trash)"
+      },
+      {
+        "command": "scratch.openNoteInBrowser",
+        "title": "Open in Browser",
+        "icon": "$(globe)"
       }
     ],
     "configuration": {

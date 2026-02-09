@@ -114,6 +114,10 @@ export async function activate(
     vscode.commands.registerCommand(COMMANDS.deleteNote, handleDeleteNote),
     vscode.commands.registerCommand(COMMANDS.renameNote, handleRenameNote),
     vscode.commands.registerCommand(
+      COMMANDS.openNoteInBrowser,
+      handleOpenNoteInBrowser,
+    ),
+    vscode.commands.registerCommand(
       COMMANDS.addNoteToGist,
       handleAddNoteToGist,
     ),
@@ -694,6 +698,39 @@ export async function activate(
     } catch (error) {
       vscode.window.showErrorMessage(
         `Scratchpad: failed to rename note. ${String(error)}`,
+      );
+    }
+  }
+
+  async function handleOpenNoteInBrowser(item?: {
+    resourceUri?: vscode.Uri;
+    gistId?: string;
+  }): Promise<void> {
+    try {
+      const selectedItem =
+        item ?? gistFlatView.selection?.[0] ?? gistView.selection?.[0];
+      let gistId = selectedItem?.gistId;
+      if (!gistId) {
+        const fileUri =
+          selectedItem?.resourceUri ??
+          vscode.window.activeTextEditor?.document.uri;
+        if (fileUri) {
+          const { scratchRoot } = await getScratchContext();
+          const gistInfo = getGistInfoFromUri(scratchRoot, fileUri);
+          gistId = gistInfo?.gistId;
+        }
+      }
+
+      if (!gistId) {
+        vscode.window.showWarningMessage(MESSAGES.notScratchNote);
+        return;
+      }
+
+      const url = `https://gist.github.com/${gistId}`;
+      await vscode.env.openExternal(vscode.Uri.parse(url));
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: failed to open note in browser. ${String(error)}`,
       );
     }
   }
