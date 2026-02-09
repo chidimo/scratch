@@ -145,7 +145,7 @@ class GithubClient implements GithubClientAdapter {
           return acc;
         },
         {} as { [filename: string]: { content: string } | null },
-      ),
+      ) as any,
     });
 
     const gist = response.data as Gist;

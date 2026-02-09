@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context';
+import { PageMetaTitle } from '../components/page-meta-title';
 
 export function Callback() {
   const navigate = useNavigate();
@@ -85,22 +85,6 @@ export function Callback() {
 
         setStatus('success');
 
-        // Check if this is a mobile redirect request
-        const callbackUrlParams = new URLSearchParams(
-          globalThis.location.search,
-        );
-        const stateParam = callbackUrlParams.get('state');
-
-        if (stateParam?.startsWith('mobile_')) {
-          // This is a mobile request, redirect back to mobile app
-          // The mobile app will handle the token from AsyncStorage
-          const mobileRedirectUri = `scratch://auth/callback?success=true`;
-          setTimeout(() => {
-            globalThis.location.href = mobileRedirectUri;
-          }, 1500);
-          return;
-        }
-
         setTimeout(() => {
           navigate('/');
         }, 1500);
@@ -115,15 +99,10 @@ export function Callback() {
 
   return (
     <>
-      <Helmet>
-        <title>
-          Authentication - Scratch (Gists) | Your Cross-Platform Scratchpad
-        </title>
-        <meta
-          name="description"
-          content="Completing GitHub authentication for Scratch (Gists)"
-        />
-      </Helmet>
+      <PageMetaTitle
+        title="Authentication"
+        description="Completing GitHub authentication for Scratch (Gists)"
+      />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
           {status === 'loading' && (

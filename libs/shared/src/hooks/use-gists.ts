@@ -255,6 +255,7 @@ export const useGistById = (
         id: gistData.id,
         title: noteTitle,
         content: noteContent,
+        description: gistData.description,
         created_at: gistData.created_at,
         updated_at: gistData.updated_at,
         tags: [],
@@ -265,6 +266,8 @@ export const useGistById = (
         file_contents: fileContents,
         is_public: gistData.public,
         owner_login: gistData.owner?.login,
+        owner_avatar_url: gistData.owner?.avatar_url,
+        html_url: gistData.html_url,
         sync_status: 'synced' as const,
       };
     },

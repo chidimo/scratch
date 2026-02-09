@@ -9,7 +9,7 @@
       "vite/client"
     ],
     "paths": {
-      "@scratch/shared": ["../../libs/shared/src/index.ts"]
+      "@scratch/shared": ["libs/shared/src/index.ts"]
     }
   },
   "exclude": [

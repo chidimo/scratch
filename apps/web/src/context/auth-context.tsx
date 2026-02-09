@@ -1,78 +1,14 @@
+import { GitHubUser } from '@scratch/shared';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-
-// GitHub User interface - matches GitHub API response
-interface GitHubUser {
-  login: string;
-  id: number;
-  node_id: string;
-  avatar_url: string;
-  gravatar_id: string;
-  url: string;
-  html_url: string;
-  followers_url: string;
-  following_url: string;
-  gists_url: string;
-  starred_url: string;
-  subscriptions_url: string;
-  organizations_url: string;
-  repos_url: string;
-  events_url: string;
-  received_events_url: string;
-  type: string;
-  user_view_type: string;
-  site_admin: boolean;
-  name: string;
-  company: string;
-  blog: string;
-  location: string;
-  email: string;
-  hireable: boolean;
-  bio: string;
-  twitter_username: string | null;
-  notification_email: string;
-  public_repos: number;
-  public_gists: number;
-  followers: number;
-  following: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Gist interfaces - matches GitHub API response
-interface Gist {
-  id: string;
-  description: string | null;
-  public: boolean;
-  created_at: string;
-  updated_at: string;
-  files: Record<
-    string,
-    {
-      filename: string;
-      type: string;
-      language: string | null;
-      raw_url: string;
-      size: number;
-    }
-  >;
-  owner: {
-    login: string;
-    id: number;
-    avatar_url: string;
-  };
-  html_url: string;
-}
 
 // Auth context interfaces
 interface AuthContextType {
   user: GitHubUser | null;
   token: string | null;
-  gists: Gist[];
   isLoading: boolean;
   error: string | null;
   login: () => void;
   logout: () => void;
-  fetchGists: () => Promise<void>;
   setUser: (user: GitHubUser | null) => void;
   setToken: (token: string | null) => void;
 }
@@ -86,7 +22,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [gists, setGists] = useState<Gist[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -141,65 +76,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    setGists([]);
     sessionStorage.removeItem('github_token');
     sessionStorage.removeItem('github_user');
-  };
-
-  const fetchGists = async () => {
-    if (!token) {
-      throw new Error('No authentication token available');
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('https://api.github.com/gists', {
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch gists: ${response.statusText}`);
-      }
-
-      const gistsData = await response.json();
-      setGists(gistsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch gists');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const value: AuthContextType = useMemo(() => {
     return {
       user,
       token,
-      gists,
       isLoading,
       error,
       login,
       logout,
-      fetchGists,
       setUser,
       setToken,
     };
-  }, [
-    user,
-    token,
-    gists,
-    isLoading,
-    error,
-    login,
-    logout,
-    fetchGists,
-    setUser,
-    setToken,
-  ]);
+  }, [user, token, isLoading, error, login, logout, setUser, setToken]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

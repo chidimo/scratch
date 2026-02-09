@@ -1,13 +1,13 @@
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import { PageMetaTitle } from '../components/page-meta-title';
 
 export const PrivacyPolicy = () => {
   return (
     <>
-      <Helmet>
-        <title>Privacy Policy - Scratch (Gists)</title>
-        <meta name="description" content="Privacy policy for Scratch (Gists)" />
-      </Helmet>
+      <PageMetaTitle
+        title="Privacy Policy"
+        description="Privacy policy for Scratch (Gists)"
+      />
       <div className="min-h-screen bg-white">
         <div className="max-w-3xl mx-auto px-6 py-12">
           <Link

@@ -1,58 +1,17 @@
+import { Note, useGistById, useUpdateGistFileContent } from '@scratch/shared';
 import { useEffect, useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link, useParams } from 'react-router-dom';
-import { useGistById, useUpdateGistFileContent } from '@scratch/shared';
-import { useAuth } from '../context/AuthContext';
-import { getGithubClient } from '../services/GithubClient';
 import { RichTextEditor } from '../components/rich-text-editor';
-
-type SignInStateProps = {
-  login: () => void;
-};
-
-const SignInState = ({ login }: SignInStateProps) => (
-  <>
-    <Helmet>
-      <title>Sign in - Scratch (Gists)</title>
-      <meta
-        name="description"
-        content="Sign in with GitHub to view your gist details"
-      />
-    </Helmet>
-    <div className="min-h-screen bg-white flex items-center justify-center px-6">
-      <div className="w-full max-w-md text-center">
-        <img
-          src="/scratch-icon.png"
-          alt="Scratch (Gists) logo"
-          className="w-12 h-12 rounded-xl mx-auto mb-6"
-        />
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">
-          Sign in to view this gist
-        </h2>
-        <p className="text-gray-600 mb-6">
-          Connect your GitHub account to access gist details.
-        </p>
-        <button
-          onClick={login}
-          className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-        >
-          Sign in with GitHub
-        </button>
-        <div className="mt-6">
-          <Link to="/" className="text-sm text-gray-500 hover:text-gray-700">
-            Back to gists
-          </Link>
-        </div>
-      </div>
-    </div>
-  </>
-);
+import { useAuth } from '../context/auth-context';
+import { getGithubClient } from '../services/github-client';
+import { UnknownUser } from '../components/unknown-user';
+import { GistVisibility } from '../components/gist-visibility';
+import { KnownUserHeader } from '../components/known-user-header';
+import { PageMetaTitle } from '../components/page-meta-title';
 
 const LoadingState = () => (
   <>
-    <Helmet>
-      <title>Loading gist - Scratch (Gists)</title>
-    </Helmet>
+    <PageMetaTitle title="Loading gist" />
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -71,9 +30,7 @@ type ErrorStateProps = {
 
 const ErrorState = ({ message, onRetry }: ErrorStateProps) => (
   <>
-    <Helmet>
-      <title>Error - Scratch (Gists)</title>
-    </Helmet>
+    <PageMetaTitle title="Error" />
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
@@ -96,9 +53,7 @@ const ErrorState = ({ message, onRetry }: ErrorStateProps) => (
 
 const NotFoundState = () => (
   <>
-    <Helmet>
-      <title>Gist not found - Scratch (Gists)</title>
-    </Helmet>
+    <PageMetaTitle title="Gist not found" />
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-6">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-10 w-full max-w-md text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-3">
@@ -120,45 +75,34 @@ const NotFoundState = () => (
 
 type GistDetailStateParams = {
   user: { login: string } | null;
-  isLoading: boolean;
-  gistsCount: number;
-  note: unknown;
+  note: Note | null | undefined;
   isNoteLoading: boolean;
-  error: string | null;
   noteError: unknown;
-  fetchGists: () => Promise<void>;
-  login: () => void;
-  gist: unknown;
+  refetchNote: () => Promise<unknown>;
 };
 
 const getGistDetailState = ({
   user,
-  isLoading,
-  gistsCount,
   note,
   isNoteLoading,
-  error,
   noteError,
-  fetchGists,
-  login,
-  gist,
+  refetchNote,
 }: GistDetailStateParams) => {
   if (!user) {
-    return <SignInState login={login} />;
+    return <UnknownUser title="Sign in to view this gist" />;
   }
 
-  if ((isLoading && gistsCount === 0) || (isNoteLoading && !note)) {
+  if (isNoteLoading && !note) {
     return <LoadingState />;
   }
 
-  if (error || noteError) {
+  if (noteError) {
     const message =
-      error ||
-      (noteError instanceof Error ? noteError.message : 'Failed to load gist');
-    return <ErrorState message={message} onRetry={() => void fetchGists()} />;
+      noteError instanceof Error ? noteError.message : 'Failed to load gist';
+    return <ErrorState message={message} onRetry={() => void refetchNote()} />;
   }
 
-  if (!gist) {
+  if (!note) {
     return <NotFoundState />;
   }
 
@@ -221,35 +165,26 @@ const useGistFileSave = ({
 
 export const GistDetail = () => {
   const { gistId } = useParams();
-  const { user, token, gists, isLoading, error, fetchGists, login } = useAuth();
+  const { user, token } = useAuth();
   const githubClient = useMemo(() => getGithubClient(), []);
+
   const [activeFile, setActiveFile] = useState<string | null>(null);
+  const [loadedGistId, setLoadedGistId] = useState<string | null>(null);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [initialContents, setInitialContents] = useState<
     Record<string, string>
   >({});
-  const [loadedGistId, setLoadedGistId] = useState<string | null>(null);
 
   const {
     data: note,
     isLoading: isNoteLoading,
     error: noteError,
+    refetch: refetchNote,
   } = useGistById(gistId ?? null, {
     githubClient,
     enabled: !!token,
   });
   const updateGistFileContent = useUpdateGistFileContent({ githubClient });
-
-  useEffect(() => {
-    if (user && gists.length === 0 && !isLoading) {
-      fetchGists();
-    }
-  }, [user, gists.length, isLoading, fetchGists]);
-
-  const gist = useMemo(
-    () => gists.find((item) => item.id === gistId),
-    [gists, gistId],
-  );
 
   useEffect(() => {
     if (!note || !gistId) {
@@ -274,7 +209,7 @@ export const GistDetail = () => {
       gistId,
       activeFile,
       activeContent,
-      isPublic: gist?.public,
+      isPublic: note?.is_public,
       isSaving: updateGistFileContent.isPending,
       updateGistFileContent,
       onSaved: (fileName, content) => {
@@ -284,88 +219,72 @@ export const GistDetail = () => {
 
   const stateView = getGistDetailState({
     user,
-    isLoading,
-    gistsCount: gists.length,
     note,
     isNoteLoading,
-    error,
     noteError,
-    fetchGists,
-    login,
-    gist,
+    refetchNote,
   });
 
   if (stateView) {
     return stateView;
   }
 
+  if (!note) {
+    return null;
+  }
+
+  const activeGist = note;
+
   return (
     <>
-      <Helmet>
-        <title>{gist.description || 'Untitled Gist'} - Scratch (Gists)</title>
-        <meta
-          name="description"
-          content={`Details for ${gist.description || 'a gist'} from ${gist.owner.login}`}
-        />
-      </Helmet>
+      <PageMetaTitle
+        title={activeGist.title || 'Untitled Gist'}
+        description={`Details for ${activeGist.title || 'a gist'} from ${activeGist.owner_login || 'GitHub user'}`}
+      />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-100">
-          <div className="max-w-5xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Link
-                  to="/"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  ← Back to gists
-                </Link>
-              </div>
-              <a
-                href={gist.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-              >
-                View on GitHub
-              </a>
-            </div>
-          </div>
-        </header>
+        <KnownUserHeader />
 
-        <main className="max-w-5xl mx-auto px-6 py-8">
+        <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    {gist.description || 'Untitled Gist'}
+                  <h1 className="text-lg font-bold text-gray-900 mb-2">
+                    {activeGist.title || 'Untitled Gist'}
                   </h1>
-                  <p className="text-sm text-gray-600">
-                    Created {new Date(gist.created_at).toLocaleString()}
+                  <p className="text-xs text-gray-600">
+                    Created{' '}
+                    {new Date(activeGist.created_at).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Updated {new Date(gist.updated_at).toLocaleString()}
+                  <p className="text-xs text-gray-600">
+                    Updated{' '}
+                    {new Date(activeGist.updated_at).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                    gist.public
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {gist.public ? '🌐 Public' : '🔒 Private'}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <img
-                  src={gist.owner.avatar_url}
-                  alt={`${gist.owner.login} avatar`}
-                  className="w-8 h-8 rounded-full"
-                />
-                <span className="text-sm text-gray-700">
-                  {gist.owner.login}
-                </span>
+
+                <div className="flex flex-col justify-between gap-2">
+                  <GistVisibility isPublic={activeGist.is_public ?? false} />
+                  {activeGist.html_url ? (
+                    <p>
+                      <a
+                        href={activeGist.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                      >
+                        View on GitHub
+                      </a>
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
@@ -402,7 +321,7 @@ export const GistDetail = () => {
             ) : (
               <>
                 <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-4 mb-4">
-                  {markdownFiles.map((file) => (
+                  {markdownFiles.map((file: string, index: number) => (
                     <button
                       key={file}
                       onClick={() => {
@@ -416,7 +335,7 @@ export const GistDetail = () => {
                           : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
                       }`}
                     >
-                      {file}
+                      File: {index + 1}
                     </button>
                   ))}
                 </div>
@@ -434,7 +353,7 @@ export const GistDetail = () => {
               </>
             )}
           </div>
-        </main>
+        </div>
       </div>
     </>
   );

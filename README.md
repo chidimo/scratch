@@ -117,6 +117,11 @@ Total estimated timeline: **6-8 weeks**
 
 See [Implementation Plan](./IMPLEMENTATION_PLAN.md) for detailed development roadmap and contribution guidelines.
 
+## ☕ Support
+
+If you find this project helpful, you can support it here:
+[buymeacoffee.com/chidimo](https://buymeacoffee.com/chidimo)
+
 ## 📄 License
 
 MIT License - see LICENSE file for details.

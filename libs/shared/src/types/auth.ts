@@ -48,6 +48,12 @@ export interface GistFile {
   content?: string;
 }
 
+interface GistOwner {
+  login: string;
+  id: number;
+  avatar_url: string;
+}
+
 export interface Gist {
   id: string;
   description: string | null;
@@ -55,11 +61,7 @@ export interface Gist {
   created_at: string;
   updated_at: string;
   files: Record<string, GistFile>;
-  owner: {
-    login: string;
-    id: number;
-    avatar_url: string;
-  };
+  owner: GistOwner;
   html_url: string;
 }
 
@@ -68,6 +70,7 @@ export interface Note {
   id: string;
   title: string;
   content: string;
+  description?: string | null;
   created_at: string;
   updated_at: string;
   tags: string[];
@@ -78,6 +81,8 @@ export interface Note {
   file_contents?: Record<string, string>;
   is_public?: boolean;
   owner_login?: string;
+  owner_avatar_url?: string;
+  html_url?: string;
   sync_status: 'synced' | 'pending' | 'error';
 }
 
