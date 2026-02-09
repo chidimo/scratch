@@ -13,7 +13,7 @@ on:
       publish_ovsx:
         description: 'Publish to Open VSX'
         required: false
-        default: 'false'
+        default: 'true'
 
 jobs:
   publish:
@@ -48,7 +48,7 @@ jobs:
         run: yarn publish:vsce
 
       - name: Publish to Open VSX
-        if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_ovsx == 'true')) && env.OVSX_TOKEN != ''
+        if: ${{ (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.publish_ovsx == 'true') }}
         env:
           OVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
         run: yarn publish:ovsx
