@@ -21,7 +21,7 @@ export const UnknownUser = ({ title }: Props) => {
               <img
                 src="/scratch-icon.png"
                 alt="Scratch (Gists) logo"
-                className="w-12 h-12 rounded-xl mx-auto mb-6"
+                className="w-20 h-20 md:w-32 md:h-32 rounded-xl mx-auto mb-6"
               />
               <h2 className="text-3xl font-bold text-gray-900 mb-3">{title}</h2>
               <p className="text-lg text-gray-600 mb-1">

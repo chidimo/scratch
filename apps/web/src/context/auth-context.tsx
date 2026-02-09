@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { WebStorageKeys } from '../lib/constants';
 
 interface AuthContextType {
+  hasToken: boolean;
   token: string | null;
   isLoading: boolean;
   error: string | null;
@@ -82,6 +83,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value: AuthContextType = useMemo(() => {
     return {
+      hasToken: !!token,
       token,
       isLoading,
       error,
