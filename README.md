@@ -75,6 +75,11 @@ This project solves the common developer problem of losing great ideas while awa
 - **[Technical Findings](./FINDINGS.md)** - Detailed technical feasibility analysis
 - **[Implementation Plan](./IMPLEMENTATION_PLAN.md)** - Complete development roadmap
 
+## 🔗 Links
+
+- **VS Code Marketplace**: <https://marketplace.visualstudio.com/items?itemName=chidimo.scratch>
+- **Open VSX Registry**: <https://open-vsx.org/extension/chidimo/scratch>
+
 ## 🛠️ Tech Stack
 
 ### Mobile App
@@ -91,17 +96,13 @@ This project solves the common developer problem of losing great ideas while awa
 
 ## 🚀 Quick Start
 
-### Mobile App
+Here's the quick start guide for the project.
+
+### Mobile App (Expo Go)
 
 ```bash
 npm install
 npx expo start
-```
-
-### VSCode Extension
-
-```bash
-# Coming soon - extension in development
 ```
 
 ## 📅 Development Timeline

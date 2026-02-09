@@ -2,6 +2,12 @@
 
 Scratchpad brings a lightweight GitHub Gist-powered note system into VS Code with automatic sync and dual view modes.
 
+## 🔗 Links
+
+- **Web app**: <https://scratch.chidiorji.com/>
+- **VS Code Marketplace**: <https://marketplace.visualstudio.com/items?itemName=chidimo.scratch>
+- **Open VSX Registry**: <https://open-vsx.org/extension/chidimo/scratch>
+
 ## ✨ Features
 
 ### 📝 Note Management

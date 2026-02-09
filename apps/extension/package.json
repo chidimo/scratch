@@ -174,7 +174,7 @@
         {
           "id": "scratch",
           "title": "Scratch (Gists)",
-          "icon": "$(notebook)"
+          "icon": "icon.png"
         }
       ]
     },
