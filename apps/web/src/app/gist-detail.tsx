@@ -1,13 +1,12 @@
 import { Note, useGistById, useUpdateGistFileContent } from '@scratch/shared';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { RichTextEditor } from '../components/rich-text-editor';
 import { useAuth } from '../context/auth-context';
-import { getGithubClient } from '../services/github-client';
-import { UnknownUser } from '../components/unknown-user';
 import { GistVisibility } from '../components/gist-visibility';
 import { KnownUserHeader } from '../components/known-user-header';
 import { PageMetaTitle } from '../components/page-meta-title';
+import { useUserWithClient } from '../hooks/use-shared-hooks';
 
 const LoadingState = () => (
   <>
@@ -74,7 +73,6 @@ const NotFoundState = () => (
 );
 
 type GistDetailStateParams = {
-  user: { login: string } | null;
   note: Note | null | undefined;
   isNoteLoading: boolean;
   noteError: unknown;
@@ -82,16 +80,11 @@ type GistDetailStateParams = {
 };
 
 const getGistDetailState = ({
-  user,
   note,
   isNoteLoading,
   noteError,
   refetchNote,
 }: GistDetailStateParams) => {
-  if (!user) {
-    return <UnknownUser title="Sign in to view this gist" />;
-  }
-
   if (isNoteLoading && !note) {
     return <LoadingState />;
   }
@@ -165,8 +158,8 @@ const useGistFileSave = ({
 
 export const GistDetail = () => {
   const { gistId } = useParams();
-  const { user, token } = useAuth();
-  const githubClient = useMemo(() => getGithubClient(), []);
+  const { token } = useAuth();
+  const { githubClient } = useUserWithClient();
 
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const [loadedGistId, setLoadedGistId] = useState<string | null>(null);
@@ -218,7 +211,6 @@ export const GistDetail = () => {
     });
 
   const stateView = getGistDetailState({
-    user,
     note,
     isNoteLoading,
     noteError,

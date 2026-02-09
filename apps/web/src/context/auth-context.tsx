@@ -1,16 +1,13 @@
-import { GitHubUser } from '@scratch/shared';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { WebStorageKeys } from '../lib/constants';
 
-// Auth context interfaces
 interface AuthContextType {
-  user: GitHubUser | null;
   token: string | null;
   isLoading: boolean;
   error: string | null;
   login: () => void;
   logout: () => void;
-  setUser: (user: GitHubUser | null) => void;
-  setToken: (token: string | null) => void;
+  onCallbackSuccess: (token: string | null) => void;
 }
 
 interface AuthProviderProps {
@@ -20,24 +17,20 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<GitHubUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check for existing session on app load
-    const storedToken = sessionStorage.getItem('github_token');
-    const storedUser = sessionStorage.getItem('github_user');
+    const storedToken = sessionStorage.getItem(WebStorageKeys.GITHUB_TOKEN);
 
-    if (storedToken && storedUser) {
+    if (storedToken) {
       try {
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
       } catch (err) {
         console.error('Failed to parse user data:', err);
-        sessionStorage.removeItem('github_token');
-        sessionStorage.removeItem('github_user');
+        sessionStorage.removeItem(WebStorageKeys.GITHUB_TOKEN);
       }
     }
   }, []);
@@ -49,7 +42,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // Generate random state for security
       const state = Math.random().toString(36).substring(2, 15);
-      sessionStorage.setItem('oauth_state', state);
+      sessionStorage.setItem(WebStorageKeys.OAUTH_STATE, state);
 
       // GitHub OAuth configuration
       const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
@@ -74,24 +67,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = () => {
-    setUser(null);
     setToken(null);
-    sessionStorage.removeItem('github_token');
-    sessionStorage.removeItem('github_user');
+    sessionStorage.removeItem(WebStorageKeys.GITHUB_TOKEN);
+    sessionStorage.removeItem(WebStorageKeys.OAUTH_STATE);
+  };
+
+  const onCallbackSuccess = (token: string | null) => {
+    if (!token) {
+      return;
+    }
+    setToken(token);
+    sessionStorage.setItem(WebStorageKeys.GITHUB_TOKEN, token);
   };
 
   const value: AuthContextType = useMemo(() => {
     return {
-      user,
       token,
       isLoading,
       error,
       login,
       logout,
-      setUser,
-      setToken,
+      onCallbackSuccess,
     };
-  }, [user, token, isLoading, error, login, logout, setUser, setToken]);
+  }, [token, isLoading, error, login, logout, onCallbackSuccess]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

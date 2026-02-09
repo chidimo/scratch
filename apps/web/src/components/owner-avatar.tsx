@@ -1,4 +1,6 @@
 import { useAuth } from '../context/auth-context';
+import { useNavigate } from 'react-router-dom';
+import { useLogoutUser } from '@scratch/shared';
 
 type Props = {
   owner_avatar_url: string;
@@ -7,9 +9,20 @@ type Props = {
 
 export const OwnerAvatar = ({ owner_avatar_url, owner_login }: Props) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const logoutUser = useLogoutUser({
+    onLogout: logout,
+  });
+
   const profileUrl = owner_login
     ? `https://github.com/${owner_login}`
     : 'https://github.com';
+
+  const handleLogout = () => {
+    logoutUser();
+    navigate('/');
+  };
 
   return (
     <div className="flex items-center gap-3">
@@ -39,7 +52,7 @@ export const OwnerAvatar = ({ owner_avatar_url, owner_login }: Props) => {
           </a>
           <button
             type="button"
-            onClick={logout}
+            onClick={handleLogout}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             Sign out

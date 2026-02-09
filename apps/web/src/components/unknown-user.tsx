@@ -1,5 +1,4 @@
 import { useAuth } from '../context/auth-context';
-import { UnknownUserHeader } from './page-headers.tsx/unknown-user-header';
 import { PageMetaTitle } from './page-meta-title';
 
 type Props = {
@@ -16,8 +15,6 @@ export const UnknownUser = ({ title }: Props) => {
         description="Sign in with GitHub to access your gists and manage your scratchpad across all platforms"
       />
       <div className="min-h-screen bg-white flex flex-col">
-        <UnknownUserHeader />
-
         <div className="flex-1 flex items-center justify-center px-6">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">

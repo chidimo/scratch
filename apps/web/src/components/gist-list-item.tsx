@@ -8,7 +8,7 @@ type Props = {
 
 export const GistListItem = ({ gist }: Props) => {
   return (
-    <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-all duration-200">
+    <div className="bg-white rounded-xl shadow-md border border-gray-100 px-6 py-4 hover:shadow-lg transition-all duration-200">
       <div className="flex items-start justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-4">
           <Link
@@ -48,18 +48,8 @@ export const GistListItem = ({ gist }: Props) => {
             to={`/gists/${gist.id}`}
             className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
           >
-            Open details →
+            View →
           </Link>
-          {gist.html_url ? (
-            <a
-              href={gist.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-700 font-medium text-sm transition-colors"
-            >
-              View on GitHub
-            </a>
-          ) : null}
         </div>
       </div>
     </div>

@@ -1,31 +1,21 @@
-import { useMemo } from 'react';
 import { Note, useGists } from '@scratch/shared';
 import { useAuth } from '../context/auth-context';
-import { getGithubClient } from '../services/github-client';
-import { GistListItem } from '../components/gist-list-item';
-import { UnknownUser } from '../components/unknown-user';
-import { KnownUserHeader } from '../components/known-user-header';
-import { PageMetaTitle } from '../components/page-meta-title';
+import { GistListItem } from './gist-list-item';
+import { KnownUserHeader } from './known-user-header';
+import { PageMetaTitle } from './page-meta-title';
+import { useUserWithClient } from '../hooks/use-shared-hooks';
 
-export const Gists = () => {
-  const { user, token } = useAuth();
-  const githubClient = useMemo(() => getGithubClient(), []);
+export const GistList = () => {
+  const { token } = useAuth();
+  const { user, githubClient } = useUserWithClient();
   const {
     data: gists = [],
-    isLoading,
+    isPending,
     error,
     refetch,
-  } = useGists({
-    githubClient,
-    enabled: !!token,
-  });
+  } = useGists({ githubClient, enabled: !!token });
 
-  // Show login page if user is not authenticated
-  if (!user) {
-    return <UnknownUser title="Scratch (Gists)" />;
-  }
-
-  if (isLoading && gists.length === 0) {
+  if (isPending) {
     return (
       <>
         <PageMetaTitle title="Loading" />
@@ -143,7 +133,7 @@ export const Gists = () => {
             </div>
           )}
 
-          {isLoading && gists.length > 0 && (
+          {isPending && gists.length > 0 && (
             <div className="flex items-center justify-center gap-2 py-4">
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-gray-600">Refreshing...</span>

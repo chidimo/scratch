@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/auth-context';
 import { PageMetaTitle } from '../components/page-meta-title';
+import { WebStorageKeys } from '../lib/constants';
 
 export function Callback() {
   const navigate = useNavigate();
-  const { setUser, setToken } = useAuth();
+  const { onCallbackSuccess } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
     'loading',
   );
@@ -28,7 +29,7 @@ export function Callback() {
         }
 
         // Verify state to prevent CSRF attacks
-        const storedState = sessionStorage.getItem('oauth_state');
+        const storedState = sessionStorage.getItem(WebStorageKeys.OAUTH_STATE);
         if (!storedState || storedState !== state) {
           throw new Error('Invalid state parameter');
         }
@@ -62,26 +63,7 @@ export function Callback() {
 
         const tokenData = await tokenResponse.json();
 
-        // Store token securely
-        sessionStorage.setItem('github_token', tokenData.access_token);
-        setToken(tokenData.access_token);
-
-        // Get user information
-        const userResponse = await fetch('https://api.github.com/user', {
-          headers: {
-            Authorization: `token ${tokenData.access_token}`,
-          },
-        });
-
-        if (!userResponse.ok) {
-          throw new Error('Failed to fetch user information');
-        }
-
-        const userData = await userResponse.json();
-
-        // Store user data and update context
-        sessionStorage.setItem('github_user', JSON.stringify(userData));
-        setUser(userData);
+        onCallbackSuccess(tokenData.access_token);
 
         setStatus('success');
 
@@ -95,7 +77,7 @@ export function Callback() {
     };
 
     handleCallback();
-  }, [navigate, setUser, setToken]);
+  }, [navigate, onCallbackSuccess]);
 
   return (
     <>

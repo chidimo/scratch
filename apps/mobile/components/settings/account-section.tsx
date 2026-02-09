@@ -63,7 +63,7 @@ const styles = {
   userLogin: {
     fontSize: 16,
     color: '#2563eb',
-    textDecorationLine: 'underline',
+    textDecorationLine: 'underline' as const,
     marginBottom: 6,
   },
   avatar: {

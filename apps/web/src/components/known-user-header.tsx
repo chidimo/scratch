@@ -1,9 +1,9 @@
-import { useAuth } from '../context/auth-context';
 import { OwnerAvatar } from './owner-avatar';
 import { Link } from 'react-router-dom';
+import { useUserWithClient } from '../hooks/use-shared-hooks';
 
 export const KnownUserHeader = () => {
-  const { user } = useAuth();
+  const { user } = useUserWithClient();
 
   return (
     <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-100">
