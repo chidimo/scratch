@@ -65,14 +65,19 @@ export const UnknownUser = ({ title }: Props) => {
                 <p>Connect your GitHub account to start managing your gists</p>
                 <div className="space-y-2">
                   <p>Get the extension</p>
-                  <a
-                    href="https://marketplace.visualstudio.com/items?itemName=chidimo.scratch"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
-                  >
-                    Visual Studio Code marketplace →
-                  </a>
+                  <div className="space-y-2">
+                    {[{
+                      name: 'Visual Studio Code Marketplace',
+                      url: 'https://marketplace.visualstudio.com/items?itemName=chidimo.scratch',
+                    }, {
+                      name: 'Open VSX Registry',
+                      url: 'https://open-vsx.org/extension/chidimo/scratch',
+                    }].map((item) => (
+                      <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" className="block items-center justify-center gap-2 mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors">
+                        {item.name} →
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
