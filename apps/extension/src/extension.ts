@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
 import * as path from 'node:path';
+import * as os from 'node:os';
 
 import { getGithubSession, signInGithub, signOutGithub } from './auth/github';
 import { getScratchConfig } from './config';
@@ -27,7 +28,6 @@ import {
   updateGistFiles,
 } from './services/gist-sync';
 import { getGitUserIdentity } from './utils/git';
-import { hasWorkspaceFolders } from './utils/workspace';
 
 import {
   COMMANDS,
@@ -177,13 +177,6 @@ export async function activate(
   async function showUserIdentity(): Promise<void> {
     const config = getScratchConfig();
 
-    if (!hasWorkspaceFolders()) {
-      vscode.window.showWarningMessage(
-        'Scratchpad: open a workspace to detect user identity.',
-      );
-      return;
-    }
-
     if (config.userIdStrategy !== 'git') {
       vscode.window.showErrorMessage(
         `Scratchpad: unsupported userIdStrategy "${config.userIdStrategy}".`,
@@ -191,12 +184,13 @@ export async function activate(
       return;
     }
 
+    // Use workspace folder if available, otherwise use home directory for global git config
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) {
-      return;
-    }
+    const gitConfigPath = workspaceFolder
+      ? workspaceFolder.uri.fsPath
+      : os.homedir();
 
-    const identity = await getGitUserIdentity(workspaceFolder.uri.fsPath);
+    const identity = await getGitUserIdentity(gitConfigPath);
     if (!identity) {
       vscode.window.showWarningMessage(
         'Scratchpad: Git user identity not configured.',
@@ -211,8 +205,9 @@ export async function activate(
       .filter(Boolean)
       .join(' • ');
 
+    const source = workspaceFolder ? 'workspace' : 'global';
     vscode.window.showInformationMessage(
-      `Scratchpad user (${identity.source}): ${display}`,
+      `Scratchpad user (${source} ${identity.source}): ${display}`,
     );
   }
 
