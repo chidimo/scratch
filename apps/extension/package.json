@@ -2,14 +2,14 @@
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
   "description": "Local scratch folder integration for the Scratchpad system.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",
   "bugs": {
     "url": "https://github.com/chidimo/scratch/issues"
   },
-  "icon": "icon.png",
+  "icon": "media/scratch-icon.png",
   "keywords": [
     "chidimo",
     "scratchpad",
