@@ -16,6 +16,7 @@ Scratchpad brings a lightweight GitHub Gist-powered note system into VS Code wit
 - **Add to Gist**: Add additional notes to existing gists via inline action
 - **Delete Notes**: Remove individual notes with automatic GitHub sync
 - **Rename Notes**: Rename notes locally and remotely in one action
+- **Open in Browser**: Open a note's gist on GitHub in your browser
 - **Delete Gists**: Remove entire gists with all their notes
 
 ### 🔄 Sync & Auto-Refresh
@@ -78,6 +79,7 @@ Access via Command Palette (`Cmd/Ctrl+Shift+P`):
 - `Scratch: Sync GitHub Gists` - Import selected gists from GitHub
 - `Scratch: Refresh Imported Gists` - Update all imported gists
 - `Scratch: Create Note` - Create a new note/gist
+- `Scratch: Open in Browser` - Open the selected note gist on GitHub
 - `Scratch: Show GitHub Status` - View current authentication status
 - `Scratch: Refresh Scratch State` - Reload extension state
 
@@ -99,3 +101,4 @@ Access via Command Palette (`Cmd/Ctrl+Shift+P`):
 - Only markdown files (`.md`, `.markdown`) are synced
 - Gist descriptions become folder names in the grouped view
 - File changes are debounced (5 seconds) before syncing to GitHub
+- Multiple editors can share the same `scratch.storagePath`, but concurrent edits to the same note may overwrite each other
