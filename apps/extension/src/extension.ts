@@ -462,12 +462,12 @@ export async function activate(
     type GistChoice =
       | { type: 'all'; label: string; description: string }
       | {
-          type: 'gist';
-          label: string;
-          description: string;
-          detail?: string;
-          gist: GistSummary;
-        };
+        type: 'gist';
+        label: string;
+        description: string;
+        detail?: string;
+        gist: GistSummary;
+      };
 
     const gistChoices: GistChoice[] = [
       {
@@ -579,16 +579,20 @@ export async function activate(
     }
   }
 
-  async function handleDeleteNote(): Promise<void> {
+  async function handleDeleteNote(item?: {
+    resourceUri?: vscode.Uri;
+  }): Promise<void> {
     try {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
+      const selectedItem = item ?? gistFlatView.selection?.[0];
+      const fileUri =
+        selectedItem?.resourceUri ??
+        vscode.window.activeTextEditor?.document.uri;
+      const { gistsRoot } = await getScratchContext();
+
+      if (!fileUri) {
         vscode.window.showWarningMessage(MESSAGES.noFileOpen);
         return;
       }
-
-      const fileUri = editor.document.uri;
-      const { gistsRoot } = await getScratchContext();
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
@@ -624,16 +628,20 @@ export async function activate(
     }
   }
 
-  async function handleRenameNote(): Promise<void> {
+  async function handleRenameNote(item?: {
+    resourceUri?: vscode.Uri;
+  }): Promise<void> {
     try {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
+      const selectedItem = item ?? gistFlatView.selection?.[0];
+      const fileUri =
+        selectedItem?.resourceUri ??
+        vscode.window.activeTextEditor?.document.uri;
+      const { config, scratchRoot, gistsRoot } = await getScratchContext();
+
+      if (!fileUri) {
         vscode.window.showWarningMessage(MESSAGES.noFileOpen);
         return;
       }
-
-      const fileUri = editor.document.uri;
-      const { config, scratchRoot, gistsRoot } = await getScratchContext();
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
