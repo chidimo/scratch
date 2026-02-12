@@ -1,7 +1,7 @@
 {
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
-  "description": "Local .scratch folder integration for the Scratchpad system.",
+  "description": "Local scratch folder integration for the Scratchpad system.",
   "version": "0.4.0",
   "publisher": "chidimo",
   "license": "MIT",
@@ -37,11 +37,11 @@
     "commands": [
       {
         "command": "scratch.createScratchFolder",
-        "title": "Scratch (Gists): Create .scratch Folder"
+        "title": "Scratch (Gists): Create Scratch Folder"
       },
       {
         "command": "scratch.openScratchFolder",
-        "title": "Scratch (Gists): Open .scratch Folder"
+        "title": "Scratch (Gists): Open Scratch Folder"
       },
       {
         "command": "scratch.showUserIdentity",
@@ -125,14 +125,8 @@
         "scratch.storagePath": {
           "title": "Scratch (Gists): Storage Path",
           "type": "string",
-          "default": "~/.scratch",
+          "default": "~/scratch",
           "description": "Global folder used to store Scratchpad gists."
-        },
-        "scratch.scratchFolderName": {
-          "title": "Scratch (Gists): Scratch Folder Name",
-          "type": "string",
-          "default": ".scratch",
-          "description": "Folder name used to store scratch notes in each workspace."
         },
         "scratch.autoCreateScratchFolder": {
           "title": "Scratch (Gists): Auto Create Scratch Folder",

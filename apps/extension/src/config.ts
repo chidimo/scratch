@@ -7,7 +7,7 @@ import { EXTENSION_ID } from './constants';
 
 function resolveStoragePath(rawPath: string | undefined): string {
   if (!rawPath) {
-    return path.join(os.homedir(), '.scratch');
+    return path.join(os.homedir(), 'scratch');
   }
 
   if (rawPath.startsWith('~')) {
@@ -23,7 +23,6 @@ export function getScratchConfig(): ScratchConfig {
 
   return {
     storagePath: resolveStoragePath(config.get<string>('storagePath')),
-    scratchFolderName: config.get<string>('scratchFolderName', '.scratch'),
     autoCreateScratchFolder: config.get<boolean>(
       'autoCreateScratchFolder',
       true,

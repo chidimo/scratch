@@ -1145,9 +1145,8 @@ function scheduleGistDelete(options: {
         options.outputChannel.appendLine(
           `Deleted gist file ${gistInfo.gistId} -> ${gistInfo.filePath}`,
         );
-        const gistsRoot = vscode.Uri.joinPath(options.scratchRoot, 'gists');
         await removeEmptyGistFolder(
-          gistsRoot,
+          options.scratchRoot,
           options.fileUri,
           options.outputChannel,
         );
@@ -1186,12 +1185,16 @@ async function guardGistFolderMutation(
   const relativePath = path.relative(scratchRoot.fsPath, uri.fsPath);
   const segments = relativePath.split(path.sep);
 
-  if (segments[0] !== 'gists' || segments.length < 2) {
+  if (segments.length < 1) {
     return;
   }
 
-  const gistId = segments[1];
+  const gistId = segments[0];
   if (!gistId || gistIdCache.has(gistId)) {
+    return;
+  }
+
+  if (segments.length > 1) {
     return;
   }
 

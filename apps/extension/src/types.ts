@@ -16,7 +16,6 @@ export type UserIdStrategy = 'git';
 
 export interface ScratchConfig {
   storagePath: string;
-  scratchFolderName: string;
   autoCreateScratchFolder: boolean;
   watchScratchFolder: boolean;
   userIdStrategy: UserIdStrategy;

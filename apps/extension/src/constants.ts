@@ -15,8 +15,7 @@ export const TREE_VIEW_COMMAND_DELAY_MS = 200;
 
 // Default configuration values
 export const DEFAULT_CONFIG = {
-  storagePath: '~/.scratch',
-  scratchFolderName: '.scratch',
+  storagePath: '~/scratch',
   autoCreateScratchFolder: true,
   watchScratchFolder: true,
   userIdStrategy: 'git' as const,

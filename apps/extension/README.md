@@ -56,7 +56,7 @@ Scratchpad brings a lightweight GitHub Gist-powered note system into VS Code wit
 
 All settings are available via VS Code Settings (`Cmd/Ctrl+,`):
 
-- **Storage Path** (`scratch.storagePath`): Global folder for storing gists (default: `~/.scratch`)
+- **Storage Path** (`scratch.storagePath`): Global folder for storing gists (default: `~/scratch`)
 - **Auto-Refresh** (`scratch.gistAutoRefreshMinutes`): Auto-refresh interval
   - Options: 0 (disabled), 5, 10, 15, 20, 25, 30 minutes
   - Default: 15 minutes

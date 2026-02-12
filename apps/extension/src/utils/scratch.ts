@@ -5,20 +5,17 @@ import { ScratchConfig } from '../types';
 import { getScratchConfig } from '../config';
 import { getGithubSession } from '../auth/github';
 
-const GISTS_FOLDER_NAME = 'gists';
-
 export function getScratchRoot(config: ScratchConfig): vscode.Uri {
   return vscode.Uri.file(config.storagePath);
 }
 
 function getGistsRoot(config: ScratchConfig): vscode.Uri {
-  return vscode.Uri.joinPath(getScratchRoot(config), GISTS_FOLDER_NAME);
+  return getScratchRoot(config);
 }
 
 async function ensureScratchRoot(config: ScratchConfig): Promise<vscode.Uri> {
   const root = getScratchRoot(config);
   await vscode.workspace.fs.createDirectory(root);
-  await vscode.workspace.fs.createDirectory(getGistsRoot(config));
   return root;
 }
 
@@ -38,7 +35,7 @@ export function createScratchWatcher(
 ): vscode.FileSystemWatcher {
   const pattern = new vscode.RelativePattern(
     getScratchRoot(config),
-    `${GISTS_FOLDER_NAME}/**/*`,
+    '**/*',
   );
 
   return vscode.workspace.createFileSystemWatcher(pattern);
@@ -158,14 +155,12 @@ export function getGistInfoFromUri(
 ): { gistId: string; filePath: string } | undefined {
   const relativePath = path.relative(scratchRoot.fsPath, fileUri.fsPath);
   const segments = relativePath.split(path.sep);
-  const gistsIndex = segments.indexOf('gists');
-
-  if (gistsIndex < 0 || gistsIndex + 2 > segments.length - 1) {
+  if (segments.length < 2) {
     return undefined;
   }
 
-  const gistId = segments[gistsIndex + 1];
-  const fileSegments = segments.slice(gistsIndex + 2);
+  const gistId = segments[0];
+  const fileSegments = segments.slice(1);
   if (!gistId || fileSegments.length === 0) {
     return undefined;
   }
