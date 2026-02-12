@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
 import * as path from 'node:path';
+import * as os from 'node:os';
 
 import { getGithubSession, signInGithub, signOutGithub } from './auth/github';
 import { getScratchConfig } from './config';
@@ -27,7 +28,6 @@ import {
   updateGistFiles,
 } from './services/gist-sync';
 import { getGitUserIdentity } from './utils/git';
-import { hasWorkspaceFolders } from './utils/workspace';
 
 import {
   COMMANDS,
@@ -114,6 +114,10 @@ export async function activate(
     vscode.commands.registerCommand(COMMANDS.deleteNote, handleDeleteNote),
     vscode.commands.registerCommand(COMMANDS.renameNote, handleRenameNote),
     vscode.commands.registerCommand(
+      COMMANDS.openNoteInBrowser,
+      handleOpenNoteInBrowser,
+    ),
+    vscode.commands.registerCommand(
       COMMANDS.addNoteToGist,
       handleAddNoteToGist,
     ),
@@ -173,13 +177,6 @@ export async function activate(
   async function showUserIdentity(): Promise<void> {
     const config = getScratchConfig();
 
-    if (!hasWorkspaceFolders()) {
-      vscode.window.showWarningMessage(
-        'Scratchpad: open a workspace to detect user identity.',
-      );
-      return;
-    }
-
     if (config.userIdStrategy !== 'git') {
       vscode.window.showErrorMessage(
         `Scratchpad: unsupported userIdStrategy "${config.userIdStrategy}".`,
@@ -187,12 +184,13 @@ export async function activate(
       return;
     }
 
+    // Use workspace folder if available, otherwise use home directory for global git config
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) {
-      return;
-    }
+    const gitConfigPath = workspaceFolder
+      ? workspaceFolder.uri.fsPath
+      : os.homedir();
 
-    const identity = await getGitUserIdentity(workspaceFolder.uri.fsPath);
+    const identity = await getGitUserIdentity(gitConfigPath);
     if (!identity) {
       vscode.window.showWarningMessage(
         'Scratchpad: Git user identity not configured.',
@@ -207,8 +205,9 @@ export async function activate(
       .filter(Boolean)
       .join(' • ');
 
+    const source = workspaceFolder ? 'workspace' : 'global';
     vscode.window.showInformationMessage(
-      `Scratchpad user (${identity.source}): ${display}`,
+      `Scratchpad user (${source} ${identity.source}): ${display}`,
     );
   }
 
@@ -463,12 +462,12 @@ export async function activate(
     type GistChoice =
       | { type: 'all'; label: string; description: string }
       | {
-          type: 'gist';
-          label: string;
-          description: string;
-          detail?: string;
-          gist: GistSummary;
-        };
+        type: 'gist';
+        label: string;
+        description: string;
+        detail?: string;
+        gist: GistSummary;
+      };
 
     const gistChoices: GistChoice[] = [
       {
@@ -580,16 +579,20 @@ export async function activate(
     }
   }
 
-  async function handleDeleteNote(): Promise<void> {
+  async function handleDeleteNote(item?: {
+    resourceUri?: vscode.Uri;
+  }): Promise<void> {
     try {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
+      const selectedItem = item ?? gistFlatView.selection?.[0];
+      const fileUri =
+        selectedItem?.resourceUri ??
+        vscode.window.activeTextEditor?.document.uri;
+      const { gistsRoot } = await getScratchContext();
+
+      if (!fileUri) {
         vscode.window.showWarningMessage(MESSAGES.noFileOpen);
         return;
       }
-
-      const fileUri = editor.document.uri;
-      const { gistsRoot } = await getScratchContext();
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
@@ -625,16 +628,20 @@ export async function activate(
     }
   }
 
-  async function handleRenameNote(): Promise<void> {
+  async function handleRenameNote(item?: {
+    resourceUri?: vscode.Uri;
+  }): Promise<void> {
     try {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
+      const selectedItem = item ?? gistFlatView.selection?.[0];
+      const fileUri =
+        selectedItem?.resourceUri ??
+        vscode.window.activeTextEditor?.document.uri;
+      const { config, scratchRoot, gistsRoot } = await getScratchContext();
+
+      if (!fileUri) {
         vscode.window.showWarningMessage(MESSAGES.noFileOpen);
         return;
       }
-
-      const fileUri = editor.document.uri;
-      const { config, scratchRoot, gistsRoot } = await getScratchContext();
 
       // Check if the file is within the gists directory
       if (!fileUri.fsPath.includes(gistsRoot.fsPath)) {
@@ -694,6 +701,39 @@ export async function activate(
     } catch (error) {
       vscode.window.showErrorMessage(
         `Scratchpad: failed to rename note. ${String(error)}`,
+      );
+    }
+  }
+
+  async function handleOpenNoteInBrowser(item?: {
+    resourceUri?: vscode.Uri;
+    gistId?: string;
+  }): Promise<void> {
+    try {
+      const selectedItem =
+        item ?? gistFlatView.selection?.[0] ?? gistView.selection?.[0];
+      let gistId = selectedItem?.gistId;
+      if (!gistId) {
+        const fileUri =
+          selectedItem?.resourceUri ??
+          vscode.window.activeTextEditor?.document.uri;
+        if (fileUri) {
+          const { scratchRoot } = await getScratchContext();
+          const gistInfo = getGistInfoFromUri(scratchRoot, fileUri);
+          gistId = gistInfo?.gistId;
+        }
+      }
+
+      if (!gistId) {
+        vscode.window.showWarningMessage(MESSAGES.notScratchNote);
+        return;
+      }
+
+      const url = `https://gist.github.com/${gistId}`;
+      await vscode.env.openExternal(vscode.Uri.parse(url));
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: failed to open note in browser. ${String(error)}`,
       );
     }
   }

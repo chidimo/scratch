@@ -66,4 +66,5 @@ export const COMMANDS = {
   deleteGist: `${EXTENSION_ID}.deleteGist`,
   openScratchFolder: `${EXTENSION_ID}.openScratchFolder`,
   openExtensionSettings: `${EXTENSION_ID}.openExtensionSettings`,
+  openNoteInBrowser: `${EXTENSION_ID}.openNoteInBrowser`,
 } as const;

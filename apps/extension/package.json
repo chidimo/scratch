@@ -2,7 +2,7 @@
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
   "description": "Local .scratch folder integration for the Scratchpad system.",
-  "version": "0.3.6",
+  "version": "0.4.0",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",
@@ -44,11 +44,6 @@
         "title": "Scratch (Gists): Open .scratch Folder"
       },
       {
-        "command": "scratch.openExtensionSettings",
-        "title": "Scratch (Gists): Open Extension Settings",
-        "icon": "$(settings-gear)"
-      },
-      {
         "command": "scratch.showUserIdentity",
         "title": "Scratch (Gists): Show User Identity"
       },
@@ -65,46 +60,63 @@
         "title": "Scratch (Gists): Sign Out of GitHub"
       },
       {
+        "command": "scratch.openExtensionSettings",
+        "title": "Open settings",
+        "icon": "$(settings-gear)"
+      },
+      {
         "command": "scratch.syncGists",
-        "title": "Scratch (Gists): Sync GitHub Gists",
+        "title": "Sync GitHub notes",
         "icon": "$(sync)"
       },
       {
         "command": "scratch.refreshGists",
-        "title": "Scratch (Gists): Refresh Imported Gists",
+        "title": "Re-sync notes",
         "icon": "$(refresh)"
       },
       {
         "command": "scratch.refreshGistsInProgress",
-        "title": "Scratch (Gists): Refresh Imported Gists",
+        "title": "Syncing notes...",
         "icon": "$(sync~spin)"
       },
       {
         "command": "scratch.createNote",
-        "title": "Scratch (Gists): Create Note",
+        "title": "Create note",
         "icon": "$(add)"
       },
       {
         "command": "scratch.refreshScratchState",
-        "title": "Scratch (Gists): Refresh Scratch State"
+        "title": "Refresh extension state"
       },
       {
         "command": "scratch.deleteNote",
-        "title": "Delete Note"
+        "title": "Delete",
+        "icon": "$(trash)"
       },
       {
         "command": "scratch.renameNote",
-        "title": "Rename Note"
+        "title": "Rename",
+        "icon": "$(pencil)"
+      },
+      {
+        "command": "scratch.openNoteInBrowser",
+        "title": "Open in browser",
+        "icon": "$(globe)"
       },
       {
         "command": "scratch.addNoteToGist",
-        "title": "Scratch (Gists): Add Note",
+        "title": "Add Note",
         "icon": "$(plus)"
       },
       {
         "command": "scratch.deleteGist",
-        "title": "Scratch (Gists): Delete Gist",
+        "title": "Delete note",
         "icon": "$(trash)"
+      },
+      {
+        "command": "scratch.openNoteInBrowser",
+        "title": "Open in Browser",
+        "icon": "$(globe)"
       }
     ],
     "configuration": {
@@ -174,7 +186,7 @@
         {
           "id": "scratch",
           "title": "Scratch (Gists)",
-          "icon": "icon.png"
+          "icon": "media/activity-icon.svg"
         }
       ]
     },
@@ -261,14 +273,24 @@
           "group": "inline@2"
         },
         {
-          "command": "scratch.deleteNote",
-          "when": "view == scratch.gistsFlatView && viewItem == file",
-          "group": "inline@1"
+          "command": "scratch.openNoteInBrowser",
+          "when": "view == scratch.gistsView && viewItem == gist",
+          "group": "inline@3"
         },
         {
           "command": "scratch.renameNote",
           "when": "view == scratch.gistsFlatView && viewItem == file",
+          "group": "inline@1"
+        },
+        {
+          "command": "scratch.deleteNote",
+          "when": "view == scratch.gistsFlatView && viewItem == file",
           "group": "inline@2"
+        },
+        {
+          "command": "scratch.openNoteInBrowser",
+          "when": "view == scratch.gistsFlatView && viewItem == file",
+          "group": "inline@3"
         }
       ]
     }
