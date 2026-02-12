@@ -199,6 +199,10 @@
         {
           "id": "scratch.gistsView",
           "name": "Notes (Grouped by Gist)"
+        },
+        {
+          "id": "scratch.todosView",
+          "name": "TODOs"
         }
       ]
     },
@@ -252,6 +256,11 @@
         {
           "command": "scratch.refreshGistsInProgress",
           "when": "view == scratch.gistsFlatView && scratch.isRefreshingGists",
+          "group": "navigation"
+        },
+        {
+          "command": "scratch.refreshScratchState",
+          "when": "view == scratch.todosView",
           "group": "navigation"
         }
       ],

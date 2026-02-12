@@ -18,6 +18,7 @@ import {
   removeStaleMarkdownFiles,
 } from './utils/scratch';
 import { GistTreeProvider } from './views/gist-tree';
+import { TodoTreeProvider } from './views/todo-tree';
 
 import {
   createGist,
@@ -36,6 +37,7 @@ import {
   MESSAGES,
   SECRET_KEYS,
   VIEW_FLAT_ID,
+  VIEW_TODOS_ID,
   VIEW_WITH_GIST_ID,
 } from './constants';
 
@@ -44,6 +46,7 @@ const gistDeleteTimers = new Map<string, NodeJS.Timeout>();
 let lastGistRefreshAt: Date | null = null;
 let watchers: vscode.FileSystemWatcher[] = [];
 const gistUpdateTimers = new Map<string, NodeJS.Timeout>();
+let todoRefreshTimer: NodeJS.Timeout | null = null;
 
 export async function activate(
   context: vscode.ExtensionContext,
@@ -69,6 +72,7 @@ export async function activate(
     flat: true,
     isSignedIn: () => scratchSignedIn,
   });
+  const todoTreeProvider = new TodoTreeProvider();
   hydrateGistIdCache(context);
 
   const gistView = vscode.window.createTreeView(VIEW_WITH_GIST_ID, {
@@ -77,12 +81,16 @@ export async function activate(
   const gistFlatView = vscode.window.createTreeView(VIEW_FLAT_ID, {
     treeDataProvider: gistFlatTreeProvider,
   });
+  const todoView = vscode.window.createTreeView(VIEW_TODOS_ID, {
+    treeDataProvider: todoTreeProvider,
+  });
 
   const disposables: vscode.Disposable[] = [
     outputChannel,
     statusBar,
     gistView,
     gistFlatView,
+    todoView,
     vscode.commands.registerCommand(
       COMMANDS.refreshScratchState,
       refreshScratchState,
@@ -116,6 +124,10 @@ export async function activate(
     vscode.commands.registerCommand(
       COMMANDS.openNoteInBrowser,
       handleOpenNoteInBrowser,
+    ),
+    vscode.commands.registerCommand(
+      COMMANDS.openTodoLocation,
+      handleOpenTodoLocation,
     ),
     vscode.commands.registerCommand(
       COMMANDS.addNoteToGist,
@@ -165,13 +177,25 @@ export async function activate(
   async function refreshScratchState(): Promise<void> {
     const { config, scratchRoot } = await getScratchContext();
     outputChannel.appendLine(`Scratch folder ready: ${scratchRoot.fsPath}`);
-    resetWatchers(config, outputChannel, scratchRoot);
+    resetWatchers(config, outputChannel, scratchRoot, scheduleTodoRefresh);
     refreshGistViews();
   }
 
   function refreshGistViews(): void {
     gistTreeProvider.refresh();
     gistFlatTreeProvider.refresh();
+    todoTreeProvider.refresh();
+  }
+
+  function scheduleTodoRefresh(): void {
+    if (todoRefreshTimer) {
+      clearTimeout(todoRefreshTimer);
+    }
+
+    todoRefreshTimer = setTimeout(() => {
+      todoRefreshTimer = null;
+      todoTreeProvider.refresh();
+    }, 250);
   }
 
   async function showUserIdentity(): Promise<void> {
@@ -738,6 +762,26 @@ export async function activate(
     }
   }
 
+  async function handleOpenTodoLocation(entry: {
+    uri: vscode.Uri;
+    line: number;
+  }): Promise<void> {
+    try {
+      const document = await vscode.workspace.openTextDocument(entry.uri);
+      const editor = await vscode.window.showTextDocument(document, {
+        preview: false,
+      });
+      const line = Math.min(entry.line, document.lineCount - 1);
+      const range = document.lineAt(line).range;
+      editor.selection = new vscode.Selection(range.start, range.start);
+      editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Scratchpad: failed to open TODO location. ${String(error)}`,
+      );
+    }
+  }
+
   async function handleAddNoteToGist(item?: {
     gistId?: string;
   }): Promise<void> {
@@ -958,6 +1002,7 @@ function resetWatchers(
   config: ReturnType<typeof getScratchConfig>,
   outputChannel: vscode.OutputChannel,
   scratchRoot: vscode.Uri,
+  onScratchChange: () => void,
 ): void {
   disposeWatchers();
 
@@ -972,6 +1017,7 @@ function resetWatchers(
     watcher.onDidCreate((uri) => {
       outputChannel.appendLine(`Scratch file created: ${uri.fsPath}`);
       void guardGistFolderMutation(uri, scratchRoot, outputChannel, 'create');
+      onScratchChange();
       scheduleGistUpdate({
         scratchRoot,
         fileUri: uri,
@@ -980,6 +1026,7 @@ function resetWatchers(
     });
     watcher.onDidChange((uri) => {
       outputChannel.appendLine(`Scratch file updated: ${uri.fsPath}`);
+      onScratchChange();
       scheduleGistUpdate({
         scratchRoot,
         fileUri: uri,
@@ -989,6 +1036,7 @@ function resetWatchers(
     watcher.onDidDelete((uri) => {
       outputChannel.appendLine(`Scratch file deleted: ${uri.fsPath}`);
       void guardGistFolderMutation(uri, scratchRoot, outputChannel, 'delete');
+      onScratchChange();
       scheduleGistDelete({
         scratchRoot,
         fileUri: uri,

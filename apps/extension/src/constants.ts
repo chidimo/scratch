@@ -1,6 +1,7 @@
 export const EXTENSION_ID = 'scratch';
 export const VIEW_FLAT_ID = `${EXTENSION_ID}.gistsFlatView`;
 export const VIEW_WITH_GIST_ID = `${EXTENSION_ID}.gistsView`;
+export const VIEW_TODOS_ID = `${EXTENSION_ID}.todosView`;
 
 // GitHub authentication
 export const GITHUB_PROVIDER_ID = 'github';
@@ -67,4 +68,5 @@ export const COMMANDS = {
   openScratchFolder: `${EXTENSION_ID}.openScratchFolder`,
   openExtensionSettings: `${EXTENSION_ID}.openExtensionSettings`,
   openNoteInBrowser: `${EXTENSION_ID}.openNoteInBrowser`,
+  openTodoLocation: `${EXTENSION_ID}.openTodoLocation`,
 } as const;
