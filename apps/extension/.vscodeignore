@@ -1,4 +1,4 @@
 **/*.ts
 **/*.map
 **/tsconfig.json
-**/.vscode/**
+**/.vscode/**src/
