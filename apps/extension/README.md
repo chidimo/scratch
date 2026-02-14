@@ -8,6 +8,13 @@ Scratchpad brings a lightweight GitHub Gist-powered note system into VS Code wit
 - **VS Code Marketplace**: <https://marketplace.visualstudio.com/items?itemName=chidimo.scratch>
 - **Open VSX Registry**: <https://open-vsx.org/extension/chidimo/scratch>
 
+## 📚 Documentation
+
+- **[Deployment Guide](../../DEPLOYMENT.md)** - Extension publishing and web deployment instructions
+- **[Contribution Guide](../../CONTRIBUTING.md)** - How to contribute to the project
+- **[Implementation Plans](../../IMPLEMENTATION.md)** - Technical findings and implementation details
+- **[Changelog](./CHANGELOG.md)** - Version history and release notes
+
 ## ✨ Features
 
 ### 📝 Note Management
