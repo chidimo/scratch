@@ -2,7 +2,14 @@
 
 A cross-platform scratchpad system for developers to capture ideas on the go, with seamless sync between mobile and VSCode.
 
-## 🚀 Project Overview
+## � Documentation
+
+- **[Deployment Guide](./DEPLOYMENT.md)** - Extension publishing and web deployment instructions
+- **[Contribution Guide](./CONTRIBUTING.md)** - How to contribute to the project
+- **[Implementation Plans](./IMPLEMENTATION.md)** - Technical findings and implementation details
+- **[Extension Changelog](./apps/extension/CHANGELOG.md)** - VSCode extension version history
+
+## �🚀 Project Overview
 
 This project solves the common developer problem of losing great ideas while away from the keyboard. It provides:
 
