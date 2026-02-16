@@ -1,6 +1,5 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "nxCloudId": "697d4f4f8298878e61cf1dcf",
   "plugins": [
     {
       "plugin": "@nx/eslint/plugin",
