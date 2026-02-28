@@ -10,10 +10,7 @@ Scratchpad brings a lightweight GitHub Gist-powered note system into VS Code wit
 
 ## 📚 Documentation
 
-- **[Deployment Guide](../../DEPLOYMENT.md)** - Extension publishing and web deployment instructions
-- **[Contribution Guide](../../CONTRIBUTING.md)** - How to contribute to the project
-- **[Implementation Plans](../../IMPLEMENTATION.md)** - Technical findings and implementation details
-- **[Changelog](./CHANGELOG.md)** - Version history and release notes
+- **[Changelog](https://github.com/chidimo/scratch/blob/main/apps/extension/CHANGELOG.md)** - Version history and release notes
 
 ## ✨ Features
 
