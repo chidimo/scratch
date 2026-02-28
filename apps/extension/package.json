@@ -1,8 +1,8 @@
 {
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
-  "description": "Local scratch folder integration for the Scratchpad system.",
-  "version": "0.4.3",
+  "description": "Lightweight GitHub Gist-powered note system with automatic sync, TODO tracking, and dual view modes.",
+  "version": "0.5.0",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",

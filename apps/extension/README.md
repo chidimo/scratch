@@ -25,6 +25,7 @@ Scratchpad brings a lightweight GitHub Gist-powered note system into VS Code wit
 - **Rename Notes**: Rename notes locally and remotely in one action
 - **Open in Browser**: Open a note's gist on GitHub in your browser
 - **Delete Gists**: Remove entire gists with all their notes
+- **TODO Listing**: Automatically tracks and lists TODO items (e.g., `- [ ] task`) across all imported notes
 
 ### 🔄 Sync & Auto-Refresh
 
@@ -49,6 +50,7 @@ Scratchpad brings a lightweight GitHub Gist-powered note system into VS Code wit
 - Inline actions on gist folders:
   - ➕ Add a new note to the gist
   - 🗑️ Delete the entire gist
+- **Highlighting**: Active notes and their parent folders are highlighted for quick identification (color is customizable)
 - Clean, hierarchical view of your gist collection
 
 ### 🔐 GitHub Integration
@@ -69,6 +71,8 @@ All settings are available via VS Code Settings (`Cmd/Ctrl+,`):
   - Default: 15 minutes
 - **Folder Watching** (`scratch.watchScratchFolder`): Enable/disable file change detection
 - **Auto-Create** (`scratch.autoCreateScratchFolder`): Auto-create scratch folder on startup
+- **Accent Color** (`scratch.accentColor`): Choose the highlight color for active notes and folders
+- **Group TODOs** (`scratch.groupTodosByFile`): Toggle between grouped (by file) or flat list of TODOs
 
 ## 🚀 Quick Start
 
