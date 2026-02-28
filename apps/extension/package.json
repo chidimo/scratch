@@ -1,8 +1,8 @@
 {
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
-  "description": "Local scratch folder integration for the Scratchpad system.",
-  "version": "0.4.3",
+  "description": "Lightweight GitHub Gist-powered note system with automatic sync, TODO tracking, and dual view modes.",
+  "version": "0.5.0",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/chidimo/scratch",
@@ -112,11 +112,6 @@
         "command": "scratch.deleteGist",
         "title": "Delete note",
         "icon": "$(trash)"
-      },
-      {
-        "command": "scratch.openNoteInBrowser",
-        "title": "Open in Browser",
-        "icon": "$(globe)"
       }
     ],
     "configuration": {
@@ -172,6 +167,36 @@
             "30 minutes"
           ],
           "description": "Auto-refresh imported gists every N minutes. Setting to 0 disables auto-refresh."
+        },
+        "scratch.accentColor": {
+          "title": "Scratch (Gists): Accent Color",
+          "type": "string",
+          "default": "testing.iconPassed",
+          "enum": [
+            "testing.iconPassed",
+            "charts.blue",
+            "charts.red",
+            "charts.orange",
+            "charts.yellow",
+            "charts.purple",
+            "terminal.ansiCyan"
+          ],
+          "enumDescriptions": [
+            "Green (Default)",
+            "Blue",
+            "Red",
+            "Orange",
+            "Yellow",
+            "Purple",
+            "Cyan"
+          ],
+          "description": "The theme color used to highlight open notes and their parent gist folders."
+        },
+        "scratch.groupTodosByFile": {
+          "title": "Scratch (Gists): Group Todos By File",
+          "type": "boolean",
+          "default": true,
+          "description": "Group TODO items by the file they belong to."
         }
       }
     },
@@ -188,15 +213,18 @@
       "scratch": [
         {
           "id": "scratch.gistsFlatView",
-          "name": "Notes (Flat List)"
+          "name": "Notes (Flat List)",
+          "icon": "$(list-unordered)"
         },
         {
           "id": "scratch.gistsView",
-          "name": "Notes (Grouped by Gist)"
+          "name": "Notes (Grouped by Gist)",
+          "icon": "$(folder)"
         },
         {
           "id": "scratch.todosView",
-          "name": "TODOs"
+          "name": "TODOs",
+          "icon": "$(checklist)"
         }
       ]
     },

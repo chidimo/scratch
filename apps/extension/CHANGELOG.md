@@ -5,28 +5,21 @@ All notable changes to the Scratchpad VSCode Extension will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-02-28
 
 ### Added
 
-- Enhanced documentation structure with deployment, contributing, and implementation guides
-- Centralized constants management in `constants.ts`
-- Rate limit protection with increased debounce timing (5000ms)
-- Enhanced error messages and user feedback
-
-### Changed
-
-- Default auto-refresh interval increased to 30 minutes
-- Local-first approach for delete/rename operations
-- Better GitHub API rate limit handling
-- Improved code organization and maintainability
+- **Gist Folder Highlighting**: Automatically highlight gist folders in the tree view when they contain an open note.
+- **Customizable Accent Color**: New `scratch.accentColor` setting to choose your highlight color from a curated palette.
+- **TODO Item Grouping**: Group TODO items by file name in the TODOs view.
+- **Group Todos Toggle**: New `scratch.groupTodosByFile` setting to switch between grouped and flat TODO views.
+- **Improved Settings Navigation**: The "Open settings" command now uses the official `@ext` filter for better visibility.
+- **View Icons**: Added descriptive icons to tree views (Notes, TODOs) for better recognition.
 
 ### Fixed
 
-- Tree view collapse/expand functionality removed (due to VSCode API limitations)
-- Command handler issues with tree item parameters
-- Missing variable declarations and import issues
-- ESLint configuration for VSCode module resolution
+- Duplicate command registrations in `package.json`.
+- Missing icons placeholder warnings for tree view items.
 
 ## [0.4.3] - 2024-02-14
 

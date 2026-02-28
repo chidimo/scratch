@@ -1,9 +1,9 @@
 // eslint-disable-next-line import/no-unresolved
-import * as vscode from 'vscode';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { ScratchConfig, UserIdStrategy } from './types';
+import * as vscode from 'vscode';
 import { EXTENSION_ID } from './constants';
+import { ScratchConfig, UserIdStrategy } from './types';
 
 function resolveStoragePath(rawPath: string | undefined): string {
   if (!rawPath) {
@@ -30,5 +30,7 @@ export function getScratchConfig(): ScratchConfig {
     watchScratchFolder: config.get<boolean>('watchScratchFolder', true),
     userIdStrategy: config.get<UserIdStrategy>('userIdStrategy', 'git'),
     gistAutoRefreshMinutes: config.get<number>('gistAutoRefreshMinutes', 0),
+    accentColor: config.get<string>('accentColor', 'testing.iconPassed'),
+    groupTodosByFile: config.get<boolean>('groupTodosByFile', true),
   };
 }

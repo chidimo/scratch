@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
-import * as vscode from 'vscode';
-import * as path from 'node:path';
 import * as os from 'node:os';
+import * as path from 'node:path';
+import * as vscode from 'vscode';
 
 import { getGithubSession, signInGithub, signOutGithub } from './auth/github';
 import { getScratchConfig } from './config';
@@ -85,12 +85,79 @@ export async function activate(
     treeDataProvider: todoTreeProvider,
   });
 
+  const lastActiveUris: vscode.Uri[] = [];
+  const activeNoteDecorationProvider = new (class
+    implements vscode.FileDecorationProvider
+  {
+    private readonly _onDidChangeFileDecorations = new vscode.EventEmitter<
+      vscode.Uri | vscode.Uri[] | undefined
+    >();
+    readonly onDidChangeFileDecorations =
+      this._onDidChangeFileDecorations.event;
+
+    refresh() {
+      this._onDidChangeFileDecorations.fire(undefined);
+    }
+
+    constructor() {
+      vscode.window.tabGroups.onDidChangeTabs((e) => {
+        const uris = [...e.opened, ...e.changed, ...e.closed]
+          .map((tab) => (tab.input as any)?.uri as vscode.Uri | undefined)
+          .filter((uri): uri is vscode.Uri => !!uri);
+
+        if (uris.length > 0) {
+          const parentUris = uris.map((u) =>
+            u.with({ path: path.dirname(u.path) }),
+          );
+          this._onDidChangeFileDecorations.fire([...uris, ...parentUris]);
+        }
+      });
+    }
+
+    provideFileDecoration(
+      uri: vscode.Uri,
+    ): vscode.ProviderResult<vscode.FileDecoration> {
+      const openUris = vscode.window.tabGroups.all
+        .flatMap((group) =>
+          group.tabs.map(
+            (tab) => (tab.input as any)?.uri as vscode.Uri | undefined,
+          ),
+        )
+        .filter(Boolean);
+
+      const isOpen = openUris.some((u) => u?.toString() === uri.toString());
+      const { accentColor } = getScratchConfig();
+
+      if (isOpen) {
+        return {
+          color: new vscode.ThemeColor(accentColor),
+        };
+      }
+
+      // Check if this URI is a directory and if any open file is inside it
+      const hasOpenChild = openUris.some((u) => {
+        const parentPath = path.dirname(u!.path);
+        const folderPath = uri.path;
+        return parentPath === folderPath;
+      });
+
+      if (hasOpenChild) {
+        return {
+          color: new vscode.ThemeColor(accentColor),
+        };
+      }
+
+      return undefined;
+    }
+  })();
+
   const disposables: vscode.Disposable[] = [
     outputChannel,
     statusBar,
     gistView,
     gistFlatView,
     todoView,
+    vscode.window.registerFileDecorationProvider(activeNoteDecorationProvider),
     vscode.commands.registerCommand(
       COMMANDS.refreshScratchState,
       refreshScratchState,
@@ -152,6 +219,14 @@ export async function activate(
       openExtensionSettings,
     ),
     vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration('scratch.accentColor')) {
+        activeNoteDecorationProvider.refresh();
+      }
+
+      if (event.affectsConfiguration('scratch.groupTodosByFile')) {
+        todoTreeProvider.refresh();
+      }
+
       if (event.affectsConfiguration('scratch')) {
         refreshScratchState().catch((error) => {
           outputChannel.appendLine(
@@ -266,7 +341,7 @@ export async function activate(
   async function openExtensionSettings(): Promise<void> {
     await vscode.commands.executeCommand(
       'workbench.action.openSettings',
-      'Scratch (Gists)',
+      '@ext:chidimo.scratch',
     );
   }
 
@@ -486,12 +561,12 @@ export async function activate(
     type GistChoice =
       | { type: 'all'; label: string; description: string }
       | {
-        type: 'gist';
-        label: string;
-        description: string;
-        detail?: string;
-        gist: GistSummary;
-      };
+          type: 'gist';
+          label: string;
+          description: string;
+          detail?: string;
+          gist: GistSummary;
+        };
 
     const gistChoices: GistChoice[] = [
       {
