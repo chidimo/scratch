@@ -20,4 +20,5 @@ export interface ScratchConfig {
   watchScratchFolder: boolean;
   userIdStrategy: UserIdStrategy;
   gistAutoRefreshMinutes: number;
+  accentColor: string;
 }

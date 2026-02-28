@@ -172,6 +172,30 @@
             "30 minutes"
           ],
           "description": "Auto-refresh imported gists every N minutes. Setting to 0 disables auto-refresh."
+        },
+        "scratch.accentColor": {
+          "title": "Scratch (Gists): Accent Color",
+          "type": "string",
+          "default": "testing.iconPassed",
+          "enum": [
+            "testing.iconPassed",
+            "charts.blue",
+            "charts.red",
+            "charts.orange",
+            "charts.yellow",
+            "charts.purple",
+            "terminal.ansiCyan"
+          ],
+          "enumDescriptions": [
+            "Green (Default)",
+            "Blue",
+            "Red",
+            "Orange",
+            "Yellow",
+            "Purple",
+            "Cyan"
+          ],
+          "description": "The theme color used to highlight open notes and their parent gist folders."
         }
       }
     },

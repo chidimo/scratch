@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-unresolved
-import * as vscode from 'vscode';
 import * as path from 'node:path';
+import * as vscode from 'vscode';
 import { COMMANDS } from '../constants';
 import { getScratchContext, isMarkdownFile } from '../utils/scratch';
 
@@ -154,14 +154,28 @@ export class GistTreeProvider implements vscode.TreeDataProvider<GistTreeItem> {
           ];
         }
 
-        return gistFolders.map(
-          (name) =>
-            new GistTreeItem(
+        return Promise.all(
+          gistFolders.map(async (name) => {
+            const gistFolder = vscode.Uri.joinPath(gistsRoot, name);
+            const gistEntries = await vscode.workspace.fs.readDirectory(
+              gistFolder,
+            );
+            const markdownFiles = gistEntries
+              .filter(
+                ([filename, type]) =>
+                  type === vscode.FileType.File && isMarkdownFile(filename),
+              )
+              .map(([filename]) => filename)
+              .sort((a, b) => a.localeCompare(b));
+
+            return new GistTreeItem(
               'gist',
               name,
               vscode.TreeItemCollapsibleState.Collapsed,
               vscode.Uri.joinPath(gistsRoot, name),
-            ),
+              markdownFiles.length > 0 ? markdownFiles.join('\n') : 'No notes',
+            );
+          }),
         );
       }
 
