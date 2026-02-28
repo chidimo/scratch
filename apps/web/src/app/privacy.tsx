@@ -82,11 +82,11 @@ export const PrivacyPolicy = () => {
               </span>
               <a
                 className="text-blue-600 hover:text-blue-700 ml-1"
-                href="https://github.com/chidimo/scratch/issues"
+                href="https://github.com/Clegina/scratch/issues"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                github.com/chidimo/scratch
+                github.com/Clegina/scratch
               </a>
               <span>.</span>
             </p>

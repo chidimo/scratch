@@ -5,9 +5,9 @@
   "version": "0.5.0",
   "publisher": "chidimo",
   "license": "MIT",
-  "homepage": "https://github.com/chidimo/scratch",
+  "homepage": "https://github.com/Clegina/scratch",
   "bugs": {
-    "url": "https://github.com/chidimo/scratch/issues"
+    "url": "https://github.com/Clegina/scratch/issues"
   },
   "icon": "media/scratch-icon.png",
   "keywords": [
@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/chidimo/scratch.git"
+    "url": "https://github.com/Clegina/scratch.git"
   },
   "engines": {
     "vscode": "^1.82.0"
