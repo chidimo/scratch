@@ -2,7 +2,7 @@
   "name": "scratch",
   "displayName": "Scratchpad (Gists)",
   "description": "Lightweight GitHub Gist-powered note system with automatic sync, TODO tracking, and dual view modes.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "chidimo",
   "license": "MIT",
   "homepage": "https://github.com/Clegina/scratch",

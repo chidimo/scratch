@@ -117,13 +117,38 @@ export async function activate(
     provideFileDecoration(
       uri: vscode.Uri,
     ): vscode.ProviderResult<vscode.FileDecoration> {
+      const scratchRoot = vscode.Uri.file(getScratchConfig().storagePath);
+      const isWithinScratchRoot = (candidate: vscode.Uri): boolean => {
+        if (candidate.scheme !== scratchRoot.scheme) {
+          return false;
+        }
+
+        const relativePath = path.relative(
+          scratchRoot.fsPath,
+          candidate.fsPath,
+        );
+
+        if (relativePath === '') {
+          return true;
+        }
+
+        return (
+          !relativePath.startsWith('..') && !path.isAbsolute(relativePath)
+        );
+      };
+
+      if (!isWithinScratchRoot(uri)) {
+        return undefined;
+      }
+
       const openUris = vscode.window.tabGroups.all
         .flatMap((group) =>
           group.tabs.map(
             (tab) => (tab.input as any)?.uri as vscode.Uri | undefined,
           ),
         )
-        .filter(Boolean);
+        .filter((tabUri): tabUri is vscode.Uri => Boolean(tabUri))
+        .filter(isWithinScratchRoot);
 
       const isOpen = openUris.some((u) => u?.toString() === uri.toString());
       const { accentColor } = getScratchConfig();
