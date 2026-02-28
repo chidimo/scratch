@@ -341,7 +341,7 @@ export async function activate(
   async function openExtensionSettings(): Promise<void> {
     await vscode.commands.executeCommand(
       'workbench.action.openSettings',
-      'Scratch (Gists)',
+      '@ext:chidimo.scratch',
     );
   }
 

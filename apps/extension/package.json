@@ -112,11 +112,6 @@
         "command": "scratch.deleteGist",
         "title": "Delete note",
         "icon": "$(trash)"
-      },
-      {
-        "command": "scratch.openNoteInBrowser",
-        "title": "Open in Browser",
-        "icon": "$(globe)"
       }
     ],
     "configuration": {
@@ -218,15 +213,18 @@
       "scratch": [
         {
           "id": "scratch.gistsFlatView",
-          "name": "Notes (Flat List)"
+          "name": "Notes (Flat List)",
+          "icon": "$(list-unordered)"
         },
         {
           "id": "scratch.gistsView",
-          "name": "Notes (Grouped by Gist)"
+          "name": "Notes (Grouped by Gist)",
+          "icon": "$(folder)"
         },
         {
           "id": "scratch.todosView",
-          "name": "TODOs"
+          "name": "TODOs",
+          "icon": "$(checklist)"
         }
       ]
     },
