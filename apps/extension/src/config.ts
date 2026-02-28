@@ -31,5 +31,6 @@ export function getScratchConfig(): ScratchConfig {
     userIdStrategy: config.get<UserIdStrategy>('userIdStrategy', 'git'),
     gistAutoRefreshMinutes: config.get<number>('gistAutoRefreshMinutes', 0),
     accentColor: config.get<string>('accentColor', 'testing.iconPassed'),
+    groupTodosByFile: config.get<boolean>('groupTodosByFile', true),
   };
 }

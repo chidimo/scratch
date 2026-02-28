@@ -196,6 +196,12 @@
             "Cyan"
           ],
           "description": "The theme color used to highlight open notes and their parent gist folders."
+        },
+        "scratch.groupTodosByFile": {
+          "title": "Scratch (Gists): Group Todos By File",
+          "type": "boolean",
+          "default": true,
+          "description": "Group TODO items by the file they belong to."
         }
       }
     },

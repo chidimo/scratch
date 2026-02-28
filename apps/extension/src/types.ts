@@ -21,4 +21,5 @@ export interface ScratchConfig {
   userIdStrategy: UserIdStrategy;
   gistAutoRefreshMinutes: number;
   accentColor: string;
+  groupTodosByFile: boolean;
 }

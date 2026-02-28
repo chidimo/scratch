@@ -223,6 +223,10 @@ export async function activate(
         activeNoteDecorationProvider.refresh();
       }
 
+      if (event.affectsConfiguration('scratch.groupTodosByFile')) {
+        todoTreeProvider.refresh();
+      }
+
       if (event.affectsConfiguration('scratch')) {
         refreshScratchState().catch((error) => {
           outputChannel.appendLine(
