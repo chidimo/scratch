@@ -5,6 +5,7 @@
   },
   "build": {
     "development": {
+      "node": "22.14.0",
       "developmentClient": true,
       "distribution": "internal",
       "android": {
@@ -15,12 +16,14 @@
       }
     },
     "preview": {
+      "node": "22.14.0",
       "distribution": "internal",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "node": "22.14.0",
       "autoIncrement": true,
       "prebuildCommand": "npx expo prebuild --clean",
       "android": {
@@ -29,6 +32,7 @@
       "distribution": "store"
     },
     "local": {
+      "node": "22.14.0",
       "distribution": "internal",
       "android": {
         "buildType": "apk",
