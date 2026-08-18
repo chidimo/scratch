@@ -12,17 +12,17 @@ export const PrivacyPolicy = () => {
         <div className="max-w-3xl mx-auto px-6 py-12">
           <Link
             to="/"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-sm text-brand-500 hover:text-brand-600 font-medium"
           >
             ← Back to Scratch (Gists)
           </Link>
 
-          <h1 className="text-3xl font-bold text-gray-900 mt-6 mb-6">
+          <h1 className="text-3xl font-bold text-brand-900 mt-6 mb-6">
             Privacy Policy for Scratch (Gists)
           </h1>
 
           <section className="space-y-4 text-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-brand-900">
               Introduction
             </h2>
             <p>
@@ -31,7 +31,7 @@ export const PrivacyPolicy = () => {
               information when you use our application.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-brand-900">
               Data Collection
             </h2>
             <p>
@@ -42,14 +42,14 @@ export const PrivacyPolicy = () => {
               syncing.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">Data Usage</h2>
+            <h2 className="text-xl font-semibold text-brand-900">Data Usage</h2>
             <p>
               We use your GitHub access token to fetch and update gists, and to
               display your GitHub profile details (such as username and avatar)
               within the app.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-brand-900">
               Data Sharing
             </h2>
             <p>
@@ -58,14 +58,14 @@ export const PrivacyPolicy = () => {
               synchronization.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">User Rights</h2>
+            <h2 className="text-xl font-semibold text-brand-900">User Rights</h2>
             <p>
               You can revoke access at any time by signing out of the app and
               revoking the GitHub OAuth app in your GitHub settings. You can
               also delete any gists directly on GitHub.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-brand-900">
               Changes to This Privacy Policy
             </h2>
             <p>
@@ -74,14 +74,14 @@ export const PrivacyPolicy = () => {
               changes are effective immediately after they are posted.
             </p>
 
-            <h2 className="text-xl font-semibold text-gray-900">Contact Us</h2>
+            <h2 className="text-xl font-semibold text-brand-900">Contact Us</h2>
             <p>
               <span>
                 If you have any questions or suggestions about our Privacy
                 Policy, please open an issue at
               </span>
               <a
-                className="text-blue-600 hover:text-blue-700 ml-1"
+                className="text-brand-500 hover:text-brand-600 ml-1"
                 href="https://github.com/Clegina/scratch/issues"
                 target="_blank"
                 rel="noopener noreferrer"
