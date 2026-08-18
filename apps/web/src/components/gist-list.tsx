@@ -79,7 +79,7 @@ export const GistList = () => {
       <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white">
         <KnownUserHeader />
 
-        <main className="max-w-6xl mx-auto px-6 py-8">
+        <main className="max-w-7xl mx-auto px-6 py-8">
           {gists.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -97,7 +97,7 @@ export const GistList = () => {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-brand-900 mb-4">
                 No gists found
               </h2>
               <p className="text-gray-600 mb-6">
@@ -107,7 +107,7 @@ export const GistList = () => {
                 href="https://gist.github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl"
+                className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl"
               >
                 <svg
                   className="w-5 h-5"
@@ -126,7 +126,7 @@ export const GistList = () => {
               </a>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {gists.map((gist: Note) => (
                 <GistListItem key={gist.id} gist={gist} />
               ))}
@@ -135,7 +135,7 @@ export const GistList = () => {
 
           {isPending && gists.length > 0 && (
             <div className="flex items-center justify-center gap-2 py-4">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-gray-600">Refreshing...</span>
             </div>
           )}
