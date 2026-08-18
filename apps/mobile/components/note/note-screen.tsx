@@ -50,7 +50,6 @@ export const NoteScreen = () => {
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const pagerRef = useRef<ScrollView | null>(null);
   const [pagerWidth, setPagerWidth] = useState(0);
-  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update form when note data changes
   useEffect(() => {
@@ -145,67 +144,6 @@ export const NoteScreen = () => {
       }
     }
   };
-
-  useEffect(() => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-      autoSaveTimeoutRef.current = null;
-    }
-
-    if (!note || !id || isPreviewing || isMutating || isDeletingNote) {
-      return;
-    }
-
-    const fileName = activeFile ?? note.file_name ?? note.md_files?.[0];
-    if (!fileName) {
-      return;
-    }
-
-    const draft = drafts[fileName];
-    if (!draft) {
-      return;
-    }
-
-    const baselineTitle = fileName.replace('.md', '');
-    const baselineContent = note.file_contents?.[fileName] ?? '';
-    const hasChanges =
-      draft.title.trim() !== baselineTitle.trim() ||
-      draft.content !== baselineContent;
-
-    if (!hasChanges || !draft.title.trim()) {
-      return;
-    }
-
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      const gistId = note.gist_id ?? id ?? '';
-      if (!gistId) {
-        return;
-      }
-      updateGist({
-        id: gistId,
-        title: draft.title.trim(),
-        content: draft.content,
-        isPublic,
-        fileName,
-      });
-    }, 750);
-
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [
-    activeFile,
-    drafts,
-    id,
-    isDeletingNote,
-    isMutating,
-    isPreviewing,
-    isPublic,
-    note,
-    updateGist,
-  ]);
 
   const handleSave = async () => {
     if (!activeDraft.title.trim()) {

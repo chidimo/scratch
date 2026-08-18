@@ -5,6 +5,7 @@
   "engines": {
     "node": ">=22"
   },
+  "workspaces": ["apps/mobile", "apps/dev-auth-server", "libs/shared"],
   "scripts": {
     "start": "nx start mobile",
     "start:web": "concurrently \"nx dev web\" \"tsx apps/dev-auth-server/index.ts\"",
