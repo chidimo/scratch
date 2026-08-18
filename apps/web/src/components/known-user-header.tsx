@@ -6,7 +6,7 @@ export const KnownUserHeader = () => {
   const { user } = useUserWithClient();
 
   return (
-    <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-100">
+    <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-brand-900/5">
       <div className="max-w-6xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link to="/">
@@ -16,7 +16,7 @@ export const KnownUserHeader = () => {
                 alt="Scratch (Gists) logo"
                 className="w-10 h-10 rounded-xl"
               />
-              <h1 className="text-lg font-bold text-gray-900">
+              <h1 className="text-lg font-bold text-brand-900">
                 Scratch (Gists)
               </h1>
             </div>

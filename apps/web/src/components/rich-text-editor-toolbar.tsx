@@ -265,7 +265,7 @@ export const RteToolbar = ({ editor }: { editor: Editor }) => {
             aria-label="Insert YouTube video"
             className={mergeClasses(
               'px-2 h-10 flex items-center',
-              tbItem.isActive() ? 'text-blue-500' : 'text-gray-800',
+              tbItem.isActive() ? 'text-brand-500' : 'text-gray-800',
             )}
             onClick={(e) => {
               e.preventDefault();
@@ -296,7 +296,7 @@ export const RteToolbar = ({ editor }: { editor: Editor }) => {
         aria-label={tbItem.label}
         className={mergeClasses(
           'px-2 h-10 flex items-center',
-          tbItem.isActive() ? 'text-blue-500' : 'text-gray-800',
+          tbItem.isActive() ? 'text-brand-500' : 'text-gray-800',
         )}
         onClick={(e) => {
           e.preventDefault();

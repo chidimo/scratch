@@ -11,10 +11,10 @@ import { useUserWithClient } from '../hooks/use-shared-hooks';
 const LoadingState = () => (
   <>
     <PageMetaTitle title="Loading gist" />
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white flex items-center justify-center">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <h2 className="text-2xl font-semibold text-gray-900">
+        <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h2 className="text-2xl font-semibold text-brand-900">
           Loading gist...
         </h2>
       </div>
@@ -30,14 +30,14 @@ type ErrorStateProps = {
 const ErrorState = ({ message, onRetry }: ErrorStateProps) => (
   <>
     <PageMetaTitle title="Error" />
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white flex items-center justify-center px-6">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
+        <h2 className="text-2xl font-bold text-brand-900 mb-4">Error</h2>
         <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={onRetry}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+            className="bg-brand-500 hover:bg-brand-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
           >
             Try Again
           </button>
@@ -53,9 +53,9 @@ const ErrorState = ({ message, onRetry }: ErrorStateProps) => (
 const NotFoundState = () => (
   <>
     <PageMetaTitle title="Gist not found" />
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white flex items-center justify-center px-6">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-10 w-full max-w-md text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">
+        <h2 className="text-2xl font-bold text-brand-900 mb-3">
           Gist not found
         </h2>
         <p className="text-gray-600 mb-6">
@@ -63,7 +63,7 @@ const NotFoundState = () => (
         </p>
         <Link
           to="/"
-          className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+          className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
         >
           Back to gists
         </Link>
@@ -233,7 +233,7 @@ export const GistDetail = () => {
         title={activeGist.title || 'Untitled Gist'}
         description={`Details for ${activeGist.title || 'a gist'} from ${activeGist.owner_login || 'GitHub user'}`}
       />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white">
         <KnownUserHeader />
 
         <div className="max-w-5xl mx-auto px-6 py-8">
@@ -241,7 +241,7 @@ export const GistDetail = () => {
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900 mb-2">
+                  <h1 className="text-lg font-bold text-brand-900 mb-2">
                     {activeGist.title || 'Untitled Gist'}
                   </h1>
                   <p className="text-xs text-gray-600">
@@ -283,7 +283,7 @@ export const GistDetail = () => {
 
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-brand-900">
                 Markdown Files ({markdownFiles.length})
               </h2>
               <button
@@ -293,7 +293,7 @@ export const GistDetail = () => {
                 disabled={
                   !isDirty || updateGistFileContent.isPending || !activeFile
                 }
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {updateGistFileContent.isPending ? 'Saving...' : 'Save file'}
               </button>
@@ -323,8 +323,8 @@ export const GistDetail = () => {
                       }}
                       className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                         activeFile === file
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
+                          ? 'bg-brand-500 text-white border-brand-500'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300'
                       }`}
                     >
                       File: {index + 1}

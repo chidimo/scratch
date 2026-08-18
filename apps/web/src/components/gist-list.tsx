@@ -19,10 +19,10 @@ export const GistList = () => {
     return (
       <>
         <PageMetaTitle title="Loading" />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white flex items-center justify-center">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h2 className="text-2xl font-semibold text-gray-900">
+            <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-2xl font-semibold text-brand-900">
               Loading your gists...
             </h2>
           </div>
@@ -35,8 +35,8 @@ export const GistList = () => {
     return (
       <>
         <PageMetaTitle title="Error" />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
+        <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white flex items-center justify-center px-6">
+          <div className="bg-white rounded-2xl shadow-xl shadow-brand-900/5 ring-1 ring-brand-900/5 p-8 w-full max-w-md text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
                 className="w-8 h-8 text-red-600"
@@ -52,7 +52,7 @@ export const GistList = () => {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
+            <h2 className="text-2xl font-bold text-brand-900 mb-4">Error</h2>
             <p className="text-gray-600 mb-6">
               {error instanceof Error ? error.message : 'Failed to load gists'}
             </p>
@@ -60,7 +60,7 @@ export const GistList = () => {
               onClick={() => {
                 void refetch();
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              className="bg-brand-500 hover:bg-brand-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
             >
               Try Again
             </button>
@@ -76,7 +76,7 @@ export const GistList = () => {
         title={`${user?.name || user?.login}'s Gists`}
         description={`Manage and view ${user?.public_gists} gists from ${user?.name || user?.login} on Scratch (Gists)`}
       />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white">
         <KnownUserHeader />
 
         <main className="max-w-6xl mx-auto px-6 py-8">

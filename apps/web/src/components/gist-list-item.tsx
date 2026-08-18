@@ -13,7 +13,7 @@ export const GistListItem = ({ gist }: Props) => {
         <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-4">
           <Link
             to={`/gists/${gist.id}`}
-            className="hover:text-blue-600 transition-colors"
+            className="hover:text-brand-500 transition-colors"
           >
             {gist.title || 'Untitled Gist'}
           </Link>
@@ -46,7 +46,7 @@ export const GistListItem = ({ gist }: Props) => {
         <div className="flex items-center gap-4">
           <Link
             to={`/gists/${gist.id}`}
-            className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+            className="text-brand-500 hover:text-brand-600 font-medium text-sm transition-colors"
           >
             View →
           </Link>

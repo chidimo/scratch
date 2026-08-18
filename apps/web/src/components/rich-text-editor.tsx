@@ -72,7 +72,7 @@ export const RichTextEditor = (props: Props) => {
   return (
     <div className={mergeClasses('mt-2 bg-white', className)}>
       {label ? <label className="mb-1 block">{label}</label> : null}
-      <div className="border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-indigo-600 focus-within:border-indigo-600 overflow-hidden">
+      <div className="border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-brand-500 focus-within:border-brand-500 overflow-hidden">
         {editor && <RteToolbar editor={editor} />}
 
         {/* Toggle Preview Button */}
@@ -82,7 +82,7 @@ export const RichTextEditor = (props: Props) => {
             onClick={() => setShowPreview(!showPreview)}
             className={mergeClasses(
               'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-              showPreview ? 'bg-indigo-600' : 'bg-gray-300',
+              showPreview ? 'bg-brand-500' : 'bg-gray-300',
             )}
           >
             <span
