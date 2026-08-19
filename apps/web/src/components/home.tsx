@@ -23,7 +23,7 @@ export const Home = () => {
   }
 
   if (!user) {
-    return <UnknownUser title="Scratch (Gists)" />;
+    return <UnknownUser title="Scratch" />;
   }
 
   return <Navigate to="/gists" />;
