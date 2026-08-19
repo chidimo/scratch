@@ -241,7 +241,7 @@ export const GistDetail = () => {
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight mb-2">
+                  <h1 className="text-xl font-bold text-brand-900 mb-2">
                     {activeGist.title || 'Untitled Gist'}
                   </h1>
                   <p className="text-xs text-gray-600">
