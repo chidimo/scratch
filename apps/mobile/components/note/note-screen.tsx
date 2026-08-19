@@ -18,7 +18,6 @@ import {
 } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { CustomSwitch } from '@/components/form-elements/custom-switch';
 import { NoteActionBar } from './note-action-bar';
 import { HorizontalFileTabs } from './horizontal-file-tabs';
 import { NoteEditor } from './note-editor';
@@ -51,7 +50,6 @@ export const NoteScreen = () => {
   const [drafts, setDrafts] = useState<
     Record<string, { title: string; content: string }>
   >({});
-  const [isPublic, setIsPublic] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const pagerRef = useRef<ScrollView | null>(null);
@@ -75,7 +73,6 @@ export const NoteScreen = () => {
 
       setActiveFile(initialFile);
       setDrafts(initialDrafts);
-      setIsPublic(note.is_public ?? false);
     }
   }, [note]);
 
@@ -173,7 +170,6 @@ export const NoteScreen = () => {
         id: gistId,
         title: activeDraft.title.trim(),
         content: activeDraft.content.trim(),
-        isPublic,
         fileName: activeFile ?? note?.file_name,
       });
 
@@ -189,32 +185,6 @@ export const NoteScreen = () => {
     }
   };
 
-  const handlePrivacyToggle = async (nextValue: boolean) => {
-    if (!note || !id || isMutating) {
-      return;
-    }
-
-    const previousValue = isPublic;
-    const nextTitle = activeDraft.title.trim() || note.title;
-    const nextContent = activeDraft.content.trim() || note.content;
-    const gistId = note.gist_id ?? id ?? '';
-    setIsPublic(nextValue);
-
-    try {
-      await updateGist({
-        id: gistId,
-        title: nextTitle,
-        content: nextContent,
-        isPublic: nextValue,
-        fileName: activeFile ?? note.file_name,
-      });
-    } catch (error) {
-      console.error('Error updating note privacy:', error);
-      setIsPublic(previousValue);
-      Alert.alert('Error', 'Failed to update note privacy. Please try again.');
-    }
-  };
-
   const handleCancel = () => {
     const baselineTitle =
       (activeFile ? activeFile.replace('.md', '') : note?.title) ?? '';
@@ -222,8 +192,7 @@ export const NoteScreen = () => {
       (activeFile && note?.file_contents?.[activeFile]) ?? note?.content ?? '';
     const hasChanges =
       activeDraft.title.trim() !== baselineTitle.trim() ||
-      activeDraft.content.trim() !== baselineContent.trim() ||
-      isPublic !== (note?.is_public ?? false);
+      activeDraft.content.trim() !== baselineContent.trim();
 
     if (hasChanges) {
       Alert.alert(
@@ -342,14 +311,6 @@ export const NoteScreen = () => {
             onChange={handleFileChange}
           />
         ) : null}
-        <ThemedView style={styles.privacyRow}>
-          <CustomSwitch
-            value={isPublic}
-            onChange={handlePrivacyToggle}
-            label={isPublic ? 'Public gist' : 'Private gist'}
-            containerStyle={{ padding: 6 }}
-          />
-        </ThemedView>
 
         <ScrollView
           ref={pagerRef}
@@ -460,9 +421,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 120,
-  },
-  privacyRow: {
-    marginBottom: 12,
   },
   errorText: {
     fontSize: 16,

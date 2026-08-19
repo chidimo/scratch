@@ -71,19 +71,17 @@ export const CustomButton = (props: Props) => {
       onPress={disabled ? () => null : onPress}
       style={({ pressed }) => {
         return [
-          typeof title === 'string'
-            ? {
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: 50,
-                borderRadius: 4,
-                paddingVertical: 8,
-                backgroundColor: variantBg[variant],
-                opacity: pressed || disabled ? 0.8 : 1,
-              }
-            : {},
+          {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: 50,
+            borderRadius: 4,
+            paddingVertical: 8,
+            backgroundColor: variantBg[variant],
+            opacity: pressed || disabled ? 0.8 : 1,
+          },
           containerStyle,
         ];
       }}

@@ -37,7 +37,7 @@ export const NewUser = () => {
         </ThemedText>
         <CustomButton
           variant="PRIMARY"
-          containerStyle={[styles.signInButton, { backgroundColor: tint }]}
+          containerStyle={styles.signInButton}
           onPress={signIn}
           title={
             <View style={styles.signInButtonContent}>
@@ -86,6 +86,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 52,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   signInButtonContent: {
     flexDirection: 'row',
