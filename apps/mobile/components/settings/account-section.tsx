@@ -23,7 +23,9 @@ export const AccountSection = () => {
               Linking.openURL(profileUrl);
             }}
           >
-            <ThemedText style={styles.userLogin}>@{user.login}</ThemedText>
+            <ThemedText style={styles.userLogin} type="link">
+              @{user.login}
+            </ThemedText>
           </TouchableOpacity>
           <ThemedText style={styles.userName}>{user.name}</ThemedText>
           <ThemedText style={styles.userEmail}>{user.email}</ThemedText>
@@ -62,7 +64,6 @@ const styles = {
   },
   userLogin: {
     fontSize: 16,
-    color: '#2563eb',
     textDecorationLine: 'underline' as const,
     marginBottom: 6,
   },

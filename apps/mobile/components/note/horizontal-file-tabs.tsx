@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: 2,
     bottom: 0,
-    backgroundColor: '#2563eb',
     borderRadius: 999,
   },
 });

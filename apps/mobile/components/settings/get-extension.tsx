@@ -15,7 +15,7 @@ export const GetExtension = () => {
           )
         }
       >
-        <ThemedText style={styles.extensionLinkText}>
+        <ThemedText style={styles.extensionLinkText} type="link">
           VSCode Marketplace
         </ThemedText>
       </TouchableOpacity>
@@ -33,7 +33,9 @@ export const GetExtension = () => {
         style={styles.extensionLinkButton}
         onPress={() => Linking.openURL('https://scratch.chidiorji.com')}
       >
-        <ThemedText style={styles.extensionLinkText}>On the web</ThemedText>
+        <ThemedText style={styles.extensionLinkText} type="link">
+          On the web
+        </ThemedText>
       </TouchableOpacity>
     </ThemedView>
   );
@@ -48,7 +50,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   extensionLinkText: {
-    color: '#007AFF',
     fontSize: 15,
     fontWeight: '600',
   },

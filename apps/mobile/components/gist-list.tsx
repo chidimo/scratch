@@ -1,4 +1,5 @@
 import { useGists } from '@/hooks/use-gists';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { Note } from '@scratch/shared';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
@@ -18,6 +19,11 @@ import { NewNoteButton } from './note/new-note-button';
 export const GistList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const { border, mutedText, tint } = useThemeColor({}, [
+    'border',
+    'mutedText',
+    'tint',
+  ]);
 
   const { data: gists, refetch, isPending } = useGists({ searchTerm });
 
@@ -42,9 +48,11 @@ export const GistList = () => {
 
   return (
     <ThemedView style={styles.container}>
-      {isPending && <ActivityIndicator size="large" />}
+      {isPending && <ActivityIndicator size="large" color={tint} />}
 
-      <View style={styles.searchAndCreateContainer}>
+      <View
+        style={[styles.searchAndCreateContainer, { borderBottomColor: border }]}
+      >
         <View style={styles.searchWrapper}>
           <SearchInput onSearch={handleSearch} />
         </View>
@@ -57,14 +65,18 @@ export const GistList = () => {
         keyExtractor={(item) => item.id}
         style={styles.notesList}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={tint}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <ThemedText style={styles.emptyTitle}>
               {searchTerm?.trim() ? 'No notes found' : 'No notes yet'}
             </ThemedText>
-            <ThemedText style={styles.emptySubtitle}>
+            <ThemedText style={[styles.emptySubtitle, { color: mutedText }]}>
               {searchTerm?.trim()
                 ? `Try searching for something else`
                 : 'Create your first note to get started'}
@@ -72,8 +84,8 @@ export const GistList = () => {
           </View>
         }
         ListHeaderComponent={
-          <View style={styles.header}>
-            <ThemedText style={styles.headerTitle}>
+          <View style={[styles.header, { borderBottomColor: border }]}>
+            <ThemedText style={styles.headerTitle} type="title">
               {searchTerm?.trim() ? 'Search Results' : 'My Notes'}
             </ThemedText>
           </View>
@@ -94,7 +106,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   searchWrapper: {
     flex: 1,
@@ -102,11 +113,9 @@ const styles = StyleSheet.create({
   header: {
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
   },
   notesList: {
     flex: 1,

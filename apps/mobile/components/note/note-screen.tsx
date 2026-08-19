@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { CustomSwitch } from '@/components/form-elements/custom-switch';
 import { NoteActionBar } from './note-action-bar';
 import { HorizontalFileTabs } from './horizontal-file-tabs';
@@ -26,6 +27,11 @@ import { PreviewMarkdown } from './preview-markdown';
 export const NoteScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { border, danger, tint } = useThemeColor({}, [
+    'border',
+    'danger',
+    'tint',
+  ]);
 
   const [isDeletingNote, setIsDeletingNote] = useState(false);
   const { mutateAsync: deleteGist, isPending: isDeleting } =
@@ -291,7 +297,7 @@ export const NoteScreen = () => {
   if (isPending) {
     return (
       <ThemedView style={styles.loadingContainer}>
-        <ActivityIndicator />
+        <ActivityIndicator color={tint} />
         <ThemedText style={styles.loadingText}>Loading note...</ThemedText>
       </ThemedView>
     );
@@ -300,7 +306,9 @@ export const NoteScreen = () => {
   if (error) {
     return (
       <ThemedView style={styles.loadingContainer}>
-        <ThemedText style={styles.errorText}>Error: {error.message}</ThemedText>
+        <ThemedText style={[styles.errorText, { color: danger }]}>
+          Error: {error.message}
+        </ThemedText>
       </ThemedView>
     );
   }
@@ -318,7 +326,7 @@ export const NoteScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ThemedView style={styles.header}>
+      <ThemedView style={[styles.header, { borderBottomColor: border }]}>
         <ThemedText style={styles.headerTitle}>Edit Note</ThemedText>
       </ThemedView>
 
@@ -441,7 +449,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: 18,
@@ -459,6 +466,5 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#ff0000',
   },
 });

@@ -1,5 +1,6 @@
 import { useAuth } from '@/context/AuthContext';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { ActivityIndicator } from 'react-native';
 import { NewUser } from './new-user';
 import { ThemedText } from './themed-text';
@@ -11,6 +12,7 @@ export const Home = () => {
   const router = useRouter();
   const { token, isLoading: authLoading } = useAuth();
   const { data: user, isPending: userLoading } = useUserProfile();
+  const { tint } = useThemeColor({}, ['tint']);
 
   useEffect(() => {
     if (user) {
@@ -24,7 +26,7 @@ export const Home = () => {
       <ThemedView
         style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
       >
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={tint} />
         <ThemedText style={{ textAlign: 'center', marginTop: 16 }}>
           Setting up...
         </ThemedText>
@@ -38,7 +40,7 @@ export const Home = () => {
       <ThemedView
         style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
       >
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={tint} />
         <ThemedText style={{ textAlign: 'center', marginTop: 16 }}>
           Loading profile...
         </ThemedText>

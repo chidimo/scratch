@@ -1,7 +1,13 @@
 import { ThemedText } from '../themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export const SectionTitle = ({ title }: { title: string }) => {
-  return <ThemedText style={styles.sectionTitle}>{title}</ThemedText>;
+  const { border } = useThemeColor({}, ['border']);
+  return (
+    <ThemedText style={[styles.sectionTitle, { borderBottomColor: border }]}>
+      {title}
+    </ThemedText>
+  );
 };
 
 const styles = {
@@ -10,6 +16,5 @@ const styles = {
     fontWeight: '500' as const,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
 };

@@ -1,8 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { ThemedText } from '../../components/themed-text';
+import { CustomButton } from '../../components/form-elements/custom-button';
 import { useAuth } from '../../context/AuthContext';
+import { useThemeColor } from '../../hooks/use-theme-color';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -10,6 +12,7 @@ export default function AuthCallback() {
   const { completeAuth, isLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { danger, tint } = useThemeColor({}, ['danger', 'tint']);
   const isMounted = useRef(false);
   const hasProcessed = useRef(false);
 
@@ -82,7 +85,7 @@ export default function AuthCallback() {
           padding: 20,
         }}
       >
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={tint} />
         <ThemedText style={{ marginTop: 16, textAlign: 'center' }}>
           Completing authentication...
         </ThemedText>
@@ -103,26 +106,19 @@ export default function AuthCallback() {
         <ThemedText
           style={{
             fontSize: 16,
-            color: '#d32f2f',
+            color: danger,
             marginBottom: 16,
             textAlign: 'center',
           }}
         >
           {error}
         </ThemedText>
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#007AFF',
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-            borderRadius: 8,
-          }}
+        <CustomButton
+          variant="PRIMARY"
+          title="Go back to sign in"
+          containerStyle={{ width: 220 }}
           onPress={() => router.replace('/')}
-        >
-          <ThemedText style={{ fontSize: 14, color: 'white' }}>
-            Go back to sign in
-          </ThemedText>
-        </TouchableOpacity>
+        />
       </View>
     );
   }

@@ -9,15 +9,17 @@ import { SignOutSection } from './sign-out-section';
 import { ThemeSelector } from './theme-selector';
 import { HorizontalSeparator } from '../horizontal-separator';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { GetExtension } from './get-extension';
 
 export const SettingsScreen = () => {
   const { data: user, isPending } = useUserProfile();
+  const { tint } = useThemeColor({}, ['tint']);
 
   if (isPending) {
     return (
       <ThemedView style={styles.container}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={tint} />
         <ThemedText style={{ textAlign: 'center' }}>
           Loading user profile...
         </ThemedText>

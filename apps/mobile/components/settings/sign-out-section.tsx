@@ -1,10 +1,16 @@
 import { useSignOut } from '@/hooks/use-sign-out';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { Alert, TouchableOpacity } from 'react-native';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
 
 export const SignOutSection = () => {
   const signOut = useSignOut();
+  const { danger, surface, mutedText } = useThemeColor({}, [
+    'danger',
+    'surface',
+    'mutedText',
+  ]);
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -16,13 +22,13 @@ export const SignOutSection = () => {
   return (
     <ThemedView style={styles.section}>
       <TouchableOpacity
-        style={[styles.settingItem, styles.dangerItem]}
+        style={[styles.settingItem, { backgroundColor: surface }]}
         onPress={handleSignOut}
       >
-        <ThemedText style={[styles.settingThemedText, styles.dangerThemedText]}>
+        <ThemedText style={[styles.settingThemedText, { color: danger }]}>
           Sign Out
         </ThemedText>
-        <ThemedText style={styles.settingDescription}>
+        <ThemedText style={[styles.settingDescription, { color: mutedText }]}>
           Sign out from your GitHub account
         </ThemedText>
       </TouchableOpacity>
@@ -45,12 +51,5 @@ const styles = {
   },
   settingDescription: {
     fontSize: 12,
-    color: '#666',
-  },
-  dangerItem: {
-    backgroundColor: '#fff5f5',
-  },
-  dangerThemedText: {
-    color: '#d32f2f',
   },
 };

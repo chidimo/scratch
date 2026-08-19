@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { CustomButton } from '@/components/form-elements/custom-button';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export const NoteActionBar = ({
   isSaving,
@@ -19,8 +20,10 @@ export const NoteActionBar = ({
   onDelete: () => void;
   onPreview: () => void;
 }) => {
+  const { border } = useThemeColor({}, ['border']);
+
   return (
-    <ThemedView style={styles.actionBar}>
+    <ThemedView style={[styles.actionBar, { borderTopColor: border }]}>
       <ThemedView style={styles.actionBarInner}>
         <CustomButton
           containerStyle={{ width: '22%' }}
@@ -61,7 +64,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 12,

@@ -1,39 +1,44 @@
 import { Note } from '@scratch/shared';
 import { useRouter } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { ThemedView } from './themed-view';
 import { ThemedText } from './themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 export const GistItem = ({ gist }: { gist: Note }) => {
   const router = useRouter();
   const privacyLabel = gist.is_public ? 'Public' : 'Private';
-  const { surfaceAlt: pillBackground, text: pillText } = useThemeColor({}, [
-    'surfaceAlt',
-    'text',
-  ]);
+  const {
+    surfaceAlt: pillBackground,
+    text: pillText,
+    border,
+    card,
+    success,
+  } = useThemeColor({}, ['surfaceAlt', 'text', 'border', 'card', 'success']);
 
   return (
     <TouchableOpacity
-      style={styles.noteItem}
+      style={[
+        styles.noteItem,
+        { borderColor: border, backgroundColor: card },
+      ]}
       onPress={() => router.push(`/note/${gist.id}`)}
     >
-      <ThemedView style={styles.noteHeader}>
+      <View style={styles.noteHeader}>
         <View style={styles.noteHeaderLeft}>
           <ThemedText style={styles.noteTitle}>{gist.title}</ThemedText>
         </View>
         <ThemedText style={styles.noteDate}>
           {new Date(gist.updated_at).toLocaleDateString()}
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.noteFooter}>
+      </View>
+      <View style={styles.noteFooter}>
         <View style={styles.syncStatus}>
           <View
             style={[
               styles.statusDot,
               {
                 backgroundColor:
-                  gist.sync_status === 'synced' ? '#4CAF50' : '#FF9800',
+                  gist.sync_status === 'synced' ? success : '#FF9800',
               },
             ]}
           />
@@ -44,30 +49,17 @@ export const GistItem = ({ gist }: { gist: Note }) => {
             {privacyLabel}
           </ThemedText>
         </View>
-      </ThemedView>
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 32,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
   noteItem: {
     marginVertical: 12,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   noteHeader: {
     flexDirection: 'row',
