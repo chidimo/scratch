@@ -54,7 +54,7 @@ const NotFoundState = () => (
   <>
     <PageMetaTitle title="Gist not found" />
     <div className="min-h-screen bg-gradient-to-b from-brand-50 via-white to-white flex items-center justify-center px-6">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-10 w-full max-w-md text-center">
+      <div className="bg-white rounded-2xl shadow-lg ring-1 ring-brand-900/5 p-10 w-full max-w-md text-center">
         <h2 className="text-2xl font-bold text-brand-900 mb-3">
           Gist not found
         </h2>
@@ -237,11 +237,11 @@ export const GistDetail = () => {
         <KnownUserHeader />
 
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg ring-1 ring-brand-900/5 p-8 mb-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <h1 className="text-lg font-bold text-brand-900 mb-2">
+                  <h1 className="text-3xl font-extrabold text-brand-900 tracking-tight mb-2">
                     {activeGist.title || 'Untitled Gist'}
                   </h1>
                   <p className="text-xs text-gray-600">
@@ -281,9 +281,9 @@ export const GistDetail = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+          <div className="bg-white rounded-2xl shadow-lg ring-1 ring-brand-900/5 p-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-brand-900">
+              <h2 className="text-xs font-bold uppercase tracking-wide text-gray-400">
                 Markdown Files ({markdownFiles.length})
               </h2>
               <button
