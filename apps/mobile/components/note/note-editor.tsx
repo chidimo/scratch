@@ -26,7 +26,8 @@ export const NoteEditor = ({
         editable={isTitleEditable}
         multiline
         maxLength={100}
-        placeholder="Note Title"
+        placeholder="Untitled"
+        containerStyle={styles.titleContainer}
         textStyle={styles.titleInput}
       />
 
@@ -36,7 +37,8 @@ export const NoteEditor = ({
         editable={isContentEditable}
         multiline
         textAlignVertical="top"
-        placeholder="Start writing your note..."
+        placeholder="Start writing..."
+        containerStyle={styles.contentContainer}
         textStyle={styles.contentInput}
       />
     </>
@@ -44,19 +46,30 @@ export const NoteEditor = ({
 };
 
 const styles = StyleSheet.create({
+  titleContainer: {
+    marginBottom: 4,
+  },
   titleInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: 30,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    lineHeight: 36,
     height: 'auto',
-    paddingBottom: 8,
-    padding: 0,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 4,
+  },
+  contentContainer: {
+    marginBottom: 0,
   },
   contentInput: {
-    fontSize: 16,
+    fontSize: 17,
     height: 'auto',
-    lineHeight: 24,
+    lineHeight: 26,
     minHeight: 300,
-    padding: 0,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
   },
 });

@@ -12,12 +12,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { Feather } from '@expo/vector-icons';
 import { NoteActionBar } from './note-action-bar';
 import { HorizontalFileTabs } from './horizontal-file-tabs';
 import { NoteEditor } from './note-editor';
@@ -26,10 +28,11 @@ import { PreviewMarkdown } from './preview-markdown';
 export const NoteScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { border, danger, tint } = useThemeColor({}, [
-    'border',
+  const { danger, tint, icon, surface } = useThemeColor({}, [
     'danger',
     'tint',
+    'icon',
+    'surface',
   ]);
 
   const [isDeletingNote, setIsDeletingNote] = useState(false);
@@ -295,8 +298,21 @@ export const NoteScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ThemedView style={[styles.header, { borderBottomColor: border }]}>
-        <ThemedText style={styles.headerTitle}>Edit Note</ThemedText>
+      <ThemedView style={styles.header}>
+        <Pressable
+          onPress={handleCancel}
+          style={[styles.headerButton, { backgroundColor: surface }]}
+          hitSlop={8}
+        >
+          <Feather name="arrow-left" size={20} color={icon} />
+        </Pressable>
+        <Pressable
+          onPress={handleDelete}
+          style={[styles.headerButton, { backgroundColor: surface }]}
+          hitSlop={8}
+        >
+          <Feather name="trash-2" size={20} color={danger} />
+        </Pressable>
       </ThemedView>
 
       <ScrollView
@@ -382,8 +398,6 @@ export const NoteScreen = () => {
         isPreviewing={isPreviewing}
         canSave={!!activeDraft.title.trim() && !!activeDraft.content.trim()}
         onSave={handleSave}
-        onCancel={handleCancel}
-        onDelete={handleDelete}
         onPreview={handlePreview}
       />
     </KeyboardAvoidingView>
@@ -408,12 +422,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

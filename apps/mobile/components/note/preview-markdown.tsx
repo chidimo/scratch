@@ -48,9 +48,7 @@ export const PreviewMarkdown = ({ content, title }: Props) => {
 
   return (
     <ThemedView style={styles.previewContainer}>
-      <ThemedText style={[styles.previewTitle, { borderBottomColor: border }]}>
-        {title || 'Untitled'}
-      </ThemedText>
+      <ThemedText style={styles.previewTitle}>{title || 'Untitled'}</ThemedText>
       <Markdown style={markdownStyles} rules={markdownRules}>
         {content || 'No content to preview'}
       </Markdown>
@@ -63,12 +61,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   previewTitle: {
-    padding: 8,
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
+    fontSize: 30,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    marginBottom: 12,
   },
 });
 
