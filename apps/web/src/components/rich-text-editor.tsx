@@ -5,7 +5,7 @@ import Underline from '@tiptap/extension-underline';
 import Youtube from '@tiptap/extension-youtube';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { mergeClasses } from '../utils/class-merge';
 import { RteToolbar } from './rich-text-editor-toolbar';
 
@@ -15,11 +15,18 @@ type Props = {
   label?: string;
   className?: string;
   placeholder?: string;
+  isPreviewing?: boolean;
 };
 
 export const RichTextEditor = (props: Props) => {
-  const { value, onChange, label, className = '', placeholder } = props;
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const {
+    value,
+    onChange,
+    label,
+    className = '',
+    placeholder,
+    isPreviewing = false,
+  } = props;
 
   const editor = useEditor({
     extensions: [
@@ -70,26 +77,9 @@ export const RichTextEditor = (props: Props) => {
   }, [editor, placeholder]);
 
   return (
-    <div className={mergeClasses('mt-2 bg-white', className)}>
+    <div className={mergeClasses('bg-white', className)}>
       {label ? <label className="mb-1 block">{label}</label> : null}
       <div className="border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-brand-500 focus-within:border-brand-500 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-1.5">
-          {isPreviewing ? (
-            <span className="px-2 text-xs font-medium text-gray-500">
-              Preview
-            </span>
-          ) : (
-            editor && <RteToolbar editor={editor} />
-          )}
-          <button
-            type="button"
-            onClick={() => setIsPreviewing((prev) => !prev)}
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700 px-2 py-1 rounded transition-colors"
-          >
-            {isPreviewing ? 'Edit' : 'Preview'}
-          </button>
-        </div>
-
         {isPreviewing ? (
           <div className="prose prose-sm max-w-none p-4 min-h-[240px]">
             {value ? (
@@ -104,7 +94,10 @@ export const RichTextEditor = (props: Props) => {
             )}
           </div>
         ) : (
-          <EditorContent editor={editor} />
+          <>
+            {editor && <RteToolbar editor={editor} />}
+            <EditorContent editor={editor} />
+          </>
         )}
       </div>
     </div>

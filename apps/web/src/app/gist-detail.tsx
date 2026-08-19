@@ -167,6 +167,7 @@ export const GistDetail = () => {
   const [initialContents, setInitialContents] = useState<
     Record<string, string>
   >({});
+  const [isPreviewing, setIsPreviewing] = useState(false);
 
   const {
     data: note,
@@ -190,6 +191,7 @@ export const GistDetail = () => {
       setActiveFile(note.md_files?.[0] ?? null);
       setSaveError(null);
       setSaveMessage(null);
+      setIsPreviewing(false);
     }
   }, [note, gistId, loadedGistId]);
 
@@ -237,100 +239,101 @@ export const GistDetail = () => {
         <KnownUserHeader />
 
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="bg-white rounded-2xl shadow-lg ring-1 ring-brand-900/5 p-8 mb-6">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-start justify-between gap-6">
-                <div>
-                  <h1 className="text-xl font-bold text-brand-900 mb-2">
-                    {activeGist.title || 'Untitled Gist'}
-                  </h1>
-                  <p className="text-xs text-gray-600">
-                    Created{' '}
-                    {new Date(activeGist.created_at).toLocaleString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Updated{' '}
-                    {new Date(activeGist.updated_at).toLocaleString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </p>
-                </div>
+          <div className="bg-white rounded-2xl shadow-lg ring-1 ring-brand-900/5 p-5 mb-4">
+            <div className="flex items-start justify-between gap-6">
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold text-brand-900 truncate">
+                  {activeGist.title || 'Untitled Gist'}
+                </h1>
+                <p className="text-xs text-gray-500 mt-1">
+                  Created{' '}
+                  {new Date(activeGist.created_at).toLocaleDateString(
+                    'en-US',
+                    { month: 'short', day: 'numeric', year: 'numeric' },
+                  )}{' '}
+                  · Updated{' '}
+                  {new Date(activeGist.updated_at).toLocaleDateString(
+                    'en-US',
+                    { month: 'short', day: 'numeric', year: 'numeric' },
+                  )}
+                </p>
+              </div>
 
-                <div className="flex flex-col justify-between gap-2">
-                  <GistVisibility isPublic={activeGist.is_public ?? false} />
-                  {activeGist.html_url ? (
-                    <p>
-                      <a
-                        href={activeGist.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                      >
-                        View on GitHub
-                      </a>
-                    </p>
-                  ) : null}
-                </div>
+              <div className="flex items-center gap-4 shrink-0">
+                <GistVisibility isPublic={activeGist.is_public ?? false} />
+                {activeGist.html_url ? (
+                  <a
+                    href={activeGist.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium whitespace-nowrap"
+                  >
+                    View on GitHub
+                  </a>
+                ) : null}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg ring-1 ring-brand-900/5 p-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xs font-bold uppercase tracking-wide text-gray-400">
-                Markdown Files ({markdownFiles.length})
-              </h2>
-              <button
-                onClick={() => {
-                  void handleSave();
-                }}
-                disabled={
-                  !isDirty || updateGistFileContent.isPending || !activeFile
-                }
-                className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {updateGistFileContent.isPending ? 'Saving...' : 'Save file'}
-              </button>
-            </div>
-
-            {saveMessage ? (
-              <p className="text-sm text-green-600 mb-3">{saveMessage}</p>
-            ) : null}
-            {saveError ? (
-              <p className="text-sm text-red-600 mb-3">{saveError}</p>
-            ) : null}
-
+          <div className="bg-white rounded-2xl shadow-lg ring-1 ring-brand-900/5 p-5">
             {markdownFiles.length === 0 ? (
               <p className="text-sm text-gray-600">
                 This gist does not contain any markdown files.
               </p>
             ) : (
               <>
-                <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-4 mb-4">
-                  {markdownFiles.map((file: string, index: number) => (
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+                  <div className="flex flex-wrap gap-2">
+                    {markdownFiles.map((file: string, index: number) => (
+                      <button
+                        key={file}
+                        onClick={() => {
+                          setActiveFile(file);
+                          setSaveMessage(null);
+                          setSaveError(null);
+                          setIsPreviewing(false);
+                        }}
+                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                          activeFile === file
+                            ? 'bg-brand-500 text-white border-brand-500'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300'
+                        }`}
+                      >
+                        File: {index + 1}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
-                      key={file}
-                      onClick={() => {
-                        setActiveFile(file);
-                        setSaveMessage(null);
-                        setSaveError(null);
-                      }}
-                      className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                        activeFile === file
-                          ? 'bg-brand-500 text-white border-brand-500'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300'
-                      }`}
+                      onClick={() => setIsPreviewing((prev) => !prev)}
+                      className="text-sm font-medium text-brand-600 hover:text-brand-700 px-3 py-1.5 rounded-lg transition-colors"
                     >
-                      File: {index + 1}
+                      {isPreviewing ? 'Edit' : 'Preview'}
                     </button>
-                  ))}
+                    <button
+                      onClick={() => {
+                        void handleSave();
+                      }}
+                      disabled={
+                        !isDirty ||
+                        updateGistFileContent.isPending ||
+                        !activeFile
+                      }
+                      className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateGistFileContent.isPending ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
                 </div>
+
+                {saveMessage ? (
+                  <p className="text-sm text-green-600 mb-3">{saveMessage}</p>
+                ) : null}
+                {saveError ? (
+                  <p className="text-sm text-red-600 mb-3">{saveError}</p>
+                ) : null}
+
                 <RichTextEditor
                   value={activeContent}
                   onChange={(nextValue) => {
@@ -341,6 +344,7 @@ export const GistDetail = () => {
                     }));
                   }}
                   placeholder="Start writing..."
+                  isPreviewing={isPreviewing}
                 />
               </>
             )}
