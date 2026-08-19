@@ -1,6 +1,11 @@
-import { Note, useGistById, useUpdateGistFileContent } from '@scratch/shared';
+import {
+  Note,
+  useDeleteGistById,
+  useGistById,
+  useUpdateGistFileContent,
+} from '@scratch/shared';
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { RichTextEditor } from '../components/rich-text-editor';
 import { useAuth } from '../context/auth-context';
 import { GistVisibility } from '../components/gist-visibility';
@@ -156,6 +161,7 @@ const useGistFileSave = ({
 
 export const GistDetail = () => {
   const { gistId } = useParams();
+  const navigate = useNavigate();
   const { token } = useAuth();
   const { githubClient } = useUserWithClient();
 
@@ -177,6 +183,7 @@ export const GistDetail = () => {
     enabled: !!token,
   });
   const updateGistFileContent = useUpdateGistFileContent({ githubClient });
+  const deleteGist = useDeleteGistById({ githubClient });
 
   useEffect(() => {
     if (!note || !gistId) {
@@ -207,6 +214,39 @@ export const GistDetail = () => {
         setInitialContents((prev) => ({ ...prev, [fileName]: content }));
       },
     });
+
+  const isDeletingWholeGist = markdownFiles.length <= 1;
+
+  const handleDelete = () => {
+    if (!gistId || !activeFile || deleteGist.isPending) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      isDeletingWholeGist
+        ? 'Delete this gist? This action cannot be undone.'
+        : `Delete "${activeFile}"? This action cannot be undone.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    deleteGist.mutate(
+      {
+        id: gistId,
+        fileName: activeFile,
+        mdFileCount: note?.md_file_count,
+      },
+      {
+        onSuccess: () => {
+          navigate('/gists');
+        },
+        onError: () => {
+          window.alert('Failed to delete. Please try again.');
+        },
+      },
+    );
+  };
 
   const stateView = getGistDetailState({
     note,
@@ -300,6 +340,17 @@ export const GistDetail = () => {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleteGist.isPending}
+                      className="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {deleteGist.isPending
+                        ? 'Deleting...'
+                        : isDeletingWholeGist
+                          ? 'Delete gist'
+                          : 'Delete file'}
+                    </button>
                     <button
                       onClick={() => setIsPreviewing((prev) => !prev)}
                       className="text-sm font-medium text-brand-600 hover:text-brand-700 px-3 py-1.5 rounded-lg transition-colors"
