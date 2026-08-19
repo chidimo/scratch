@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import { SectionTitle } from './section-title';
-import { ThemedView } from '../themed-view';
+import { SettingsCard } from './settings-card';
 
 const OPTIONS: ThemePreference[] = ['light', 'dark', 'system'];
 
@@ -18,9 +18,9 @@ export const ThemeSelector = () => {
   } = useThemeColor({}, ['tint', 'onTint', 'surface', 'text']);
 
   return (
-    <ThemedView>
-      <SectionTitle title="Theme" />
-      <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 12 }}>
+    <SettingsCard>
+      <SectionTitle title="Theme" icon="sun" />
+      <View style={styles.options}>
         {OPTIONS.map((option) => {
           const active = preference === option;
           return (
@@ -32,21 +32,30 @@ export const ThemeSelector = () => {
                 { backgroundColor: active ? tint : surface },
               ]}
             >
-              <ThemedText style={{ color: active ? onTint : textColor }}>
+              <ThemedText
+                style={{
+                  fontWeight: active ? '700' : '500',
+                  color: active ? onTint : textColor,
+                }}
+              >
                 {option[0].toUpperCase() + option.slice(1)}
               </ThemedText>
             </Pressable>
           );
         })}
       </View>
-    </ThemedView>
+    </SettingsCard>
   );
 };
 
 const styles = StyleSheet.create({
+  options: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   option: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: 'center',
     paddingVertical: 10,
   },

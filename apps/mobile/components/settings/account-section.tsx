@@ -1,8 +1,8 @@
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { accentForId } from '@/constants/theme';
 import { Image, Linking, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
-import { SectionTitle } from './section-title';
+import { SettingsCard } from './settings-card';
 
 export const AccountSection = () => {
   const { data: user } = useUserProfile();
@@ -11,66 +11,71 @@ export const AccountSection = () => {
     return null;
   }
 
+  const ringColor = accentForId(user.login);
+
   return (
-    <ThemedView style={styles.section}>
-      <SectionTitle title="Account" />
-      <View style={styles.userInfo}>
-        <View style={styles.userDetails}>
-          <TouchableOpacity
-            onPress={() => {
-              const profileUrl =
-                user.html_url || `https://github.com/${user.login}`;
-              Linking.openURL(profileUrl);
-            }}
-          >
-            <ThemedText style={styles.userLogin} type="link">
-              @{user.login}
-            </ThemedText>
-          </TouchableOpacity>
-          <ThemedText style={styles.userName}>{user.name}</ThemedText>
-          <ThemedText style={styles.userEmail}>{user.email}</ThemedText>
-        </View>
+    <SettingsCard style={styles.card}>
+      <View
+        style={[
+          styles.avatarRing,
+          { borderColor: ringColor },
+        ]}
+      >
         <Image
           source={{ uri: user.avatar_url }}
           style={styles.avatar}
           resizeMode="cover"
         />
       </View>
-    </ThemedView>
+      <View style={styles.userDetails}>
+        <ThemedText style={styles.userName} numberOfLines={1}>
+          {user.name || user.login}
+        </ThemedText>
+        <TouchableOpacity
+          onPress={() => {
+            const profileUrl =
+              user.html_url || `https://github.com/${user.login}`;
+            Linking.openURL(profileUrl);
+          }}
+        >
+          <ThemedText style={styles.userLogin} type="link">
+            @{user.login}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    </SettingsCard>
   );
 };
 
 const styles = {
-  section: {
-    paddingVertical: 4,
-  },
-  userInfo: {
+  card: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    padding: 8,
+    gap: 16,
+  },
+  avatarRing: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 3,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  avatar: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
   },
   userDetails: {
     flex: 1,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: '500' as const,
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 16,
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: '800' as const,
+    marginBottom: 2,
   },
   userLogin: {
-    fontSize: 16,
-    textDecorationLine: 'underline' as const,
-    marginBottom: 6,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginLeft: 16,
+    fontSize: 15,
+    fontWeight: '600' as const,
   },
 };

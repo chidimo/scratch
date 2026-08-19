@@ -1,16 +1,12 @@
 import { useSignOut } from '@/hooks/use-sign-out';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { Alert, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Alert, Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
 
 export const SignOutSection = () => {
   const signOut = useSignOut();
-  const { danger, surface, mutedText } = useThemeColor({}, [
-    'danger',
-    'surface',
-    'mutedText',
-  ]);
+  const { danger } = useThemeColor({}, ['danger']);
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -20,36 +16,25 @@ export const SignOutSection = () => {
   };
 
   return (
-    <ThemedView style={styles.section}>
-      <TouchableOpacity
-        style={[styles.settingItem, { backgroundColor: surface }]}
-        onPress={handleSignOut}
-      >
-        <ThemedText style={[styles.settingThemedText, { color: danger }]}>
-          Sign Out
-        </ThemedText>
-        <ThemedText style={[styles.settingDescription, { color: mutedText }]}>
-          Sign out from your GitHub account
-        </ThemedText>
-      </TouchableOpacity>
-    </ThemedView>
+    <Pressable style={styles.button} onPress={handleSignOut}>
+      <Feather name="log-out" size={18} color={danger} />
+      <ThemedText style={[styles.text, { color: danger }]}>
+        Sign Out
+      </ThemedText>
+    </Pressable>
   );
 };
 
-const styles = {
-  section: {
-    marginBottom: 20,
-    paddingVertical: 4,
+const styles = StyleSheet.create({
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
   },
-  settingItem: {
-    padding: 12,
-    borderRadius: 12,
-  },
-  settingThemedText: {
+  text: {
     fontSize: 16,
-    marginBottom: 2,
+    fontWeight: '700',
   },
-  settingDescription: {
-    fontSize: 12,
-  },
-};
+});

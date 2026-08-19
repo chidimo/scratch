@@ -1,12 +1,12 @@
 import { Linking, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
 import { SectionTitle } from './section-title';
+import { SettingsCard } from './settings-card';
 
 export const GetExtension = () => {
   return (
-    <ThemedView style={styles.section}>
-      <SectionTitle title="Get the Scratch (Gists) Extension" />
+    <SettingsCard>
+      <SectionTitle title="Get the Extension" icon="download" />
       <TouchableOpacity
         style={styles.extensionLinkButton}
         onPress={() =>
@@ -20,14 +20,16 @@ export const GetExtension = () => {
         </ThemedText>
       </TouchableOpacity>
 
-      {/* <TouchableOpacity
-                style={styles.extensionLinkButton}
-                onPress={() => Linking.openURL('https://marketplace.visualstudio.com/items?itemName=scratch.scratch-vscode')}
-            >
-                <ThemedText style={styles.extensionLinkText}>
-                    Open VSX Marketplace
-                </ThemedText>
-            </TouchableOpacity> */}
+      <TouchableOpacity
+        style={styles.extensionLinkButton}
+        onPress={() =>
+          Linking.openURL('https://open-vsx.org/extension/chidimo/scratch')
+        }
+      >
+        <ThemedText style={styles.extensionLinkText} type="link">
+          Open VSX Registry
+        </ThemedText>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.extensionLinkButton}
@@ -37,17 +39,13 @@ export const GetExtension = () => {
           On the web
         </ThemedText>
       </TouchableOpacity>
-    </ThemedView>
+    </SettingsCard>
   );
 };
 
 const styles = StyleSheet.create({
-  section: {
-    paddingVertical: 4,
-  },
   extensionLinkButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   extensionLinkText: {
     fontSize: 15,

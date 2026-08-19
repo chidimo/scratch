@@ -1,5 +1,4 @@
-import { ActivityIndicator, StyleSheet } from 'react-native';
-import ParallaxScrollView from '../parallax-scroll-view';
+import { ActivityIndicator, ScrollView, StyleSheet } from 'react-native';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
 import { AccountSection } from './account-section';
@@ -7,7 +6,6 @@ import { AppSettingsSection } from './app-settings-section';
 import { GitHubApiSection } from './github-api-section';
 import { SignOutSection } from './sign-out-section';
 import { ThemeSelector } from './theme-selector';
-import { HorizontalSeparator } from '../horizontal-separator';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { GetExtension } from './get-extension';
@@ -38,30 +36,51 @@ export const SettingsScreen = () => {
   }
 
   return (
-    <ParallaxScrollView headerImage={null}>
-      <AccountSection />
-      <HorizontalSeparator />
-      <GetExtension />
-      <HorizontalSeparator />
-      <GitHubApiSection />
-      <HorizontalSeparator />
-      <ThemeSelector />
-      <HorizontalSeparator />
-      <AppSettingsSection />
-      <HorizontalSeparator />
-      <SignOutSection />
-    </ParallaxScrollView>
+    <ThemedView style={styles.screen}>
+      <ThemedText style={styles.title} type="title">
+        Settings
+      </ThemedText>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <AccountSection />
+        <GetExtension />
+        <GitHubApiSection />
+        <ThemeSelector />
+        <AppSettingsSection />
+        <SignOutSection />
+      </ScrollView>
+    </ThemedView>
   );
 };
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   container: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   message: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
     padding: 16,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+    gap: 12,
   },
 });

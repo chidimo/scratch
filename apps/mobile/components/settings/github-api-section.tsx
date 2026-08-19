@@ -1,10 +1,13 @@
 import { Alert, TouchableOpacity } from 'react-native';
 import { getGithubClient } from '@/services/GithubClient';
-import { ThemedView } from '../themed-view';
 import { ThemedText } from '../themed-text';
 import { SectionTitle } from './section-title';
+import { SettingsCard } from './settings-card';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export const GitHubApiSection = () => {
+  const { mutedText } = useThemeColor({}, ['mutedText']);
+
   const handleCheckRateLimit = async () => {
     try {
       const githubClient = getGithubClient();
@@ -19,8 +22,8 @@ export const GitHubApiSection = () => {
   };
 
   return (
-    <ThemedView style={styles.section}>
-      <SectionTitle title="GitHub API" />
+    <SettingsCard>
+      <SectionTitle title="GitHub API" icon="zap" />
       <TouchableOpacity
         style={styles.settingItem}
         onPress={handleCheckRateLimit}
@@ -28,26 +31,24 @@ export const GitHubApiSection = () => {
         <ThemedText style={styles.settingThemedText}>
           Check Rate Limit
         </ThemedText>
-        <ThemedText style={styles.settingDescription}>
+        <ThemedText style={[styles.settingDescription, { color: mutedText }]}>
           View GitHub API usage
         </ThemedText>
       </TouchableOpacity>
-    </ThemedView>
+    </SettingsCard>
   );
 };
 
 const styles = {
-  section: {
-    paddingVertical: 4,
-  },
   settingItem: {
-    paddingVertical: 12,
+    paddingVertical: 4,
   },
   settingThemedText: {
     fontSize: 16,
+    fontWeight: '600' as const,
     marginBottom: 2,
   },
   settingDescription: {
-    fontSize: 12,
+    fontSize: 13,
   },
 };

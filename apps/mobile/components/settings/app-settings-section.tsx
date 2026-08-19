@@ -1,15 +1,15 @@
 import { TouchableOpacity } from 'react-native';
-import { ThemedView } from '../themed-view';
 import { ThemedText } from '../themed-text';
 import { SectionTitle } from './section-title';
+import { SettingsCard } from './settings-card';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 export const AppSettingsSection = () => {
   const { border, mutedText } = useThemeColor({}, ['border', 'mutedText']);
 
   return (
-    <ThemedView style={styles.section}>
-      <SectionTitle title="App Settings" />
+    <SettingsCard>
+      <SectionTitle title="App Settings" icon="sliders" />
       <TouchableOpacity
         style={[styles.settingItem, { borderBottomColor: border }]}
       >
@@ -26,31 +26,30 @@ export const AppSettingsSection = () => {
           Export all notes and settings
         </ThemedText>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.settingItem, { borderBottomColor: border }]}
-      >
+      <TouchableOpacity style={styles.settingItemLast}>
         <ThemedText style={styles.settingThemedText}>About</ThemedText>
         <ThemedText style={[styles.settingDescription, { color: mutedText }]}>
           App version and information
         </ThemedText>
       </TouchableOpacity>
-    </ThemedView>
+    </SettingsCard>
   );
 };
 
 const styles = {
-  section: {
-    paddingVertical: 4,
-  },
   settingItem: {
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
+  },
+  settingItemLast: {
+    paddingTop: 10,
   },
   settingThemedText: {
     fontSize: 16,
+    fontWeight: '600' as const,
     marginBottom: 2,
   },
   settingDescription: {
-    fontSize: 12,
+    fontSize: 13,
   },
 };
