@@ -129,14 +129,12 @@ const useGistFileSave = ({
   onSaved,
 }: SaveParams) => {
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!gistId || !activeFile || isSaving) {
       return;
     }
     setSaveError(null);
-    setSaveMessage(null);
     try {
       await updateGistFileContent.mutateAsync({
         id: gistId,
@@ -145,7 +143,7 @@ const useGistFileSave = ({
         isPublic,
       });
       onSaved(activeFile, activeContent);
-      setSaveMessage('Saved.');
+      window.alert('Saved.');
     } catch (error_) {
       setSaveError(
         error_ instanceof Error ? error_.message : 'Failed to save file.',
@@ -153,7 +151,7 @@ const useGistFileSave = ({
     }
   };
 
-  return { saveError, saveMessage, setSaveError, setSaveMessage, handleSave };
+  return { saveError, setSaveError, handleSave };
 };
 
 export const GistDetail = () => {
@@ -190,7 +188,6 @@ export const GistDetail = () => {
       setInitialContents(note.file_contents ?? {});
       setActiveFile(note.md_files?.[0] ?? null);
       setSaveError(null);
-      setSaveMessage(null);
       setIsPreviewing(false);
     }
   }, [note, gistId, loadedGistId]);
@@ -199,8 +196,7 @@ export const GistDetail = () => {
   const activeContent = activeFile ? (fileContents[activeFile] ?? '') : '';
   const isDirty =
     !!activeFile && activeContent !== (initialContents[activeFile] ?? '');
-  const { saveError, saveMessage, setSaveError, setSaveMessage, handleSave } =
-    useGistFileSave({
+  const { saveError, setSaveError, handleSave } = useGistFileSave({
       gistId,
       activeFile,
       activeContent,
@@ -289,7 +285,6 @@ export const GistDetail = () => {
                         key={file}
                         onClick={() => {
                           setActiveFile(file);
-                          setSaveMessage(null);
                           setSaveError(null);
                           setIsPreviewing(false);
                         }}
@@ -327,9 +322,6 @@ export const GistDetail = () => {
                   </div>
                 </div>
 
-                {saveMessage ? (
-                  <p className="text-sm text-green-600 mb-3">{saveMessage}</p>
-                ) : null}
                 {saveError ? (
                   <p className="text-sm text-red-600 mb-3">{saveError}</p>
                 ) : null}
