@@ -19,11 +19,7 @@ import { NewNoteButton } from './note/new-note-button';
 export const GistList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const { border, mutedText, tint } = useThemeColor({}, [
-    'border',
-    'mutedText',
-    'tint',
-  ]);
+  const { mutedText, tint } = useThemeColor({}, ['mutedText', 'tint']);
 
   const { data: gists, refetch, isPending } = useGists({ searchTerm });
 
@@ -50,14 +46,17 @@ export const GistList = () => {
     <ThemedView style={styles.container}>
       {isPending && <ActivityIndicator size="large" color={tint} />}
 
-      <View
-        style={[styles.searchAndCreateContainer, { borderBottomColor: border }]}
-      >
-        <View style={styles.searchWrapper}>
-          <SearchInput onSearch={handleSearch} />
-        </View>
+      <View style={styles.topSection}>
+        <ThemedText style={styles.headerTitle} type="title">
+          {searchTerm?.trim() ? 'Search Results' : 'My Notes'}
+        </ThemedText>
+        <View style={styles.searchAndCreateContainer}>
+          <View style={styles.searchWrapper}>
+            <SearchInput onSearch={handleSearch} />
+          </View>
 
-        <NewNoteButton />
+          <NewNoteButton />
+        </View>
       </View>
       <FlatList
         data={gists}
@@ -83,13 +82,6 @@ export const GistList = () => {
             </ThemedText>
           </View>
         }
-        ListHeaderComponent={
-          <View style={[styles.header, { borderBottomColor: border }]}>
-            <ThemedText style={styles.headerTitle} type="title">
-              {searchTerm?.trim() ? 'Search Results' : 'My Notes'}
-            </ThemedText>
-          </View>
-        }
       />
     </ThemedView>
   );
@@ -98,24 +90,25 @@ export const GistList = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
+  },
+  topSection: {
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    marginBottom: 16,
   },
   searchAndCreateContainer: {
-    gap: 12,
+    gap: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
   },
   searchWrapper: {
     flex: 1,
-  },
-  header: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 24,
   },
   notesList: {
     flex: 1,

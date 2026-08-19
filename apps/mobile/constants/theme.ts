@@ -47,6 +47,23 @@ export const Colors = {
   },
 };
 
+// Fixed brand colors, independent of light/dark theme - pulled from the
+// app icon so the mobile app shares an identity with the web app.
+export const Brand = {
+  teal: '#30566C',
+  tealDark: '#1D3340',
+};
+
+export const Accent = ['#41A2DA', '#A6D27C', '#F59A9D', '#F6DE88'];
+
+export const accentForId = (id: string) => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash + id.charCodeAt(i)) % Accent.length;
+  }
+  return Accent[hash];
+};
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

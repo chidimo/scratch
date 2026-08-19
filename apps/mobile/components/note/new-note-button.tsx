@@ -1,8 +1,10 @@
 import { useAuth } from '@/context/AuthContext';
 import { useCreateGist } from '@/hooks/use-gists';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, Pressable, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { CustomButton } from '@/components/form-elements/custom-button';
 import { CustomInput } from '@/components/form-elements/custom-input';
 import { ThemedView } from '@/components/themed-view';
@@ -14,6 +16,7 @@ export const NewNoteButton = () => {
   const { token } = useAuth();
   const router = useRouter();
   const { mutateAsync: createGist, isPending } = useCreateGist();
+  const { tint, onTint } = useThemeColor({}, ['tint', 'onTint']);
 
   const [title, setTitle] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -64,12 +67,13 @@ export const NewNoteButton = () => {
 
   return (
     <>
-      <CustomButton
-        title="+ New"
-        variant="PRIMARY"
+      <Pressable
         onPress={() => setIsModalVisible(true)}
-        containerStyle={{ width: 100 }}
-      />
+        style={[styles.fab, { backgroundColor: tint }]}
+        hitSlop={8}
+      >
+        <Feather name="plus" size={24} color={onTint} />
+      </Pressable>
       <CustomModal
         title="New Note"
         visible={isModalVisible}
@@ -105,6 +109,18 @@ export const NewNoteButton = () => {
 };
 
 const styles = StyleSheet.create({
+  fab: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',

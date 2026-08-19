@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from './themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { accentForId } from '@/constants/theme';
 
 export const GistItem = ({ gist }: { gist: Note }) => {
   const router = useRouter();
@@ -10,43 +11,46 @@ export const GistItem = ({ gist }: { gist: Note }) => {
   const {
     surfaceAlt: pillBackground,
     text: pillText,
-    border,
     card,
-    success,
-  } = useThemeColor({}, ['surfaceAlt', 'text', 'border', 'card', 'success']);
+    mutedText,
+    danger,
+  } = useThemeColor({}, ['surfaceAlt', 'text', 'card', 'mutedText', 'danger']);
+  const accentColor = accentForId(gist.id);
 
   return (
     <TouchableOpacity
-      style={[
-        styles.noteItem,
-        { borderColor: border, backgroundColor: card },
-      ]}
+      style={[styles.noteItem, { backgroundColor: card }]}
       onPress={() => router.push(`/note/${gist.id}`)}
+      activeOpacity={0.8}
     >
-      <View style={styles.noteHeader}>
-        <View style={styles.noteHeaderLeft}>
-          <ThemedText style={styles.noteTitle}>{gist.title}</ThemedText>
+      <View style={[styles.accentStripe, { backgroundColor: accentColor }]} />
+      <View style={styles.noteBody}>
+        <View style={styles.noteHeader}>
+          <View style={styles.noteHeaderLeft}>
+            {gist.sync_status !== 'synced' ? (
+              <View
+                style={[
+                  styles.statusDot,
+                  {
+                    backgroundColor:
+                      gist.sync_status === 'error' ? danger : '#FF9800',
+                  },
+                ]}
+              />
+            ) : null}
+            <ThemedText style={styles.noteTitle} numberOfLines={1}>
+              {gist.title}
+            </ThemedText>
+          </View>
         </View>
-        <ThemedText style={styles.noteDate}>
-          {new Date(gist.updated_at).toLocaleDateString()}
-        </ThemedText>
-      </View>
-      <View style={styles.noteFooter}>
-        <View style={styles.syncStatus}>
-          <View
-            style={[
-              styles.statusDot,
-              {
-                backgroundColor:
-                  gist.sync_status === 'synced' ? success : '#FF9800',
-              },
-            ]}
-          />
-          <ThemedText style={styles.statusText}>{gist.sync_status}</ThemedText>
-        </View>
-        <View style={[styles.privacyPill, { backgroundColor: pillBackground }]}>
-          <ThemedText style={[styles.privacyText, { color: pillText }]}>
-            {privacyLabel}
+        <View style={styles.noteFooter}>
+          <View style={[styles.privacyPill, { backgroundColor: pillBackground }]}>
+            <ThemedText style={[styles.privacyText, { color: pillText }]}>
+              {privacyLabel}
+            </ThemedText>
+          </View>
+          <ThemedText style={[styles.noteDate, { color: mutedText }]}>
+            {new Date(gist.updated_at).toLocaleDateString()}
           </ThemedText>
         </View>
       </View>
@@ -56,63 +60,60 @@ export const GistItem = ({ gist }: { gist: Note }) => {
 
 const styles = StyleSheet.create({
   noteItem: {
-    marginVertical: 12,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+    marginVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  accentStripe: {
+    width: 6,
+  },
+  noteBody: {
+    flex: 1,
+    padding: 16,
   },
   noteHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   noteHeaderLeft: {
     flex: 1,
-    marginRight: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   noteTitle: {
     fontSize: 18,
-    fontWeight: '600',
-  },
-  ownerLink: {
-    marginTop: 2,
-    fontSize: 12,
-    textDecorationLine: 'underline',
+    fontWeight: '700',
+    flexShrink: 1,
   },
   noteDate: {
     fontSize: 12,
-  },
-  notePreview: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
   },
   noteFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  syncStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 4,
-  },
-  statusText: {
-    fontSize: 12,
-    textTransform: 'capitalize',
   },
   privacyText: {
     fontSize: 12,
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
   privacyPill: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
   },
