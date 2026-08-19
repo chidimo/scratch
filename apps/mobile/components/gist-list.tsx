@@ -47,9 +47,6 @@ export const GistList = () => {
       {isPending && <ActivityIndicator size="large" color={tint} />}
 
       <View style={styles.topSection}>
-        <ThemedText style={styles.headerTitle} type="title">
-          {searchTerm?.trim() ? 'Search Results' : 'My Notes'}
-        </ThemedText>
         <View style={styles.searchAndCreateContainer}>
           <View style={styles.searchWrapper}>
             <SearchInput onSearch={handleSearch} />
@@ -93,14 +90,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   topSection: {
-    paddingTop: 12,
+    paddingTop: 16,
     paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 34,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 16,
   },
   searchAndCreateContainer: {
     gap: 10,
