@@ -9,14 +9,10 @@ export const GetExtension = () => {
       <SectionTitle title="Get the Extension" icon="download" />
       <TouchableOpacity
         style={styles.extensionLinkButton}
-        onPress={() =>
-          Linking.openURL(
-            'https://marketplace.visualstudio.com/items?itemName=chidimo.scratch',
-          )
-        }
+        onPress={() => Linking.openURL('https://scratch.chidiorji.com')}
       >
         <ThemedText style={styles.extensionLinkText} type="link">
-          VSCode Marketplace
+          On the web
         </ThemedText>
       </TouchableOpacity>
 
@@ -33,10 +29,14 @@ export const GetExtension = () => {
 
       <TouchableOpacity
         style={styles.extensionLinkButton}
-        onPress={() => Linking.openURL('https://scratch.chidiorji.com')}
+        onPress={() =>
+          Linking.openURL(
+            'https://marketplace.visualstudio.com/items?itemName=chidimo.scratch',
+          )
+        }
       >
         <ThemedText style={styles.extensionLinkText} type="link">
-          On the web
+          VSCode Marketplace
         </ThemedText>
       </TouchableOpacity>
     </SettingsCard>
