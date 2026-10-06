@@ -1,12 +1,15 @@
 import { Note, useGists } from '@scratch/shared';
+import { useState } from 'react';
 import { useAuth } from '../context/auth-context';
 import { GistListItem } from './gist-list-item';
 import { KnownUserHeader } from './known-user-header';
+import { NewGistDialog } from './new-gist-dialog';
 import { PageMetaTitle } from './page-meta-title';
 import { useUserWithClient } from '../hooks/use-shared-hooks';
 
 export const GistList = () => {
   const { token } = useAuth();
+  const [isCreating, setIsCreating] = useState(false);
   const { user, githubClient } = useUserWithClient();
   const {
     data: gists = [],
@@ -80,6 +83,17 @@ export const GistList = () => {
         <KnownUserHeader />
 
         <main className="max-w-7xl mx-auto px-6 py-8">
+          {gists.length > 0 ? (
+            <div className="mb-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsCreating(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-600"
+              >
+                <span aria-hidden="true">+</span> New gist
+              </button>
+            </div>
+          ) : null}
           {gists.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -101,12 +115,11 @@ export const GistList = () => {
                 No gists found
               </h2>
               <p className="text-gray-600 mb-6">
-                You haven't created any public gists yet.
+                You haven't created any gists yet.
               </p>
-              <a
-                href="https://gist.github.com"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => setIsCreating(true)}
                 className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl"
               >
                 <svg
@@ -123,7 +136,7 @@ export const GistList = () => {
                   />
                 </svg>
                 Create Your First Gist
-              </a>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -140,6 +153,7 @@ export const GistList = () => {
             </div>
           )}
         </main>
+        <NewGistDialog open={isCreating} onClose={() => setIsCreating(false)} />
       </div>
     </>
   );

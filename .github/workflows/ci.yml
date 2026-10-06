@@ -1,0 +1,66 @@
+name: CI
+
+# Only gates the release PR (dev -> main). Feature PRs into dev are not
+# checked by CI.
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - name: Typecheck projects
+        run: |
+          npx tsc --noEmit -p apps/mobile/tsconfig.json
+          npx tsc --noEmit -p apps/web/tsconfig.app.json
+          npx tsc --noEmit -p libs/shared/tsconfig.lib.json
+          npx tsc --noEmit -p netlify/tsconfig.json
+          npx tsc --noEmit -p apps/dev-auth-server/tsconfig.json
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn test
+
+  web-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: npx nx build web
+
+  extension:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/extension
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: apps/extension/yarn.lock
+      - run: yarn install --frozen-lockfile
+      - run: npx tsc --noEmit -p .
