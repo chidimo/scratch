@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Scratchpad! This guide will help 
 
 ### Prerequisites
 
-- Node.js 18+ installed
+- Node.js 22+ and Yarn 1 installed
 - Git installed and configured
 - VS Code installed (for extension development)
 - GitHub account (for contributions)
@@ -16,16 +16,19 @@ Thank you for your interest in contributing to Scratchpad! This guide will help 
 ```
 scratch/
 ├── apps/
-│   ├── extension/          # VSCode extension
-│   ├── mobile/            # React Native mobile app
-│   └── web/               # Next.js web application
-├── packages/              # Shared packages (if any)
-└── docs/                  # Documentation
+│   ├── extension/         # VS Code extension (own yarn.lock, not in the root workspace)
+│   ├── mobile/            # Expo / React Native app
+│   ├── web/               # React + Vite web app
+│   └── dev-auth-server/   # Local OAuth helper for web development
+├── libs/shared/           # GitHub client, React Query hooks, types
+├── netlify/functions/     # github-token: server-side OAuth code exchange
+└── test-utils/            # Small render helpers used by tests
 ```
 
 ### Development Setup
 
 1. **Fork the repository**
+
    ```bash
    # Fork on GitHub, then clone your fork
    git clone https://github.com/YOUR_USERNAME/scratch.git
@@ -33,47 +36,44 @@ scratch/
    ```
 
 2. **Install dependencies**
+
    ```bash
-   # Install root dependencies
-   npm install
-   
-   # Install app-specific dependencies
-   cd apps/extension && npm install
-   cd ../web && npm install
-   cd ../mobile && npm install
+   yarn install                                   # web, mobile, shared, dev auth server
+   (cd apps/extension && yarn install)            # extension has its own lockfile
    ```
 
-3. **Set up development environment**
+3. **Run things**
    ```bash
-   # For extension development
-   cd apps/extension
-   npm run watch
-   
-   # For web development
-   cd apps/web
-   npm run dev
-   
-   # For mobile development
-   cd apps/mobile
-   npm run start
+   yarn start:web                                 # web app + local OAuth server
+   yarn start                                     # mobile (Expo)
+   (cd apps/extension && yarn watch)              # extension
    ```
 
 ## 📝 Development Guidelines
 
 ### Code Style
 
-We use ESLint and Prettier for code formatting. Configuration files are included in each app.
+Prettier formats the repo and ESLint is configured per app.
 
 ```bash
-# Lint code
-npm run lint
-
-# Fix formatting
-npm run format
-
-# Type check
-npm run type-check
+yarn format            # write formatting
+yarn format:check      # check formatting
+yarn lint              # mobile lint
+yarn lint:web          # web lint
 ```
+
+### Tests and type checks
+
+```bash
+yarn test                                          # Vitest: shared, web, mobile services, netlify
+npx tsc --noEmit -p apps/web/tsconfig.app.json     # typecheck one project
+```
+
+Typecheck each project against its own tsconfig (`apps/mobile`, `apps/web/tsconfig.app.json`, `libs/shared/tsconfig.lib.json`, `netlify`, `apps/dev-auth-server`, `apps/extension`); the root tsconfig mis-resolves the mobile `@/` alias.
+
+### Pull requests
+
+Branch from `dev` and open the PR **into `dev`**. Releases are a single PR from `dev` into `main`, which is when CI runs (typecheck, web build, extension compile, tests). Run the same checks locally before merging into `dev`.
 
 ### Commit Messages
 
@@ -88,6 +88,7 @@ docs(readme): update installation instructions
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -109,6 +110,7 @@ docs/update-documentation
 ### VSCode Extension Development
 
 #### Setup
+
 ```bash
 cd apps/extension
 npm install
@@ -116,6 +118,7 @@ npm run watch
 ```
 
 #### Testing
+
 ```bash
 # Run tests
 npm test
@@ -125,6 +128,7 @@ npm test
 ```
 
 #### Key Files
+
 - `src/extension.ts` - Main extension entry point
 - `src/views/` - Tree view providers
 - `src/services/` - GitHub API integration
@@ -132,6 +136,7 @@ npm test
 - `package.json` - Extension manifest and commands
 
 #### Adding New Commands
+
 1. Add command to `package.json` under `contributes.commands`
 2. Register command in `src/extension.ts`
 3. Implement command handler function
@@ -140,6 +145,7 @@ npm test
 ### Web Application Development
 
 #### Setup
+
 ```bash
 cd apps/web
 npm install
@@ -147,6 +153,7 @@ npm run dev
 ```
 
 #### Testing
+
 ```bash
 # Run tests
 npm test
@@ -159,6 +166,7 @@ npm run test:coverage
 ```
 
 #### Key Files
+
 - `pages/` - Next.js pages
 - `components/` - React components
 - `hooks/` - Custom React hooks
@@ -168,6 +176,7 @@ npm run test:coverage
 ### Mobile App Development
 
 #### Setup
+
 ```bash
 cd apps/mobile
 npm install
@@ -178,6 +187,7 @@ npm run android
 ```
 
 #### Testing
+
 ```bash
 # Run tests
 npm test
@@ -203,25 +213,31 @@ npm run start
 
 ```markdown
 ## Bug Description
+
 Brief description of the issue
 
 ## Steps to Reproduce
+
 1. Step one
 2. Step two
 3. Step three
 
 ## Expected Behavior
+
 What should happen
 
 ## Actual Behavior
+
 What actually happens
 
 ## Environment
+
 - OS: [e.g., macOS 13.0]
 - VSCode version: [e.g., 1.82.0]
 - Extension version: [e.g., 0.2.0]
 
 ## Additional Context
+
 Any other relevant information
 ```
 
@@ -241,18 +257,23 @@ Any other relevant information
 
 ```markdown
 ## Feature Description
+
 Clear description of the proposed feature
 
 ## Problem Statement
+
 What problem does this solve?
 
 ## Proposed Solution
+
 How should this work?
 
 ## Alternatives Considered
+
 Other approaches you've thought about
 
 ## Use Cases
+
 How would users benefit from this?
 ```
 
@@ -272,20 +293,24 @@ How would users benefit from this?
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Unit tests pass
 - [ ] Manual testing completed
 - [ ] Edge cases considered
 
 ## Checklist
+
 - [ ] Code follows project style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -295,6 +320,7 @@ Brief description of changes
 ### Code Review Guidelines
 
 #### For Reviewers
+
 - Be constructive and respectful
 - Focus on code quality, not personal style
 - Explain reasoning for suggestions
@@ -302,6 +328,7 @@ Brief description of changes
 - Verify tests are adequate
 
 #### For Contributors
+
 - Respond to feedback promptly
 - Explain complex code changes
 - Accept constructive criticism
@@ -311,6 +338,7 @@ Brief description of changes
 ## 📱 Platform-Specific Guidelines
 
 ### VSCode Extension
+
 - Follow VSCode Extension API guidelines
 - Use proper TypeScript types
 - Handle errors gracefully
@@ -318,6 +346,7 @@ Brief description of changes
 - Test with different VSCode versions
 
 ### Web Application
+
 - Follow React and Next.js best practices
 - Ensure responsive design
 - Optimize for performance
@@ -325,6 +354,7 @@ Brief description of changes
 - Test across browsers
 
 ### Mobile Application
+
 - Follow React Native guidelines
 - Consider platform differences (iOS/Android)
 - Optimize for performance and battery
@@ -334,24 +364,28 @@ Brief description of changes
 ## 🧪 Testing Guidelines
 
 ### Unit Tests
+
 - Test individual functions and components
 - Mock external dependencies
 - Cover edge cases and error conditions
 - Aim for high code coverage
 
 ### Integration Tests
+
 - Test component interactions
 - Test API integrations
 - Test user workflows
 - Use realistic test data
 
 ### E2E Tests
+
 - Test complete user journeys
 - Test across different platforms
 - Include accessibility tests
 - Test performance under load
 
 ### Test Structure
+
 ```
 src/
 ├── components/
@@ -367,6 +401,7 @@ src/
 ## 📚 Documentation
 
 ### Updating Documentation
+
 - Keep README files up to date
 - Document new features in relevant docs
 - Update API documentation
@@ -374,6 +409,7 @@ src/
 - Include examples in documentation
 
 ### Documentation Types
+
 - **README.md** - Project overview and quick start
 - **API docs** - Function and component documentation
 - **Guides** - Step-by-step instructions
@@ -384,6 +420,7 @@ src/
 ### Code of Conduct
 
 Be respectful, inclusive, and professional:
+
 - Welcome newcomers and help them learn
 - Respect different viewpoints and experiences
 - Focus on constructive feedback
@@ -408,12 +445,14 @@ Be respectful, inclusive, and professional:
 ## 🏆 Recognition
 
 ### Contributor Recognition
+
 - Contributors listed in README
 - Special thanks in release notes
 - Contributor badges on GitHub
 - Invitation to core team for significant contributions
 
 ### Types of Contributions
+
 - Code contributions (bug fixes, features)
 - Documentation improvements
 - Bug reports and testing
@@ -423,12 +462,14 @@ Be respectful, inclusive, and professional:
 ## 📋 Release Process
 
 ### Version Management
+
 - Follow semantic versioning (SemVer)
 - Update changelog for each release
 - Tag releases in Git
 - Update documentation as needed
 
 ### Release Checklist
+
 - [ ] All tests passing
 - [ ] Documentation updated
 - [ ] Version numbers updated
@@ -439,12 +480,14 @@ Be respectful, inclusive, and professional:
 ## 🔒 Security
 
 ### Reporting Security Issues
+
 - Do not report security issues in public
 - Email maintainers directly
 - Provide detailed vulnerability information
 - Wait for confirmation before disclosing
 
 ### Security Best Practices
+
 - Keep dependencies updated
 - Use secure coding practices
 - Test for common vulnerabilities
