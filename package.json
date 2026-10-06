@@ -31,6 +31,7 @@
     "web": "yarn --cwd apps/mobile web",
     "lint": "yarn --cwd apps/mobile lint",
     "lint:web": "nx eslint:lint web",
+    "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check",
     "build": "nx build web",

@@ -28,6 +28,17 @@ jobs:
           npx tsc --noEmit -p netlify/tsconfig.json
           npx tsc --noEmit -p apps/dev-auth-server/tsconfig.json
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn test
+
   web-build:
     runs-on: ubuntu-latest
     steps:
