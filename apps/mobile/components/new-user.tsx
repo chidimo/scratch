@@ -4,14 +4,20 @@ import { Octicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 import { CustomButton } from './form-elements/custom-button';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from './themed-text';
 
 export const NewUser = () => {
   const { signIn, isLoading: authLoading } = useAuth();
+  const insets = useSafeAreaInsets();
+  const containerStyle = [
+    styles.container,
+    { paddingTop: insets.top, paddingBottom: insets.bottom },
+  ];
 
   if (authLoading) {
     return (
-      <View style={styles.container}>
+      <View style={containerStyle}>
         <StatusBar style="light" />
         <ActivityIndicator size="large" color="#fff" />
       </View>
@@ -19,7 +25,7 @@ export const NewUser = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       <StatusBar style="light" />
       <View style={styles.authContainer}>
         <View style={styles.logoBadge}>
@@ -41,7 +47,10 @@ export const NewUser = () => {
 
         <View style={styles.dots}>
           {Accent.map((color) => (
-            <View key={color} style={[styles.dot, { backgroundColor: color }]} />
+            <View
+              key={color}
+              style={[styles.dot, { backgroundColor: color }]}
+            />
           ))}
         </View>
 

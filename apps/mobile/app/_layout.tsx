@@ -10,7 +10,11 @@ import 'react-native-reanimated';
 import { AuthProvider } from '@/context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -29,43 +33,59 @@ export const unstable_settings = {
   anchor: 'index',
 };
 
-export default function RootLayout() {
+// Each screen applies the safe-area insets itself so full-bleed screens (the
+// sign-in hero) can paint under the status and navigation bars.
+function RootNavigator() {
   const colorScheme = useColorScheme();
   const { background: backgroundColor } = useThemeColor({}, ['background']);
+  const insets = useSafeAreaInsets();
+  const insetContent = {
+    backgroundColor,
+    paddingTop: insets.top,
+    paddingBottom: insets.bottom,
+    paddingLeft: insets.left,
+    paddingRight: insets.right,
+  };
 
+  return (
+    <View style={{ flex: 1, backgroundColor }}>
+      <StatusBar style="auto" />
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ThemeProvider
+            value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
+          >
+            <Stack>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(tabs)"
+                options={{ headerShown: false, contentStyle: insetContent }}
+              />
+              <Stack.Screen
+                name="modal"
+                options={{ presentation: 'modal', title: 'Modal' }}
+              />
+              <Stack.Screen
+                name="auth/callback"
+                options={{ headerShown: false, contentStyle: insetContent }}
+              />
+              <Stack.Screen
+                name="note"
+                options={{ headerShown: false, contentStyle: insetContent }}
+              />
+            </Stack>
+          </ThemeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </View>
+  );
+}
+
+export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <SafeAreaView
-          style={{ flex: 1, backgroundColor }}
-          edges={['top', 'bottom', 'left', 'right']}
-        >
-          <StatusBar style="auto" />
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <ThemeProvider
-                value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-              >
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="modal"
-                    options={{ presentation: 'modal', title: 'Modal' }}
-                  />
-                  <Stack.Screen
-                    name="auth/callback"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen name="note" options={{ headerShown: false }} />
-                </Stack>
-              </ThemeProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        </SafeAreaView>
+        <RootNavigator />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
