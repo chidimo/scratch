@@ -1,135 +1,58 @@
-# Developer Scratchpad
+# Scratch
 
-A cross-platform scratchpad system for developers to capture ideas on the go, with seamless sync between mobile and VSCode.
+A scratchpad for developers that keeps your notes in **private GitHub Gists**, so the same notes are available on the web, on your phone and inside VS Code. There is no Scratch server: your gists are the database.
 
-## � Documentation
+## Apps
 
-- **[Deployment Guide](./DEPLOYMENT.md)** - Extension publishing and web deployment instructions
-- **[Contribution Guide](./CONTRIBUTING.md)** - How to contribute to the project
-- **[Implementation Plans](./IMPLEMENTATION.md)** - Technical findings and implementation details
-- **[Extension Changelog](./apps/extension/CHANGELOG.md)** - VSCode extension version history
+| App                                      | Stack                           | What it does                                                                                                                                             |
+| ---------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Web** (`apps/web`)                     | React, Vite, Tailwind, TipTap   | Browse gists as cards, create, edit with a rich-text editor (with a preview toggle), delete. Live at <https://scratch.chidiorji.com>.                    |
+| **Mobile** (`apps/mobile`)               | Expo, React Native, Expo Router | Sign in with GitHub, search, create, edit markdown with preview, delete, light/dark/system theme.                                                        |
+| **VS Code extension** (`apps/extension`) | TypeScript, VS Code API         | Gists as files in a local folder with two-way sync, flat and grouped tree views, auto-refresh, rename/add/delete. [Details](./apps/extension/README.md). |
 
-## �🚀 Project Overview
-
-This project solves the common developer problem of losing great ideas while away from the keyboard. It provides:
-
-- **Mobile App**: Capture ideas instantly with your phone
-- **VSCode Extension**: Access and edit notes while coding
-- **GitHub Integration**: Sync via private GitHub Gists
-- **Team Support**: Encrypted scratch files in team repositories
-
-## 📋 Key Features
-
-- ✅ **Cross-platform sync** between mobile and desktop
-- ✅ **Privacy-first** with AES-256 encryption
-- ✅ **GitHub Gists** for personal note storage
-- ✅ **Team collaboration** with encrypted .scratch folders
-- ✅ **Offline support** with automatic sync
-- ✅ **Rich text editing** with markdown support
-
-## 🔌 VSCode Extension Features
-
-### 📝 Note Management
-
-- **Create Notes**: Create new notes that automatically sync as GitHub Gists
-- **Add to Gist**: Add additional notes to existing gists
-- **Delete Notes**: Remove individual notes with automatic GitHub sync
-- **Rename Notes**: Rename notes locally and on GitHub simultaneously
-- **Delete Gists**: Remove entire gists and all their notes
-
-### 🔄 Sync & Auto-Refresh
-
-- **Manual Sync**: Import selected GitHub Gists into your workspace
-- **Auto-Refresh**: Configurable auto-refresh (5, 10, 15, 20, 25, or 30 minutes)
-- **Smart Filtering**: Only shows unimported gists when syncing
-- **Two-Way Sync**: Local changes automatically push to GitHub
-- **File Watching**: Detects file changes and syncs in the background
-- **Empty Folder Cleanup**: Automatically removes empty gist folders
-
-### 📊 Two View Modes
-
-- **Flat View (Notes)**: See all your notes in a single list
-  - Quick access with filename and gist ID
-  - Inline delete and rename actions
-- **Grouped View (Gists)**: Notes organized by gist ID
-  - Collapsible gist folders
-  - Add note or delete gist actions on folders
-  - Clean hierarchical structure
-
-### 🔐 GitHub Integration
-
-- **OAuth Authentication**: Secure sign-in with GitHub
-- **Session Management**: Persistent sessions across restarts
-- **Status Indicator**: Status bar shows auth state and last refresh
-- **Rate Limit Protection**: Configurable refresh intervals to avoid API limits
-
-### ⚙️ Configuration Options
-
-- **Storage Path**: Customize where gists are stored (default: `~/.scratch`)
-- **Auto-Refresh Interval**: Choose from 0 (disabled), 5, 10, 15, 20, 25, or 30 minutes
-- **Folder Watching**: Enable/disable automatic file change detection
-- **Auto-Create Folder**: Automatically create scratch folder on startup
-
-### 🎯 Quick Actions
-
-- **Inline Icons**: Hover over items to see available actions
-- **Context Menus**: Right-click for additional options
-- **Command Palette**: Access all commands via `Cmd/Ctrl+Shift+P`
-- **Status Bar**: Click to refresh gists or sign in
-
-## 📚 Documentation
-
-- **[Technical Findings](./FINDINGS.md)** - Detailed technical feasibility analysis
-- **[Implementation Plan](./IMPLEMENTATION_PLAN.md)** - Complete development roadmap
-
-## 🔗 Links
+Shared code (GitHub client, React Query hooks, types) lives in `libs/shared` and is used by web and mobile. `netlify/functions/github-token.ts` performs the OAuth code exchange so client secrets stay on the server.
 
 - **VS Code Marketplace**: <https://marketplace.visualstudio.com/items?itemName=chidimo.scratch>
 - **Open VSX Registry**: <https://open-vsx.org/extension/chidimo/scratch>
 
-## 🛠️ Tech Stack
+## Getting started
 
-### Mobile App
-
-- React Native with Expo
-- GitHub OAuth integration
-- AsyncStorage for offline caching
-
-### VSCode Extension
-
-- TypeScript with VSCode Extension API
-- AES-256 encryption for security
-- Git integration for team workflows
-
-## 🚀 Quick Start
-
-Here's the quick start guide for the project.
-
-### Mobile App (Expo Go)
+Requires Node 22+ and Yarn 1.
 
 ```bash
-npm install
-npx expo start
+yarn install          # root workspace (web, mobile, shared, dev auth server)
 ```
 
-## 📅 Development Timeline
+| Task                         | Command          |
+| ---------------------------- | ---------------- |
+| Web app + local OAuth server | `yarn start:web` |
+| Mobile (Expo dev server)     | `yarn start`     |
+| Tests                        | `yarn test`      |
+| Build the web app            | `yarn build`     |
+| Format                       | `yarn format`    |
 
-- **Phase 1**: Mobile App MVP (2-3 weeks)
-- **Phase 2**: VSCode Extension (2-3 weeks)
-- **Phase 3**: Integration & Testing (1-2 weeks)
-- **Phase 4**: Deployment (1 week)
+The extension is not part of the root workspace: `cd apps/extension && yarn install && yarn watch`.
 
-Total estimated timeline: **6-8 weeks**
+### Configuration
 
-## 🤝 Contributing
+Copy the `.env.example` next to each app (`apps/web`, `apps/mobile`) and fill in your GitHub OAuth app credentials. Client secrets belong on the server (Netlify environment variables), never in an `EXPO_PUBLIC_` or `VITE_` variable. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full setup, including the mobile token exchange.
 
-See [Implementation Plan](./IMPLEMENTATION_PLAN.md) for detailed development roadmap and contribution guidelines.
+## Development workflow
 
-## ☕ Support
+Work happens on short-lived branches that open pull requests into **`dev`**. A single release PR from `dev` into `main` runs CI (typecheck for every project, web build, extension compile, tests). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-If you find this project helpful, you can support it here:
-[buymeacoffee.com/chidimo](https://buymeacoffee.com/chidimo)
+## Documentation
 
-## 📄 License
+- [CONTRIBUTING.md](./CONTRIBUTING.md): setup and workflow
+- [DEPLOYMENT.md](./DEPLOYMENT.md): web deployment, extension publishing, OAuth configuration
+- [MONOREPO.md](./MONOREPO.md): Nx workspace layout
+- [Extension changelog](./apps/extension/CHANGELOG.md)
+- [FINDINGS.md](./FINDINGS.md), [IMPLEMENTATION.md](./IMPLEMENTATION.md), [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md): original research and plans, kept for history and not kept up to date
 
-MIT License - see LICENSE file for details.
+## Support
+
+If you find this project helpful, you can support it at [buymeacoffee.com/chidimo](https://buymeacoffee.com/chidimo).
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
