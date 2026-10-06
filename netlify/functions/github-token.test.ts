@@ -60,6 +60,75 @@ describe('github-token handler', () => {
     );
   });
 
+  it('uses the mobile OAuth app credentials for client "mobile"', async () => {
+    vi.stubEnv('GITHUB_MOBILE_CLIENT_ID', 'mobile-id');
+    vi.stubEnv('GITHUB_MOBILE_CLIENT_SECRET', 'mobile-secret');
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({}), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await post({ code: 'c', redirect_uri: 'r', client: 'mobile' });
+
+    const sent = fetchMock.mock.calls[0][1].body as URLSearchParams;
+    expect(sent.get('client_id')).toBe('mobile-id');
+    expect(sent.get('client_secret')).toBe('mobile-secret');
+  });
+
+  it('does not fall back to the web credentials for client "mobile"', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await post({ code: 'c', redirect_uri: 'r', client: 'mobile' });
+
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).error_description).toBe(
+      'GitHub OAuth credentials not configured',
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown client', async () => {
+    const res = await post({ code: 'c', redirect_uri: 'r', client: 'admin' });
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).error_description).toBe('Unsupported client');
+  });
+
+  it('never logs authorization codes, tokens or secrets', async () => {
+    const log = vi.spyOn(console, 'log');
+    const error = vi.spyOn(console, 'error');
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              access_token: 'gho_supersecrettoken',
+              scope: 'gist',
+            }),
+            { status: 200 },
+          ),
+        ),
+    );
+
+    await call({
+      httpMethod: 'POST',
+      headers: { authorization: 'Bearer leaked-header' },
+      body: JSON.stringify({ code: 'sensitive-auth-code', redirect_uri: 'r' }),
+    });
+
+    const logged = JSON.stringify([...log.mock.calls, ...error.mock.calls]);
+    for (const secret of [
+      'sensitive-auth-code',
+      'gho_supersecrettoken',
+      'client-secret',
+      'leaked-header',
+    ]) {
+      expect(logged).not.toContain(secret);
+    }
+  });
+
   it('exchanges the code with GitHub and returns the token payload', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

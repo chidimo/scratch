@@ -27,6 +27,14 @@ export default defineConfig({
         },
       },
       {
+        // Only the React Native-free logic under apps/mobile/services.
+        test: {
+          name: 'mobile',
+          environment: 'node',
+          include: ['apps/mobile/services/**/*.test.ts'],
+        },
+      },
+      {
         test: {
           name: 'netlify',
           environment: 'node',
