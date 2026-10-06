@@ -1,9 +1,13 @@
 import { Handler } from '@netlify/functions';
 
+type ClientKind = 'web' | 'mobile';
+
 interface TokenRequest {
   code: string;
   redirect_uri: string;
   code_verifier?: string;
+  // Which GitHub OAuth app to exchange with. Defaults to the web app.
+  client?: ClientKind;
 }
 
 interface TokenResponse {
@@ -17,85 +21,73 @@ interface ErrorResponse {
   error_description?: string;
 }
 
-const handler: Handler = async (event) => {
-  console.log('🔍 OAuth function called');
-  console.log('📥 Request method:', event.httpMethod);
-  console.log('📥 Request headers:', event.headers);
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
-  // Handle CORS preflight request
+const json = (statusCode: number, body: unknown) => ({
+  statusCode,
+  headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+  body: JSON.stringify(body),
+});
+
+const getCredentials = (client: ClientKind) =>
+  client === 'mobile'
+    ? {
+        clientId: process.env.GITHUB_MOBILE_CLIENT_ID,
+        clientSecret: process.env.GITHUB_MOBILE_CLIENT_SECRET,
+      }
+    : {
+        clientId: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      };
+
+// Never log request headers, authorization codes, tokens or secrets here.
+const handler: Handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
       body: '',
     };
   }
 
-  // Only allow POST requests for token exchange
   if (event.httpMethod !== 'POST') {
-    console.log('❌ Method not allowed:', event.httpMethod);
-    return {
-      statusCode: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: JSON.stringify({ error: 'Method not allowed' }),
-    };
+    return json(405, { error: 'Method not allowed' });
   }
 
   try {
-    // Validate request body
     if (!event.body) {
-      console.log('❌ No request body');
       throw new Error('Request body is required');
     }
 
-    const { code, redirect_uri, code_verifier }: TokenRequest = JSON.parse(
-      event.body,
-    );
-    console.log('📋 Parsed request body:', {
-      code: code ? `${code.substring(0, 10)}...` : 'null',
+    const {
+      code,
       redirect_uri,
-      code_verifier: code_verifier ? '***PRESENT***' : 'null',
-    });
+      code_verifier,
+      client = 'web',
+    }: TokenRequest = JSON.parse(event.body);
 
     if (!code) {
-      console.log('❌ No authorization code');
       throw new Error('Authorization code is required');
     }
 
     if (!redirect_uri) {
-      console.log('❌ No redirect URI');
       throw new Error('Redirect URI is required');
     }
 
-    // Get environment variables
-    const clientId = process.env.GITHUB_CLIENT_ID;
-    const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+    if (client !== 'web' && client !== 'mobile') {
+      throw new Error('Unsupported client');
+    }
 
-    console.log('🔑 Environment check:', {
-      clientId: clientId ? `${clientId.substring(0, 10)}...` : 'null',
-      clientSecret: clientSecret ? '***CONFIGURED***' : 'null',
-      hasClientId: !!clientId,
-      hasClientSecret: !!clientSecret,
-    });
+    const { clientId, clientSecret } = getCredentials(client);
 
     if (!clientId || !clientSecret) {
-      console.log('❌ Missing OAuth credentials');
       throw new Error('GitHub OAuth credentials not configured');
     }
 
-    console.log('🔄 Exchanging code for token with GitHub...');
-
-    // Exchange code for token with GitHub
     const tokenResponse = await fetch(
       'https://github.com/login/oauth/access_token',
       {
@@ -114,60 +106,24 @@ const handler: Handler = async (event) => {
       },
     );
 
-    console.log('📡 GitHub API response status:', tokenResponse.status);
-    console.log(
-      '📡 GitHub API response headers:',
-      Object.fromEntries(tokenResponse.headers.entries()),
-    );
-
     if (!tokenResponse.ok) {
       const errorData = (await tokenResponse.json()) as ErrorResponse;
-      console.log('❌ GitHub API error:', errorData);
       throw new Error(
         `GitHub API error: ${errorData.error_description || errorData.error}`,
       );
     }
 
     const tokenData = (await tokenResponse.json()) as TokenResponse;
-    console.log('✅ Token exchange successful:', {
-      access_token: tokenData.access_token
-        ? `${tokenData.access_token.substring(0, 10)}...`
-        : 'null',
-      token_type: tokenData.token_type,
-      scope: tokenData.scope,
-    });
-
-    // Return the token response
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: JSON.stringify(tokenData),
-    };
+    return json(200, tokenData);
   } catch (error) {
-    console.error('💥 OAuth token exchange error:', error);
-
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error occurred';
-    console.log('💥 Error message to return:', errorMessage);
+    console.error('OAuth token exchange failed:', errorMessage);
 
-    return {
-      statusCode: 400,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: JSON.stringify({
-        error: 'token_exchange_failed',
-        error_description: errorMessage,
-      }),
-    };
+    return json(400, {
+      error: 'token_exchange_failed',
+      error_description: errorMessage,
+    });
   }
 };
 

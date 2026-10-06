@@ -138,6 +138,26 @@ NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=your_nextauth_secret
 ```
 
+### Mobile OAuth token exchange
+
+The mobile app must not hold the GitHub client secret (`EXPO_PUBLIC_*`
+variables are bundled into the app). Instead it posts the authorization code
+to the same `github-token` Netlify function the web app uses, with
+`client: "mobile"`, and the function exchanges it using separate credentials
+for the mobile OAuth app:
+
+```bash
+# Netlify site environment
+GITHUB_MOBILE_CLIENT_ID=your_mobile_oauth_app_client_id
+GITHUB_MOBILE_CLIENT_SECRET=your_mobile_oauth_app_client_secret
+```
+
+Then set `EXPO_PUBLIC_AUTH_EXCHANGE_URL` (see `apps/mobile/.env.example`) in
+`.env` and in the EAS environments, and **remove
+`EXPO_PUBLIC_GITHUB_CLIENT_SECRET`** from both. Builds made before this change
+embedded the secret, so rotate it in the GitHub OAuth app once the new build
+is out.
+
 ### CI/CD Integration
 
 #### GitHub Actions

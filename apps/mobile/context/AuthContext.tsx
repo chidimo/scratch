@@ -6,6 +6,7 @@ import {
   USER_STORAGE_KEY,
 } from '@/constants/app-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { exchangeCodeForToken } from '@/services/token-exchange';
 import { AuthContextType, AuthProviderProps, AuthState } from '@scratch/shared';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
@@ -27,9 +28,12 @@ const discovery = {
 
 // Environment variables
 const GITHUB_CLIENT_ID = process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID;
+// Preferred: a hosted endpoint (the Netlify github-token function) that holds
+// the client secret, so it never ships in the app.
+const AUTH_EXCHANGE_URL = process.env.EXPO_PUBLIC_AUTH_EXCHANGE_URL;
+// Legacy fallback only. EXPO_PUBLIC_ variables are bundled into the app, so
+// anyone can extract this secret. Remove it once AUTH_EXCHANGE_URL is set.
 const GITHUB_CLIENT_SECRET = process.env.EXPO_PUBLIC_GITHUB_CLIENT_SECRET;
-const AUTH_USE_PROXY =
-  process.env.EXPO_PUBLIC_AUTH_USE_PROXY?.toLowerCase() !== 'false';
 
 const validateEnv = (): string[] => {
   const missing: string[] = [];
@@ -37,8 +41,10 @@ const validateEnv = (): string[] => {
   if (!GITHUB_CLIENT_ID) {
     missing.push('EXPO_PUBLIC_GITHUB_CLIENT_ID');
   }
-  if (!GITHUB_CLIENT_SECRET) {
-    missing.push('EXPO_PUBLIC_GITHUB_CLIENT_SECRET');
+  if (!AUTH_EXCHANGE_URL && !GITHUB_CLIENT_SECRET) {
+    missing.push(
+      'EXPO_PUBLIC_AUTH_EXCHANGE_URL (or, legacy, EXPO_PUBLIC_GITHUB_CLIENT_SECRET)',
+    );
   }
   if (!PUBLIC_AUTH_SCHEME) {
     missing.push('PUBLIC_AUTH_SCHEME');
@@ -193,58 +199,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           });
         const requestCodeVerifier = request?.codeVerifier;
 
-        // Exchange code for token directly with GitHub (as per Expo docs)
-        const tokenUrl = `${GITHUB_ENDPOINT}/login/oauth/access_token`;
-
-        const requestBody: any = {
-          client_id: GITHUB_CLIENT_ID!,
-          client_secret: GITHUB_CLIENT_SECRET,
+        const accessToken = await exchangeCodeForToken({
           code,
-          redirect_uri: actualRedirectUri,
-        };
-
-        // Use code verifier from parameter first, then from request
-        const finalCodeVerifier = codeVerifier || requestCodeVerifier;
-        if (finalCodeVerifier) {
-          requestBody.code_verifier = finalCodeVerifier;
-        }
-
-        const response = await fetch(tokenUrl, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
+          redirectUri: actualRedirectUri,
+          codeVerifier: codeVerifier || requestCodeVerifier,
+          exchangeUrl: AUTH_EXCHANGE_URL,
+          clientId: GITHUB_CLIENT_ID,
+          clientSecret: GITHUB_CLIENT_SECRET,
+          githubEndpoint: GITHUB_ENDPOINT,
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Token exchange failed:', errorText);
-          throw new Error(
-            `Failed to exchange code for token: ${response.status} - ${errorText}`,
-          );
-        }
+        await AsyncStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
 
-        const tokenData = await response.json();
-
-        if (tokenData.access_token) {
-          await AsyncStorage.setItem(TOKEN_STORAGE_KEY, tokenData.access_token);
-
-          setAuthState({
-            token: tokenData.access_token,
-            isLoading: false,
-            isAuthenticated: true,
-            error: null,
-          });
-        } else {
-          console.error('No access token in response:', tokenData);
-          setAuthState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: 'Failed to get access token',
-          }));
-        }
+        setAuthState({
+          token: accessToken,
+          isLoading: false,
+          isAuthenticated: true,
+          error: null,
+        });
       } catch (error) {
         console.error('Error completing auth:', error);
         setAuthState((prev) => ({
