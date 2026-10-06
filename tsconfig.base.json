@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
+    "target": "ES2022",
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
