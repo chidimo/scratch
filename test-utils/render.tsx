@@ -60,3 +60,19 @@ export const waitFor = async (
     }
   }
 };
+
+export const click = (element: Element) =>
+  act(() => {
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+export const setInputValue = (input: HTMLInputElement, value: string) =>
+  act(() => {
+    // React tracks the value setter, so go through the native one.
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    )?.set;
+    setter?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
